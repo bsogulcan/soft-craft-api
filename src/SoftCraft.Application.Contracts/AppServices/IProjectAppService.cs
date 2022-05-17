@@ -7,7 +7,7 @@ namespace SoftCraft.AppServices;
 public interface IProjectAppService : ICrudAppService<
     ProjectDto,
     long,
-    PagedAndSortedResultRequestDto,
+    GetListInput,
     CreateProjectDto,
     UpdateProjectDto>
 {

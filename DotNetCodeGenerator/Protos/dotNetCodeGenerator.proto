@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option csharp_namespace = "DotNetCodeGenerator";
+
+package dotNetCodeGenerator;
+
+service DotNetCodeGenerator {
+  rpc CreateEntity (Entity) returns (EntityResult);
+}
+
+message Entity {
+  repeated string usings = 1;
+  string namespace = 2;
+  string name = 3;
+  PrimaryKeyType primaryKeyType = 4;
+  bool fullAudited = 5;
+  TenantType tenantType = 6;
+  repeated Property properties = 7;
+}
+
+message EntityResult{
+  Entity entity = 1;
+  string stringified = 2;
+}
+
+message Property {
+  string type = 1;
+  string name = 2;
+  bool nullable = 3;
+  bool isRelationalProperty = 4;
+  optional PrimaryKeyType relationalPropertyPrimaryKeyType = 5;
+}
+
+enum PrimaryKeyType{
+  int = 0;
+  long = 1;
+  guid = 2;
+};
+
+enum TenantType{
+  none = 0;
+  may = 1;
+  must = 2;
+};
