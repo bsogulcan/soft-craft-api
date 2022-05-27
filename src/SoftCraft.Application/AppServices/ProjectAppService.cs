@@ -85,7 +85,8 @@ public class ProjectAppService : CrudAppService<Project, ProjectDto, long, GetLi
 
         var result = await client.CreateAbpBoilerplateProjectAsync(new ProjectRequest()
         {
-            Id = project.Id.ToString()
+            Id = project.Id.ToString(),
+            Name = project.NormalizedName
         });
 
         if (result != null)

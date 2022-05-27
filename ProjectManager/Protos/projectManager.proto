@@ -13,6 +13,7 @@ service ProjectManager{
 // The request message containing the user's name.
 message ProjectRequest{
   string id = 1;
+  string name = 2;
 }
 
 // The response message containing the greetings.
