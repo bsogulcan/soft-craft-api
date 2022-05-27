@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option csharp_namespace = "ProjectManager";
+
+package projectManager;
+
+// The greeting service definition.
+service ProjectManager{
+  // Sends a greeting
+  rpc CreateAbpBoilerplateProject(ProjectRequest) returns (ProjectReply);
+}
+
+// The request message containing the user's name.
+message ProjectRequest{
+  string id = 1;
+}
+
+// The response message containing the greetings.
+message ProjectReply {
+  string id = 1;
+}

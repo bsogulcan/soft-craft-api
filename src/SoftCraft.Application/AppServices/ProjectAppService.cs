@@ -3,9 +3,12 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using DotNetCodeGenerator;
 using Grpc.Net.Client;
+using Microsoft.Extensions.Configuration;
+using ProjectManager;
 using SoftCraft.AppServices.Dtos;
 using SoftCraft.Entities;
 using SoftCraft.Repositories;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Users;
@@ -16,18 +19,22 @@ public class ProjectAppService : CrudAppService<Project, ProjectDto, long, GetLi
     CreateProjectDto, UpdateProjectDto>, IProjectAppService
 {
     private readonly ICurrentUser _currentUser;
+    private readonly IConfiguration _configuration;
 
     public ProjectAppService(IProjectRepository projectRepository,
-        ICurrentUser currentUser
+        ICurrentUser currentUser,
+        IConfiguration configuration
     ) : base(projectRepository)
     {
         _currentUser = currentUser;
+        _configuration = configuration;
     }
 
 
     public override async Task<PagedResultDto<ProjectDto>> GetListAsync(GetListInput input)
     {
-        using var dotNetCodeGeneratorChannel = GrpcChannel.ForAddress("http://localhost:5252");
+        using var dotNetCodeGeneratorChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:DotNetCodeGeneratorUrl"]);
         var client =
             new DotNetCodeGenerator.DotNetCodeGenerator.DotNetCodeGeneratorClient(dotNetCodeGeneratorChannel);
 
@@ -65,5 +72,27 @@ public class ProjectAppService : CrudAppService<Project, ProjectDto, long, GetLi
             Items = ObjectMapper.Map<List<Project>, List<ProjectDto>>(projects),
             TotalCount = projects.Count
         };
+    }
+
+    public override async Task<ProjectDto> CreateAsync(CreateProjectDto input)
+    {
+        var project = await base.CreateAsync(input);
+
+        using var dotNetCodeGeneratorChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
+        var client =
+            new ProjectManager.ProjectManager.ProjectManagerClient(dotNetCodeGeneratorChannel);
+
+        var result = await client.CreateAbpBoilerplateProjectAsync(new ProjectRequest()
+        {
+            Id = project.Id.ToString()
+        });
+
+        if (result != null)
+        {
+            return project;
+        }
+
+        throw new UserFriendlyException("Project cannot be created");
     }
 }

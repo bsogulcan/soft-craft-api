@@ -39,6 +39,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{D9
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCodeGenerator", "DotNetCodeGenerator\DotNetCodeGenerator.csproj", "{99E9873C-F462-4E15-B064-4E47A83089D8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectManager", "ProjectManager\ProjectManager.csproj", "{98C2E02C-AB03-4EF3-8F53-7FB8010DDAB4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -105,6 +107,10 @@ Global
 		{99E9873C-F462-4E15-B064-4E47A83089D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99E9873C-F462-4E15-B064-4E47A83089D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99E9873C-F462-4E15-B064-4E47A83089D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98C2E02C-AB03-4EF3-8F53-7FB8010DDAB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98C2E02C-AB03-4EF3-8F53-7FB8010DDAB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98C2E02C-AB03-4EF3-8F53-7FB8010DDAB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98C2E02C-AB03-4EF3-8F53-7FB8010DDAB4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -125,6 +131,7 @@ Global
 		{AA94D832-1CCC-4715-95A9-A483F23A1A5D} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
 		{748584B1-BA69-4F6A-81AA-F4BDE6BCE29D} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
 		{99E9873C-F462-4E15-B064-4E47A83089D8} = {D9FE45EE-EF04-4422-91AD-C527088E7AE4}
+		{98C2E02C-AB03-4EF3-8F53-7FB8010DDAB4} = {D9FE45EE-EF04-4422-91AD-C527088E7AE4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {28315BFD-90E7-4E14-A2EA-F3D23AF4126F}
