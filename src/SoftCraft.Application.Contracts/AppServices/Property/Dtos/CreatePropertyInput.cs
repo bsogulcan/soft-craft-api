@@ -9,4 +9,5 @@ public class CreatePropertyInput
     public PropertyType Type { get; set; }
     public bool IsRelationalProperty { get; set; }
     public int? RelationalEntityId { get; set; }
+    public RelationType? RelationType { get; set; }
 }

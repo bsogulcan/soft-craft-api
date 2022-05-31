@@ -28,7 +28,9 @@ message Property {
   string name = 2;
   bool nullable = 3;
   bool isRelationalProperty = 4;
-  optional PrimaryKeyType relationalPropertyPrimaryKeyType = 5;
+  optional PrimaryKeyType relationalEntityPrimaryKeyType = 5;
+  optional string relationalEntityName = 6;
+  optional RelationType relationType = 7;
 }
 
 enum PrimaryKeyType{
@@ -41,4 +43,10 @@ enum TenantType{
   none = 0;
   may = 1;
   must = 2;
+};
+
+enum RelationType{
+  OneToOne = 0;
+  OneToMany = 1;
+  ManyToMany = 2;
 };

@@ -12,6 +12,7 @@ using SoftCraft.Repositories;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 using PrimaryKeyType = DotNetCodeGenerator.PrimaryKeyType;
+using RelationType = DotNetCodeGenerator.RelationType;
 using TenantType = DotNetCodeGenerator.TenantType;
 
 namespace SoftCraft.AppServices;
@@ -64,14 +65,29 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityDto, long,
 
             foreach (var createPropertyInput in input.Properties)
             {
-                dotNetCodeGeneratorEntity.Properties.Add(new DotNetCodeGenerator.Property()
+                var property = new DotNetCodeGenerator.Property()
                 {
                     Name = createPropertyInput.Name,
                     Type = GetNormalizedPropertyType(createPropertyInput.Type),
                     Nullable = createPropertyInput.IsNullable,
                     //TODO:RelationalProperty
-                    IsRelationalProperty = false
-                });
+                    IsRelationalProperty = createPropertyInput.IsRelationalProperty,
+                };
+
+                if (createPropertyInput.IsRelationalProperty && createPropertyInput.RelationalEntityId.HasValue)
+                {
+                    var relationalEntity = await Repository.GetAsync(createPropertyInput.RelationalEntityId.Value);
+                    property.RelationalEntityPrimaryKeyType = (PrimaryKeyType) relationalEntity.PrimaryKeyType;
+                    property.RelationalEntityName = relationalEntity.Name;
+
+                    if (createPropertyInput.RelationType != null)
+                    {
+                        property.RelationType = (RelationType) createPropertyInput.RelationType;
+                    }
+                }
+
+
+                dotNetCodeGeneratorEntity.Properties.Add(property);
             }
 
             var entityResult = await client.CreateEntityAsync(dotNetCodeGeneratorEntity);

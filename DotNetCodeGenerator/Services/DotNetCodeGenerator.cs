@@ -62,16 +62,32 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         {
             var property = request.Properties[i];
 
+            stringBuilder.Append('\t');
+            stringBuilder.Append('\t');
+
             if (!property.IsRelationalProperty)
             {
-                stringBuilder.Append('\t');
-                stringBuilder.Append('\t');
                 stringBuilder.Append($"public {property.Type + (property.Nullable ? "? " : " ")}" +
                                      property.Name + " { get; set; }" + Environment.NewLine);
             }
             else
             {
                 //TODO: Write Relational properties
+                if (property.RelationType == RelationType.OneToOne)
+                {
+                    // public int LineId { get; set; }
+                    // public virtual Line Line { get; set; }
+                    stringBuilder.Append(
+                        $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")}" +
+                        property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
+
+                    stringBuilder.Append('\t');
+                    stringBuilder.Append('\t');
+
+                    stringBuilder.Append(
+                        $"public virtual {property.RelationalEntityName + (property.Nullable ? "? " : " ")}" +
+                        property.RelationalEntityName + " { get; set; }" + Environment.NewLine);
+                }
             }
         }
 
@@ -79,7 +95,6 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         stringBuilder.Append("}");
         stringBuilder.Append(Environment.NewLine);
         stringBuilder.Append("}");
-
 
         entityResult.Stringified = stringBuilder.ToString();
         return entityResult;
