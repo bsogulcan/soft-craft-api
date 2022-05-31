@@ -53,6 +53,8 @@ public class SoftCraftDbContext :
     public DbSet<TenantConnectionString> TenantConnectionStrings { get; set; }
 
     public DbSet<Project> Projects { get; set; }
+    public DbSet<Entity> Entities { get; set; }
+    public DbSet<Property> Properties { get; set; }
 
     #endregion
 
@@ -60,6 +62,7 @@ public class SoftCraftDbContext :
         : base(options)
     {
     }
+
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -76,7 +79,9 @@ public class SoftCraftDbContext :
         builder.ConfigureFeatureManagement();
         builder.ConfigureTenantManagement();
 
-        builder.ApplyConfiguration(new ProjectConfiguration());
+        builder.ApplyConfiguration(new ProjectConfiguration())
+            .ApplyConfiguration(new EntityConfiguration())
+            .ApplyConfiguration(new PropertyConfiguration());
 
         /* Configure your own tables/entities inside here */
 

@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Management.Automation;
+using System.Text;
 using Grpc.Core;
 
 namespace ProjectManager.Services;
@@ -49,6 +50,47 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
 
         //Running rename.ps1 script for changing BaseAbpBoilerplateProject
         await RunScript(replacedNamePsScript, Path.Combine(projectFile));
+
+        return new ProjectReply()
+        {
+            Id = request.Id
+        };
+    }
+
+    public override async Task<ProjectReply> AddEntityToExistingProject(AddEntityRequest request,
+        ServerCallContext context)
+    {
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.Id);
+        var entityFolderPath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.Core\\Domain\\Entities");
+
+        if (!Directory.Exists(entityFolderPath))
+        {
+            Directory.CreateDirectory(entityFolderPath);
+        }
+
+        await File.WriteAllTextAsync(Path.Combine(entityFolderPath, request.EntityName + ".cs"), request.Stringified);
+
+        var dbContextFilePath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.EntityFrameworkCore\\EntityFrameworkCore\\{request.ProjectName}DbContext.cs");
+
+        var dbContext = await File.ReadAllTextAsync(dbContextFilePath);
+        var entitiesUsingLine = $"using {request.ProjectName}.Domain.Entities;";
+        var existingEntitiesUsingBlock = dbContext.Contains(entitiesUsingLine);
+
+        var modifiedDbContext = new StringBuilder(dbContext);
+
+        if (!existingEntitiesUsingBlock)
+        {
+            var lastUsingLineNumber = dbContext.LastIndexOf($"namespace {request.ProjectName}.EntityFrameworkCore",
+                StringComparison.Ordinal) - 1;
+
+            modifiedDbContext.Insert(lastUsingLineNumber,
+                entitiesUsingLine
+            );
+            modifiedDbContext.Insert(lastUsingLineNumber + entitiesUsingLine.Length, Environment.NewLine);
+            modifiedDbContext.Append(Environment.NewLine);
+        }
 
         return new ProjectReply()
         {
