@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
@@ -25,7 +25,7 @@ namespace SoftCraft.EntityFrameworkCore;
     typeof(AbpAuditLoggingEntityFrameworkCoreModule),
     typeof(AbpTenantManagementEntityFrameworkCoreModule),
     typeof(AbpFeatureManagementEntityFrameworkCoreModule)
-    )]
+)]
 public class SoftCraftEntityFrameworkCoreModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
@@ -37,15 +37,20 @@ public class SoftCraftEntityFrameworkCoreModule : AbpModule
     {
         context.Services.AddAbpDbContext<SoftCraftDbContext>(options =>
         {
-                /* Remove "includeAllEntities: true" to create
-                 * default repositories only for aggregate roots */
+            /* Remove "includeAllEntities: true" to create
+             * default repositories only for aggregate roots */
             options.AddDefaultRepositories(includeAllEntities: true);
         });
 
         Configure<AbpDbContextOptions>(options =>
         {
-                /* The main point to change your DBMS.
-                 * See also SoftCraftMigrationsDbContextFactory for EF Core tooling. */
+            /* The main point to change your DBMS.
+             * See also SoftCraftMigrationsDbContextFactory for EF Core tooling. */
+            options.PreConfigure<SoftCraftDbContext>(opts =>
+            {
+                opts.DbContextOptions.UseLazyLoadingProxies(); //Enable lazy loading
+            });
+
             options.UseSqlServer();
         });
     }

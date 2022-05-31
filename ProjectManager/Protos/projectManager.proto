@@ -8,6 +8,7 @@ package projectManager;
 service ProjectManager{
   // Sends a greeting
   rpc CreateAbpBoilerplateProject(ProjectRequest) returns (ProjectReply);
+  rpc AddEntityToExistingProject(AddEntityRequest) returns (ProjectReply);
 }
 
 // The request message containing the user's name.
@@ -19,4 +20,11 @@ message ProjectRequest{
 // The response message containing the greetings.
 message ProjectReply {
   string id = 1;
+}
+
+message AddEntityRequest{
+  string id = 1;
+  string projectName = 2;
+  string entityName = 3;
+  string stringified = 4;
 }
