@@ -4,7 +4,7 @@ using Volo.Abp.Application.Dtos;
 
 namespace SoftCraft.AppServices.Project.Dtos;
 
-public class UpdateProjectDto : EntityDto<long>
+public class ProjectPartOutput : EntityDto<long>
 {
     public string Name { get; set; }
     public string UniqueName { get; set; }

@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using SoftCraft.AppServices.Dtos;
 using SoftCraft.AppServices.Entity.Dtos;
+using SoftCraft.AppServices.Project.Dtos;
 using SoftCraft.AppServices.Property.Dtos;
 using SoftCraft.Entities;
 
@@ -16,15 +16,18 @@ public class SoftCraftApplicationAutoMapperProfile : Profile
 
         #region EntityToDto
 
-        CreateMap<Project, ProjectDto>();
+        CreateMap<Project, ProjectFullOutput>();
+        CreateMap<Project, ProjectPartOutput>();
         CreateMap<Project, CreateProjectDto>();
         CreateMap<Project, UpdateProjectDto>();
 
-        CreateMap<Entity, EntityDto>();
+        CreateMap<Entity, EntityFullOutput>();
+        CreateMap<Entity, EntityPartOutput>();
         CreateMap<Entity, CreateEntityInput>();
         CreateMap<Entity, UpdateEntityInput>();
 
-        CreateMap<Property, PropertyDto>();
+        CreateMap<Property, PropertyFullOutput>();
+        CreateMap<Property, PropertyPartOutput>();
         CreateMap<Property, CreatePropertyInput>();
         CreateMap<Property, UpdatePropertyInput>();
 
@@ -32,17 +35,21 @@ public class SoftCraftApplicationAutoMapperProfile : Profile
 
         #region DtoToEntity
 
-        CreateMap<ProjectDto, Project>();
+        CreateMap<ProjectFullOutput, Project>();
+        CreateMap<ProjectPartOutput, Project>();
         CreateMap<CreateProjectDto, Project>();
         CreateMap<UpdateProjectDto, Project>();
 
-        CreateMap<EntityDto, Entity>();
+        CreateMap<EntityFullOutput, Entity>();
+        CreateMap<EntityPartOutput, Entity>();
         CreateMap<CreateEntityInput, Entity>();
         CreateMap<UpdateEntityInput, Entity>();
 
-        CreateMap<PropertyDto, Property>();
+        CreateMap<PropertyFullOutput, Property>();
+        CreateMap<PropertyPartOutput, Property>();
         CreateMap<CreatePropertyInput, Property>();
         CreateMap<UpdatePropertyInput, Property>();
+
         #endregion
     }
 }

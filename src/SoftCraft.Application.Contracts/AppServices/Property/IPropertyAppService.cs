@@ -3,7 +3,8 @@ using Volo.Abp.Application.Services;
 
 namespace SoftCraft.AppServices.Property;
 
-public interface IPropertyAppService : ICrudAppService<PropertyDto, long, GetPropertyListInput, CreatePropertyInput,
+public interface IPropertyAppService : ICrudAppService<PropertyPartOutput, long, GetPropertyListInput,
+    CreatePropertyInput,
     UpdatePropertyInput>
 {
 }

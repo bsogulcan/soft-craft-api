@@ -1,25 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using DotNetCodeGenerator;
-using Grpc.Net.Client;
+﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using ProjectManager;
-using SoftCraft.AppServices.Dtos;
-using SoftCraft.Entities;
+using SoftCraft.AppServices.Project.Dtos;
 using SoftCraft.Repositories;
-using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Users;
-using Entity = DotNetCodeGenerator.Entity;
-using PrimaryKeyType = DotNetCodeGenerator.PrimaryKeyType;
-using Property = DotNetCodeGenerator.Property;
-using TenantType = DotNetCodeGenerator.TenantType;
 
 namespace SoftCraft.AppServices;
 
-public class ProjectAppService : CrudAppService<Project, ProjectDto, long, GetListInput,
+public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOutput, long, GetListInput,
     CreateProjectDto, UpdateProjectDto>, IProjectAppService
 {
     private readonly ICurrentUser _currentUser;
@@ -34,87 +23,34 @@ public class ProjectAppService : CrudAppService<Project, ProjectDto, long, GetLi
         _configuration = configuration;
     }
 
-
-    public override async Task<PagedResultDto<ProjectDto>> GetListAsync(GetListInput input)
+    public override Task<ProjectPartOutput> UpdateAsync(long id, UpdateProjectDto input)
     {
-        var projects = await Repository.GetListAsync(x => x.CreatorId == _currentUser.GetId());
-        return new PagedResultDto<ProjectDto>()
-        {
-            Items = ObjectMapper.Map<List<Project>, List<ProjectDto>>(projects),
-            TotalCount = projects.Count
-        };
+        return base.UpdateAsync(id, input);
     }
 
-    public override async Task<ProjectDto> CreateAsync(CreateProjectDto input)
+    public override async Task<PagedResultDto<ProjectPartOutput>> GetListAsync(GetListInput input)
     {
-        var project = await base.CreateAsync(input);
-
-        using var dotNetCodeGeneratorChannel =
-            GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
-        var client =
-            new ProjectManager.ProjectManager.ProjectManagerClient(dotNetCodeGeneratorChannel);
-
-        var result = await client.CreateAbpBoilerplateProjectAsync(new ProjectRequest()
-        {
-            Id = project.Id.ToString(),
-            Name = project.NormalizedName
-        });
-
-
-        var factoryEntity = await CreateFactoryEntityAsync(project.NormalizedName);
-
-        await client.AddEntityToExistingProjectAsync(new AddEntityRequest()
-        {
-            Id = project.Id.ToString(),
-            EntityName = factoryEntity.Entity.Name,
-            ProjectName = project.NormalizedName,
-            Stringified = factoryEntity.Stringified
-        });
-
-        if (result != null)
-        {
-            return project;
-        }
-
-        throw new UserFriendlyException("Project cannot be created");
+        return await base.GetListAsync(input);
+        // var projects = await Repository.GetListAsync(x => x.CreatorId == _currentUser.GetId());
+        // return new PagedResultDto<ProjectDto>()
+        // {
+        //     Items = ObjectMapper.Map<List<Project>, List<ProjectDto>>(projects),
+        //     TotalCount = projects.Count
+        // };
     }
 
-    private async Task<EntityResult> CreateFactoryEntityAsync(string projectName)
+    public override async Task<ProjectPartOutput> CreateAsync(CreateProjectDto input)
     {
-        using var dotNetCodeGeneratorChannel =
-            GrpcChannel.ForAddress(_configuration["MicroServices:DotNetCodeGeneratorUrl"]);
-        var client =
-            new DotNetCodeGenerator.DotNetCodeGenerator.DotNetCodeGeneratorClient(dotNetCodeGeneratorChannel);
-
-        var result = await client.CreateEntityAsync(new DotNetCodeGenerator.Entity()
-        {
-            Name = "Factory",
-            Namespace = $"{projectName}.Domain.Entities",
-            Usings =
-            {
-                "Abp.Domain.Entities.Auditing;",
-                "System.Collections.Generic;",
-                "Abp.Domain.Entities;"
-            },
-            FullAudited = true,
-            PrimaryKeyType = PrimaryKeyType.Int,
-            TenantType = TenantType.None,
-            Properties =
-            {
-                new DotNetCodeGenerator.Property()
-                {
-                    Name = "Name",
-                    Type = "string",
-                },
-                new DotNetCodeGenerator.Property()
-                {
-                    Name = "Test",
-                    Type = "int"
-                }
-            }
-        });
-
-
-        return result;
+        return await base.CreateAsync(input);
+        // using var dotNetCodeGeneratorChannel =
+        //     GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
+        // var client =
+        //     new ProjectManager.ProjectManager.ProjectManagerClient(dotNetCodeGeneratorChannel);
+        //
+        // var result = await client.CreateAbpBoilerplateProjectAsync(new ProjectRequest()
+        // {
+        //     Id = project.Id.ToString(),
+        //     Name = project.NormalizedName
+        // });
     }
 }

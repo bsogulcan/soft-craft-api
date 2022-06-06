@@ -1,10 +1,10 @@
-﻿using JetBrains.Annotations;
+﻿using SoftCraft.AppServices.Entity.Dtos;
 using SoftCraft.Enums;
-using Volo.Abp.Domain.Entities.Auditing;
+using Volo.Abp.Application.Dtos;
 
-namespace SoftCraft.Entities;
+namespace SoftCraft.AppServices.Property.Dtos;
 
-public class Property : FullAuditedEntity<long>
+public class PropertyPartOutput : EntityDto<long>
 {
     public string Name { get; set; }
     public string DisplayName { get; set; }
@@ -12,6 +12,4 @@ public class Property : FullAuditedEntity<long>
     public PropertyType Type { get; set; }
     public bool IsRelationalProperty { get; set; }
     public int? RelationalEntityId { get; set; }
-    [CanBeNull] public virtual Entity RelationalEntity { get; set; }
-    //public bool IsEnumProperty { get; set; }
 }
