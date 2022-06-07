@@ -12,4 +12,9 @@ public class PropertyPartOutput : EntityDto<long>
     public PropertyType Type { get; set; }
     public bool IsRelationalProperty { get; set; }
     public int? RelationalEntityId { get; set; }
+    public string ToolTip { get; set; }
+    public bool Required { get; set; }
+    public bool Indexed { get; set; }
+    public int MaxLength { get; set; }
+    public bool Unique { get; set; }
 }

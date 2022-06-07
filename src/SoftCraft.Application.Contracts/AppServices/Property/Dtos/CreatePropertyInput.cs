@@ -12,4 +12,9 @@ public class CreatePropertyInput
     public long? RelationalEntityId { get; set; }
     public RelationType? RelationType { get; set; }
     public long EntityId { get; set; }
+    public string ToolTip { get; set; }
+    public bool Required { get; set; }
+    public bool Indexed { get; set; }
+    public int MaxLength { get; set; }
+    public bool Unique { get; set; }
 }
