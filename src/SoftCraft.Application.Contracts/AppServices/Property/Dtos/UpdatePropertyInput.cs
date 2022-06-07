@@ -9,5 +9,6 @@ public class UpdatePropertyInput : EntityDto<long>
     public bool IsNullable { get; set; }
     public PropertyType Type { get; set; }
     public bool IsRelationalProperty { get; set; }
-    public int? RelationalEntityId { get; set; }
+    public long? RelationalEntityId { get; set; }
+    public long EntityId { get; set; }
 }

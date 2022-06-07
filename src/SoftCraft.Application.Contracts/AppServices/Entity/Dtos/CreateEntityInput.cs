@@ -12,5 +12,4 @@ public class CreateEntityInput
     public string DisplayName { get; set; }
     public bool IsFullAudited { get; set; }
     public TenantType TenantType { get; set; }
-    public List<CreatePropertyInput> Properties { get; set; }
 }

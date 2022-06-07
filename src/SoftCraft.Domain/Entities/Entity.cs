@@ -19,5 +19,5 @@ public class Entity : FullAuditedEntity<long>
     public long ProjectId { get; set; }
     public virtual Project Project { get; set; }
 
-    public virtual ICollection<Property> Properties { get; set; }
+    //public virtual ICollection<Property> Properties { get; set; }
 }
