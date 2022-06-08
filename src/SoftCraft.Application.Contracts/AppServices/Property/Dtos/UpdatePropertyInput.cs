@@ -7,9 +7,10 @@ public class UpdatePropertyInput : EntityDto<long>
 {
     public string Name { get; set; }
     public bool IsNullable { get; set; }
-    public PropertyType Type { get; set; }
+    public PropertyType? Type { get; set; }
     public bool IsRelationalProperty { get; set; }
     public long? RelationalEntityId { get; set; }
+    public RelationType? RelationType { get; set; }
     public long EntityId { get; set; }
     public string ToolTip { get; set; }
     public bool Required { get; set; }

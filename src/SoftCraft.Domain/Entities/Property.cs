@@ -9,11 +9,13 @@ public class Property : FullAuditedEntity<long>
     public string Name { get; set; }
     public string DisplayName { get; set; }
     public bool IsNullable { get; set; }
-    public PropertyType Type { get; set; }
+    public PropertyType? Type { get; set; }
     public bool IsRelationalProperty { get; set; }
     public long? RelationalEntityId { get; set; }
 
     [CanBeNull] public virtual Entity RelationalEntity { get; set; }
+
+    public RelationType? RelationType { get; set; }
     //public bool IsEnumProperty { get; set; }
 
     public string ToolTip { get; set; }
