@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using SoftCraft.AppServices.Entity.Dtos;
+using SoftCraft.AppServices.EntityValue.Dtos;
+using SoftCraft.AppServices.Enumerate.Dtos;
 using SoftCraft.AppServices.Project.Dtos;
 using SoftCraft.AppServices.Property.Dtos;
 using SoftCraft.Entities;
@@ -31,6 +33,17 @@ public class SoftCraftApplicationAutoMapperProfile : Profile
         CreateMap<Property, CreatePropertyInput>();
         CreateMap<Property, UpdatePropertyInput>();
 
+        CreateMap<Enumerate, EnumerateFullOutput>();
+        CreateMap<Enumerate, EnumeratePartOutput>();
+        CreateMap<Enumerate, CreateEnumerateInput>();
+        CreateMap<Enumerate, UpdateEnumerateInput>();
+        
+       
+        CreateMap<EnumerateValue, EnumerateFullOutput>();
+        CreateMap<EnumerateValue, EnumeratePartOutput>();
+        CreateMap<EnumerateValue, CreateEnumerateValueInput>();
+        CreateMap<EnumerateValue, UpdateEnumerateValueInput>();
+
         #endregion
 
         #region DtoToEntity
@@ -49,6 +62,18 @@ public class SoftCraftApplicationAutoMapperProfile : Profile
         CreateMap<PropertyPartOutput, Property>();
         CreateMap<CreatePropertyInput, Property>();
         CreateMap<UpdatePropertyInput, Property>();
+        
+        
+        CreateMap< EnumerateFullOutput, Enumerate>();
+        CreateMap<EnumeratePartOutput, Enumerate>();
+        CreateMap<CreateEnumerateInput, Enumerate>();
+        CreateMap<UpdateEnumerateInput, Enumerate>();
+        
+        
+        CreateMap<EnumerateFullOutput, EnumerateValue>();
+        CreateMap<EnumeratePartOutput, EnumerateValue>();
+        CreateMap<CreateEnumerateValueInput, EnumerateValue>();
+        CreateMap<UpdateEnumerateValueInput, EnumerateValue>();
 
         #endregion
     }

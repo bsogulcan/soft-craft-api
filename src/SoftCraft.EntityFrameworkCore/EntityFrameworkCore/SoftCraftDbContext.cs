@@ -55,6 +55,8 @@ public class SoftCraftDbContext :
     public DbSet<Project> Projects { get; set; }
     public DbSet<Entity> Entities { get; set; }
     public DbSet<Property> Properties { get; set; }
+    public DbSet<Enumerate> Enumerates { get; set; }
+    public DbSet<EnumerateValue> EnumerateValues { get; set; }
 
     #endregion
 
@@ -81,7 +83,10 @@ public class SoftCraftDbContext :
 
         builder.ApplyConfiguration(new ProjectConfiguration())
             .ApplyConfiguration(new EntityConfiguration())
-            .ApplyConfiguration(new PropertyConfiguration());
+            .ApplyConfiguration(new PropertyConfiguration())
+            .ApplyConfiguration(new EntityConfiguration())
+            .ApplyConfiguration(new EnumerateConfiguration())
+            .ApplyConfiguration(new EnumerateValueConfiguration());
 
         /* Configure your own tables/entities inside here */
 
