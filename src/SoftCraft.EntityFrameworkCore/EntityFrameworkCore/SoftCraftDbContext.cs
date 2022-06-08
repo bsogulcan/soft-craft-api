@@ -55,6 +55,7 @@ public class SoftCraftDbContext :
     public DbSet<Project> Projects { get; set; }
     public DbSet<Entity> Entities { get; set; }
     public DbSet<Property> Properties { get; set; }
+    public DbSet<Navigation> Navigations { get; set; }
 
     #endregion
 
@@ -81,7 +82,8 @@ public class SoftCraftDbContext :
 
         builder.ApplyConfiguration(new ProjectConfiguration())
             .ApplyConfiguration(new EntityConfiguration())
-            .ApplyConfiguration(new PropertyConfiguration());
+            .ApplyConfiguration(new PropertyConfiguration())
+            .ApplyConfiguration(new NavigationConfiguration());
 
         /* Configure your own tables/entities inside here */
 

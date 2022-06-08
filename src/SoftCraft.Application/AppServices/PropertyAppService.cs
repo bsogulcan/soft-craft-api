@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using SoftCraft.AppServices.Entity.Dtos;
 using SoftCraft.AppServices.Property;
 using SoftCraft.AppServices.Property.Dtos;
+using SoftCraft.Repositories;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
@@ -12,7 +13,7 @@ namespace SoftCraft.AppServices;
 public class PropertyAppService : CrudAppService<Entities.Property, PropertyFullOutput, long, GetPropertyListInput,
     CreatePropertyInput, UpdatePropertyInput>, IPropertyAppService
 {
-    public PropertyAppService(IRepository<Entities.Property, long> repository) : base(repository)
+    public PropertyAppService(IPropertyRepository repository) : base(repository)
     {
     }
 

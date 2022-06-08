@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using SoftCraft.AppServices.Entity.Dtos;
+using SoftCraft.AppServices.Navigations.Dtos;
 using SoftCraft.AppServices.Project.Dtos;
 using SoftCraft.AppServices.Property.Dtos;
 using SoftCraft.Entities;
@@ -31,6 +32,11 @@ public class SoftCraftApplicationAutoMapperProfile : Profile
         CreateMap<Property, CreatePropertyInput>();
         CreateMap<Property, UpdatePropertyInput>();
 
+        CreateMap<Navigation, NavigationFullOutput>();
+        CreateMap<Navigation, NavigationPartOutput>();
+        CreateMap<Navigation, CreateNavigationInput>();
+        CreateMap<Navigation, UpdateNavigationInput>();
+
         #endregion
 
         #region DtoToEntity
@@ -49,6 +55,11 @@ public class SoftCraftApplicationAutoMapperProfile : Profile
         CreateMap<PropertyPartOutput, Property>();
         CreateMap<CreatePropertyInput, Property>();
         CreateMap<UpdatePropertyInput, Property>();
+
+        CreateMap<NavigationFullOutput, Navigation>();
+        CreateMap<NavigationPartOutput, Navigation>();
+        CreateMap<CreateNavigationInput, Navigation>();
+        CreateMap<UpdateNavigationInput, Navigation>();
 
         #endregion
     }
