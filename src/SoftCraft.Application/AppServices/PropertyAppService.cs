@@ -9,19 +9,19 @@ using Volo.Abp.Domain.Repositories;
 
 namespace SoftCraft.AppServices;
 
-public class PropertyAppService : CrudAppService<Entities.Property, PropertyPartOutput, long, GetPropertyListInput,
+public class PropertyAppService : CrudAppService<Entities.Property, PropertyFullOutput, long, GetPropertyListInput,
     CreatePropertyInput, UpdatePropertyInput>, IPropertyAppService
 {
     public PropertyAppService(IRepository<Entities.Property, long> repository) : base(repository)
     {
     }
 
-    public override async Task<PagedResultDto<PropertyPartOutput>> GetListAsync(GetPropertyListInput input)
+    public override async Task<PagedResultDto<PropertyFullOutput>> GetListAsync(GetPropertyListInput input)
     {
         var properties = await Repository.GetListAsync(x => x.EntityId == input.EntityId);
-        return new PagedResultDto<PropertyPartOutput>()
+        return new PagedResultDto<PropertyFullOutput>()
         {
-            Items = ObjectMapper.Map<List<Entities.Property>, List<PropertyPartOutput>>(properties),
+            Items = ObjectMapper.Map<List<Entities.Property>, List<PropertyFullOutput>>(properties),
             TotalCount = properties.Count
         };
     }
