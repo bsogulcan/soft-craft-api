@@ -1,6 +1,8 @@
-﻿namespace SoftCraft.AppServices.Navigations.Dtos;
+﻿using Volo.Abp.Application.Dtos;
 
-public class NavigationPartOutput
+namespace SoftCraft.AppServices.Navigations.Dtos;
+
+public class NavigationPartOutput : EntityDto<long>
 {
     public string Caption { get; set; }
     public int Index { get; set; }

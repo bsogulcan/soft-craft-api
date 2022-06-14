@@ -27,4 +27,14 @@ public class NavigationAppService : CrudAppService<Navigation, NavigationFullOut
             TotalCount = navigations.Count
         };
     }
+
+    public async Task ReOrderAsync(List<NavigationPartOutput> navigations)
+    {
+        foreach (var navigationDto in navigations)
+        {
+            var navigation = await Repository.GetAsync(navigationDto.Id);
+            navigation.Index = navigations.IndexOf(navigationDto);
+            await Repository.UpdateAsync(navigation);
+        }
+    }
 }
