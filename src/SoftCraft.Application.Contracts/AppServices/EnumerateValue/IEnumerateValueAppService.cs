@@ -1,8 +1,7 @@
-﻿using SoftCraft.AppServices.EntityValue.Dtos;
-using SoftCraft.AppServices.Enumerate.Dtos;
+﻿using SoftCraft.AppServices.EnumerateValue.Dtos;
 using Volo.Abp.Application.Services;
 
-namespace SoftCraft.AppServices.EntityValue;
+namespace SoftCraft.AppServices.EnumerateValue;
 
 public interface IEnumerateValueAppService:ICrudAppService<EnumerateValuePartOutput, long, GetEnumerateValueListInput, CreateEnumerateValueInput, UpdateEnumerateValueInput>
 {

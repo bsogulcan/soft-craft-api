@@ -3,7 +3,7 @@ using Volo.Abp.Application.Services;
 
 namespace SoftCraft.AppServices.Enumerate;
 
-public interface IEnumerateAppService:ICrudAppService<EnumeratePartOutput, long, GetEnumerateListInput, CreateEnumerateInput, UpdateEnumerateInput>
+public interface IEnumerateAppService:ICrudAppService<EnumerateFullOutput, long, GetEnumerateListInput, CreateEnumerateInput, UpdateEnumerateInput>
 {
     
 }

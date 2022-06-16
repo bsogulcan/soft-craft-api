@@ -2,17 +2,15 @@
 
 namespace SoftCraft.Entities;
 
-public class EnumerateValue:FullAuditedEntity<long>
+public class EnumerateValue : FullAuditedEntity<long>
 {
     public string Name { get; set; }
 
     public string DisplayName { get; set; }
 
-    public string Value { get; set; }
+    public int Value { get; set; }
 
     public long EnumerateId { get; set; }
 
     public virtual Enumerate Enumerate { get; set; }
-
-
 }

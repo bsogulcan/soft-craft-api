@@ -9,22 +9,21 @@ using Volo.Abp.Domain.Repositories;
 
 namespace SoftCraft.AppServices;
 
-public class EnumerateAppService:CrudAppService<Entities.Enumerate,EnumeratePartOutput,long,GetEnumerateListInput,CreateEnumerateInput,UpdateEnumerateInput>,IEnumerateAppService
+public class EnumerateAppService :
+    CrudAppService<Entities.Enumerate, EnumerateFullOutput, long, GetEnumerateListInput, CreateEnumerateInput,
+        UpdateEnumerateInput>, IEnumerateAppService
 {
-  
-    
-    public EnumerateAppService(IRepository<Entities.Enumerate, long> repository,IProjectRepository projectRepository) : base(repository)
+    public EnumerateAppService(IRepository<Entities.Enumerate, long> repository, IProjectRepository projectRepository) :
+        base(repository)
     {
-       
-        
     }
 
-    public override async Task<PagedResultDto<EnumeratePartOutput>> GetListAsync(GetEnumerateListInput input)
+    public override async Task<PagedResultDto<EnumerateFullOutput>> GetListAsync(GetEnumerateListInput input)
     {
         var enumerates = await Repository.GetListAsync(x => x.ProjectId == input.ProjectId);
-        return new PagedResultDto<EnumeratePartOutput>()
+        return new PagedResultDto<EnumerateFullOutput>()
         {
-            Items = ObjectMapper.Map<List<Entities.Enumerate>, List<EnumeratePartOutput>>(enumerates),
+            Items = ObjectMapper.Map<List<Entities.Enumerate>, List<EnumerateFullOutput>>(enumerates),
             TotalCount = enumerates.Count
         };
     }

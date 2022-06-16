@@ -1,22 +1,16 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using SoftCraft.AppServices.EntityValue;
-using SoftCraft.AppServices.EntityValue.Dtos;
-using SoftCraft.AppServices.Enumerate.Dtos;
-using SoftCraft.Entities;
-using SoftCraft.Repositories;
-using Volo.Abp.Application.Dtos;
+﻿using SoftCraft.AppServices.EnumerateValue;
+using SoftCraft.AppServices.EnumerateValue.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 
 namespace SoftCraft.AppServices;
 
-public class EnumerateValueAppService:CrudAppService<
+public class EnumerateValueAppService : CrudAppService<
     Entities.EnumerateValue,
     EnumerateValuePartOutput,
-    long,GetEnumerateValueListInput,CreateEnumerateValueInput,UpdateEnumerateValueInput>,IEnumerateValueAppService
+    long, GetEnumerateValueListInput, CreateEnumerateValueInput, UpdateEnumerateValueInput>, IEnumerateValueAppService
 {
-    public EnumerateValueAppService(IRepository<EnumerateValue, long> repository) : base(repository)
+    public EnumerateValueAppService(IRepository<Entities.EnumerateValue, long> repository) : base(repository)
     {
     }
 
