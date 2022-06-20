@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SoftCraft.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
@@ -12,9 +13,10 @@ using Volo.Abp.EntityFrameworkCore;
 namespace SoftCraft.Migrations
 {
     [DbContext(typeof(SoftCraftDbContext))]
-    partial class SoftCraftDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220617000643_0")]
+    partial class _0
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -373,9 +375,6 @@ namespace SoftCraft.Migrations
                     b.Property<long>("EntityId")
                         .HasColumnType("bigint");
 
-                    b.Property<long?>("EnumerateId")
-                        .HasColumnType("bigint");
-
                     b.Property<bool>("Indexed")
                         .HasColumnType("bit");
 
@@ -384,9 +383,6 @@ namespace SoftCraft.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false)
                         .HasColumnName("IsDeleted");
-
-                    b.Property<bool>("IsEnumProperty")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("IsNullable")
                         .HasColumnType("bit");
@@ -431,8 +427,6 @@ namespace SoftCraft.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EntityId");
-
-                    b.HasIndex("EnumerateId");
 
                     b.HasIndex("RelationalEntityId");
 
@@ -2428,17 +2422,11 @@ namespace SoftCraft.Migrations
                         .HasForeignKey("EntityId")
                         .IsRequired();
 
-                    b.HasOne("SoftCraft.Entities.Enumerate", "Enumerate")
-                        .WithMany()
-                        .HasForeignKey("EnumerateId");
-
                     b.HasOne("SoftCraft.Entities.Entity", "RelationalEntity")
                         .WithMany()
                         .HasForeignKey("RelationalEntityId");
 
                     b.Navigation("Entity");
-
-                    b.Navigation("Enumerate");
 
                     b.Navigation("RelationalEntity");
                 });

@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Humanizer;
 
 namespace ProjectManager.HelperClass;
 
@@ -42,7 +43,7 @@ public static class HelperClass
             return modifiedDbContext;
         }
 
-        var dbSetText = "public virtual DbSet<" + entityName + "> " + entityName + " { get; set; }";
+        var dbSetText = "public virtual DbSet<" + entityName + "> " + entityName.Pluralize() + " { get; set; }";
         var constructorIndex = dbContext.LastIndexOf(
             $"public {projectName}DbContext(DbContextOptions<{projectName}DbContext> options)",
             StringComparison.Ordinal);
@@ -53,5 +54,11 @@ public static class HelperClass
         modifiedDbContext.Insert(constructorIndex + dbSetText.Length, Environment.NewLine + "\t \t");
 
         return modifiedDbContext;
+    }
+
+    public static string GetElasticSearchConfiguration(string projectName)
+    {
+        return
+            $"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n<log4net>\n    <appender name=\"ElasticSearchAppender\" type=\"log4net.ElasticSearch.ElasticSearchAppender, log4net.ElasticSearch\">\n        <connectionString value=\"Server=localhost;Index={projectName};Port=9200;\" />\n        <bufferSize value=\"0\" />\n    </appender>\n    <root>\n        <level value=\"ALL\" />\n        <appender-ref ref=\"ElasticSearchAppender\" />\n    </root>\n</log4net>";
     }
 }

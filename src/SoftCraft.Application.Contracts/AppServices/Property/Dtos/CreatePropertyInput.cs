@@ -17,4 +17,6 @@ public class CreatePropertyInput
     public bool Indexed { get; set; }
     public int MaxLength { get; set; }
     public bool Unique { get; set; }
+    public bool IsEnumProperty { get; set; }
+    public long? EnumerateId { get; set; }
 }

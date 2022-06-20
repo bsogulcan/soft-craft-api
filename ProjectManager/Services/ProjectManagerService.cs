@@ -52,6 +52,29 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         //Running rename.ps1 script for changing BaseAbpBoilerplateProject
         await RunScript(replacedNamePsScript, Path.Combine(projectFile));
 
+        var webHostFolderPath = Path.Combine(projectFile, "aspnet-core", "src",
+            request.Name + ".Web.Host");
+
+        var coreFolderPath = Path.Combine(projectFile, "aspnet-core", "src",
+            request.Name + ".Core");
+
+        if (request.LogManagement == LogManagement.ElasticSearch)
+        {
+            await File.WriteAllTextAsync(Path.Combine(webHostFolderPath, "log4net.config"),
+                HelperClass.HelperClass.GetElasticSearchConfiguration(request.Name));
+            await File.WriteAllTextAsync(Path.Combine(webHostFolderPath, "log4net.Production.config"),
+                HelperClass.HelperClass.GetElasticSearchConfiguration(request.Name));
+        }
+
+        if (!request.MultiTenant)
+        {
+            var constFileText = await File.ReadAllTextAsync(Path.Combine(coreFolderPath, request.Name + "Consts.cs"));
+            var replacedConstFileText =
+                constFileText.Replace("MultiTenancyEnabled = true", "MultiTenancyEnabled = false");
+            await File.WriteAllTextAsync(Path.Combine(coreFolderPath, request.Name + "Consts.cs"),
+                replacedConstFileText); 
+        }
+
         return new ProjectReply()
         {
             Id = request.Id
@@ -80,7 +103,7 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         dbContext = await HelperClass.HelperClass.AddEntityToDbContext(dbContextFilePath, request.ProjectName,
             request.EntityName);
         await File.WriteAllTextAsync(dbContextFilePath, dbContext.ToString());
-        
+
         return new ProjectReply()
         {
             Id = request.Id

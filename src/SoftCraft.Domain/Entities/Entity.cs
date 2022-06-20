@@ -15,9 +15,8 @@ public class Entity : FullAuditedEntity<long>
     // public bool AuditLog { get; set; }
     public bool IsFullAudited { get; set; }
     public TenantType TenantType { get; set; }
-
     public long ProjectId { get; set; }
     public virtual Project Project { get; set; }
 
-    //public virtual ICollection<Property> Properties { get; set; }
+    public virtual ICollection<Property> Properties { get; set; }
 }

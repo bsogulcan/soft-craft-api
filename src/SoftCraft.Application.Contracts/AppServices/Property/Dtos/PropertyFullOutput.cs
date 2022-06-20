@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using SoftCraft.AppServices.Entity.Dtos;
+using SoftCraft.AppServices.Enumerate.Dtos;
 using SoftCraft.Enums;
 using Volo.Abp.Application.Dtos;
 
@@ -22,4 +23,7 @@ public class PropertyFullOutput : EntityDto<long>
     public bool Indexed { get; set; }
     public int MaxLength { get; set; }
     public bool Unique { get; set; }
+    public bool IsEnumProperty { get; set; }
+    public long? EnumerateId { get; set; }
+    public EnumeratePartOutput Enumerate { get; set; }
 }

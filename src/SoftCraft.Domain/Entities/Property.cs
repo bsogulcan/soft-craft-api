@@ -16,7 +16,9 @@ public class Property : FullAuditedEntity<long>
     [CanBeNull] public virtual Entity RelationalEntity { get; set; }
 
     public RelationType? RelationType { get; set; }
-    //public bool IsEnumProperty { get; set; }
+    public bool IsEnumProperty { get; set; }
+    public long? EnumerateId { get; set; }
+    public virtual Enumerate Enumerate { get; set; }
 
     public string ToolTip { get; set; }
     public bool Required { get; set; }
