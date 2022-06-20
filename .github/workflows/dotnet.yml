@@ -23,5 +23,9 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
-      
+    - name: Deploy to IIS
+      run: |
+        iisreset /stop
+        Copy-Item ./soft-craft-api/* C:/inetpub/wwwroot/soft-craft-api -Recurse -Force
+        iisreset /start
     
