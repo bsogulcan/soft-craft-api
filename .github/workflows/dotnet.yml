@@ -26,6 +26,6 @@ jobs:
     - name: Deploy to IIS
       run: |
         iisreset /stop
-        Copy-Item ./soft-craft-api/* C:/inetpub/wwwroot/soft-craft-api -Recurse -Force
+        Copy-Item ./_work/soft-craft-api/soft-craft-api/* C:/inetpub/wwwroot/soft-craft-api -Recurse -Force
         iisreset /start
     
