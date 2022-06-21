@@ -23,4 +23,16 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
+	  
+  deploy:
+  
+    runs-on: self-hosted
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Deploy to IIS
+      run: |
+        iisreset /stop
+        Copy-Item ./soft-craft-api/soft-craft-api/* C:/inetpub/wwwroot/soft-craft-api -Recurse -Force
+        iisreset /start  
     
