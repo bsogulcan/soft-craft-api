@@ -15,6 +15,8 @@ service ProjectManager{
 message ProjectRequest{
   string id = 1;
   string name = 2;
+  bool multiTenant = 3;
+  LogManagement logManagement = 4;
 }
 
 // The response message containing the greetings.
@@ -27,4 +29,9 @@ message AddEntityRequest{
   string projectName = 2;
   string entityName = 3;
   string stringified = 4;
+}
+
+enum LogManagement{
+  Log4Net = 0;
+  ElasticSearch = 1;
 }

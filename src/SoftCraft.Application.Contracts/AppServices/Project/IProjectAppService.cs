@@ -1,14 +1,15 @@
-﻿using SoftCraft.AppServices.Dtos;
-using Volo.Abp.Application.Dtos;
+﻿using System.Threading.Tasks;
+using SoftCraft.AppServices.Project.Dtos;
 using Volo.Abp.Application.Services;
 
 namespace SoftCraft.AppServices;
 
 public interface IProjectAppService : ICrudAppService<
-    ProjectDto,
+    ProjectPartOutput,
     long,
     GetListInput,
     CreateProjectDto,
     UpdateProjectDto>
 {
+    Task Generate(GenerateProjectInput input);
 }

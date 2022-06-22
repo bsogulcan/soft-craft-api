@@ -8,6 +8,6 @@ public enum PropertyType
     Long = 3,
     Float = 4,
     Double = 5,
-    Decimal = 6
+    Decimal = 6,
+    DateTime = 7
 }
-

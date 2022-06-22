@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.IO.Compression;
 using System.Management.Automation;
 using System.Text;
@@ -51,6 +52,29 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         //Running rename.ps1 script for changing BaseAbpBoilerplateProject
         await RunScript(replacedNamePsScript, Path.Combine(projectFile));
 
+        var webHostFolderPath = Path.Combine(projectFile, "aspnet-core", "src",
+            request.Name + ".Web.Host");
+
+        var coreFolderPath = Path.Combine(projectFile, "aspnet-core", "src",
+            request.Name + ".Core");
+
+        if (request.LogManagement == LogManagement.ElasticSearch)
+        {
+            await File.WriteAllTextAsync(Path.Combine(webHostFolderPath, "log4net.config"),
+                HelperClass.HelperClass.GetElasticSearchConfiguration(request.Name));
+            await File.WriteAllTextAsync(Path.Combine(webHostFolderPath, "log4net.Production.config"),
+                HelperClass.HelperClass.GetElasticSearchConfiguration(request.Name));
+        }
+
+        if (!request.MultiTenant)
+        {
+            var constFileText = await File.ReadAllTextAsync(Path.Combine(coreFolderPath, request.Name + "Consts.cs"));
+            var replacedConstFileText =
+                constFileText.Replace("MultiTenancyEnabled = true", "MultiTenancyEnabled = false");
+            await File.WriteAllTextAsync(Path.Combine(coreFolderPath, request.Name + "Consts.cs"),
+                replacedConstFileText); 
+        }
+
         return new ProjectReply()
         {
             Id = request.Id
@@ -74,23 +98,11 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         var dbContextFilePath = Path.Combine(projectFolderPath,
             $"aspnet-core\\src\\{request.ProjectName}.EntityFrameworkCore\\EntityFrameworkCore\\{request.ProjectName}DbContext.cs");
 
-        var dbContext = await File.ReadAllTextAsync(dbContextFilePath);
-        var entitiesUsingLine = $"using {request.ProjectName}.Domain.Entities;";
-        var existingEntitiesUsingBlock = dbContext.Contains(entitiesUsingLine);
-
-        var modifiedDbContext = new StringBuilder(dbContext);
-
-        if (!existingEntitiesUsingBlock)
-        {
-            var lastUsingLineNumber = dbContext.LastIndexOf($"namespace {request.ProjectName}.EntityFrameworkCore",
-                StringComparison.Ordinal) - 1;
-
-            modifiedDbContext.Insert(lastUsingLineNumber,
-                entitiesUsingLine
-            );
-            modifiedDbContext.Insert(lastUsingLineNumber + entitiesUsingLine.Length, Environment.NewLine);
-            modifiedDbContext.Append(Environment.NewLine);
-        }
+        var dbContext = await HelperClass.HelperClass.AddEntitiesNamespace(dbContextFilePath, request.ProjectName);
+        await File.WriteAllTextAsync(dbContextFilePath, dbContext.ToString());
+        dbContext = await HelperClass.HelperClass.AddEntityToDbContext(dbContextFilePath, request.ProjectName,
+            request.EntityName);
+        await File.WriteAllTextAsync(dbContextFilePath, dbContext.ToString());
 
         return new ProjectReply()
         {

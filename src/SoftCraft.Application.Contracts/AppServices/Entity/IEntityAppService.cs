@@ -5,6 +5,6 @@ using EntityDto = Volo.Abp.Application.Dtos.EntityDto;
 namespace SoftCraft.AppServices.Entity;
 
 public interface
-    IEntityAppService : ICrudAppService<EntityDto, long, GetEntityListInput, CreateEntityInput, UpdateEntityInput>
+    IEntityAppService : ICrudAppService<EntityPartOutput, long, GetEntityListInput, CreateEntityInput, UpdateEntityInput>
 {
 }

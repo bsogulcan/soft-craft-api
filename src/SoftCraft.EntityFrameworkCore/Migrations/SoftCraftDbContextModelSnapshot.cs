@@ -48,6 +48,9 @@ namespace SoftCraft.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("DeletionTime");
 
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -86,6 +89,192 @@ namespace SoftCraft.Migrations
                     b.ToTable("Entities", (string)null);
                 });
 
+            modelBuilder.Entity("SoftCraft.Entities.Enumerate", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"), 1L, 1);
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<long>("ProjectId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("Enumerates", (string)null);
+                });
+
+            modelBuilder.Entity("SoftCraft.Entities.EnumerateValue", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"), 1L, 1);
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("EnumerateId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<int>("Value")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EnumerateId");
+
+                    b.ToTable("EnumerateValues", (string)null);
+                });
+
+            modelBuilder.Entity("SoftCraft.Entities.Navigation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"), 1L, 1);
+
+                    b.Property<string>("Caption")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<long?>("EntityId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Icon")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Index")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<long?>("ParentNavigationId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("ProjectId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("Visible")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("ParentNavigationId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("Navigations", (string)null);
+                });
+
             modelBuilder.Entity("SoftCraft.Entities.Project", b =>
                 {
                     b.Property<long>("Id")
@@ -110,9 +299,6 @@ namespace SoftCraft.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("DeletionTime");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -127,21 +313,30 @@ namespace SoftCraft.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("LastModifierId");
 
+                    b.Property<int>("LogType")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("MultiTenant")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
 
-                    b.Property<string>("NormalizedName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Port")
+                    b.Property<int?>("Port")
                         .HasColumnType("int");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
+
+                    b.Property<string>("UniqueName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WebAddress")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -172,11 +367,26 @@ namespace SoftCraft.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("DeletionTime");
 
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("EntityId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("EnumerateId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("Indexed")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false)
                         .HasColumnName("IsDeleted");
+
+                    b.Property<bool>("IsEnumProperty")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsNullable")
                         .HasColumnType("bit");
@@ -192,23 +402,39 @@ namespace SoftCraft.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("LastModifierId");
 
+                    b.Property<int>("MaxLength")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
 
-                    b.Property<int?>("RelationalEntityId")
+                    b.Property<int?>("RelationType")
                         .HasColumnType("int");
 
-                    b.Property<long?>("RelationalEntityId1")
+                    b.Property<long?>("RelationalEntityId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("Type")
+                    b.Property<bool>("Required")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ToolTip")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Type")
                         .HasColumnType("int");
+
+                    b.Property<bool>("Unique")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RelationalEntityId1");
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("EnumerateId");
+
+                    b.HasIndex("RelationalEntityId");
 
                     b.ToTable("Properties", (string)null);
                 });
@@ -2144,6 +2370,17 @@ namespace SoftCraft.Migrations
             modelBuilder.Entity("SoftCraft.Entities.Entity", b =>
                 {
                     b.HasOne("SoftCraft.Entities.Project", "Project")
+                        .WithMany("Entities")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("SoftCraft.Entities.Enumerate", b =>
+                {
+                    b.HasOne("SoftCraft.Entities.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2152,11 +2389,56 @@ namespace SoftCraft.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("SoftCraft.Entities.EnumerateValue", b =>
+                {
+                    b.HasOne("SoftCraft.Entities.Enumerate", "Enumerate")
+                        .WithMany("EnumerateValues")
+                        .HasForeignKey("EnumerateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Enumerate");
+                });
+
+            modelBuilder.Entity("SoftCraft.Entities.Navigation", b =>
+                {
+                    b.HasOne("SoftCraft.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId");
+
+                    b.HasOne("SoftCraft.Entities.Navigation", "ParentNavigation")
+                        .WithMany("Navigations")
+                        .HasForeignKey("ParentNavigationId");
+
+                    b.HasOne("SoftCraft.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId");
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("ParentNavigation");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("SoftCraft.Entities.Property", b =>
                 {
-                    b.HasOne("SoftCraft.Entities.Entity", "RelationalEntity")
+                    b.HasOne("SoftCraft.Entities.Entity", "Entity")
                         .WithMany("Properties")
-                        .HasForeignKey("RelationalEntityId1");
+                        .HasForeignKey("EntityId")
+                        .IsRequired();
+
+                    b.HasOne("SoftCraft.Entities.Enumerate", "Enumerate")
+                        .WithMany()
+                        .HasForeignKey("EnumerateId");
+
+                    b.HasOne("SoftCraft.Entities.Entity", "RelationalEntity")
+                        .WithMany()
+                        .HasForeignKey("RelationalEntityId");
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("Enumerate");
 
                     b.Navigation("RelationalEntity");
                 });
@@ -2441,6 +2723,21 @@ namespace SoftCraft.Migrations
             modelBuilder.Entity("SoftCraft.Entities.Entity", b =>
                 {
                     b.Navigation("Properties");
+                });
+
+            modelBuilder.Entity("SoftCraft.Entities.Enumerate", b =>
+                {
+                    b.Navigation("EnumerateValues");
+                });
+
+            modelBuilder.Entity("SoftCraft.Entities.Navigation", b =>
+                {
+                    b.Navigation("Navigations");
+                });
+
+            modelBuilder.Entity("SoftCraft.Entities.Project", b =>
+                {
+                    b.Navigation("Entities");
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLog", b =>

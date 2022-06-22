@@ -1,4 +1,4 @@
-﻿namespace SoftCraft.AppServices.Dtos;
+﻿namespace SoftCraft.AppServices.Project.Dtos;
 
 public class GetListInput
 {
