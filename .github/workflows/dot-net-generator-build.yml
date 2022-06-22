@@ -1,0 +1,32 @@
+name: dot-net-generator-build
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'DotNetCodeGenerator/**'
+
+jobs:
+  build-and-publish:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Publish
+        run: dotnet publish ./DotNetCodeGenerator/DotNetCodeGenerator.csproj --configuration Release
+  
+  migrate-and-deploy:
+    name: Migrate and Deploy
+    needs: "build-and-publish"
+    runs-on: self-hosted
+    steps:
+      - name: Migrate and Deploy
+        run: |
+          sc.exe stop DotNetCodeGeneratorForSC 
+          Copy-Item ./DotNetCodeGenerator/bin/Release/net6.0/publish/* C:/inetpub/wwwroot/DotNetCodeGenerator -Recurse -Force
+          sc.exe start DotNetCodeGeneratorForSC 
+          Remove-Item .\* -Force -Recurse
