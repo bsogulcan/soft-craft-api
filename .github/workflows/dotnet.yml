@@ -25,7 +25,6 @@ jobs:
       run: dotnet test --no-build --verbosity normal
     - name: Deploy to IIS
       run: |
-        iisreset /stop
+        Stop-IISSite -Name soft-craft-api -Confirm:$false
         Copy-Item ./src/SoftCraft.HttpApi.Host/bin/Debug/net6.0/* C:/inetpub/wwwroot/soft-craft-api -Recurse -Force
-        iisreset /start
-    
+        Start-IISSite -Name soft-craft-api
