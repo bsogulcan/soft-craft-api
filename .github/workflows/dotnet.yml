@@ -30,7 +30,7 @@ jobs:
         run: |
           Stop-IISSite -Name soft-craft-api -Confirm:$false
           cd ./src/SoftCraft.DbMigrator/bin/Release/net6.0/
-          SoftCraft.DbMigrator.exe
+          ./SoftCraft.DbMigrator.exe
           cd ../../../../..
           Copy-Item ./src/SoftCraft.HttpApi.Host/bin/Release/net6.0/publish/* C:/inetpub/wwwroot/soft-craft-api -Recurse -Force
           Start-IISSite -Name soft-craft-api
