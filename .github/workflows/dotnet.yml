@@ -28,11 +28,13 @@ jobs:
     steps:
       - name: Migrate and Deploy
         run: |
+          Stop-WebAppPool -Name soft-craft-api
           Stop-IISSite -Name soft-craft-api -Confirm:$false
           cd ./src/SoftCraft.DbMigrator/bin/Release/net6.0/
           ./SoftCraft.DbMigrator.exe
           cd ../../../../..
           Copy-Item ./src/SoftCraft.HttpApi.Host/bin/Release/net6.0/publish/* C:/inetpub/wwwroot/soft-craft-api -Recurse -Force
+          Start-WebAppPool -Name soft-craft-api
           Start-IISSite -Name soft-craft-api
           Remove-Item .\* -Force -Recurse
           
