@@ -33,6 +33,9 @@
         <Content Remove="Logs\**"/>
         <EmbeddedResource Remove="Logs\**"/>
         <None Remove="Logs\**"/>
+        <Content Update="wwwroot\*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
 </Project>
