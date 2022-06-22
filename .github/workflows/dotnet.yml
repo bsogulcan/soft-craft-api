@@ -28,5 +28,5 @@ jobs:
     - name: Deploy to IIS
       run: |
         Stop-IISSite -Name soft-craft-api -Confirm:$false
-        Copy-Item ./src/SoftCraft.HttpApi.Host/bin/Debug/net6.0/* C:/inetpub/wwwroot/soft-craft-api -Recurse -Force
+        Copy-Item ./src/SoftCraft.HttpApi.Host/bin/Release/net6.0/* C:/inetpub/wwwroot/soft-craft-api -Recurse -Force
         Start-IISSite -Name soft-craft-api
