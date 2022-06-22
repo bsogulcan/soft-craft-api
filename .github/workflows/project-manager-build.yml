@@ -1,0 +1,32 @@
+name: project-manager-build
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'ProjectManager/**'
+
+jobs:
+  build-and-publish:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Publish
+        run: dotnet publish ./ProjectManager/ProjectManager.csproj --configuration Release
+  
+  migrate-and-deploy:
+    name: Migrate and Deploy
+    needs: "build-and-publish"
+    runs-on: self-hosted
+    steps:
+      - name: Migrate and Deploy
+        run: |
+          sc.exe stop ProjectManager 
+          Copy-Item ./ProjectManager/bin/Release/net6.0/publish/* C:/inetpub/wwwroot/ProjectManager -Recurse -Force
+          sc.exe start ProjectManager 
+          Remove-Item .\* -Force -Recurse
