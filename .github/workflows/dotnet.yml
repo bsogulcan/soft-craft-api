@@ -20,9 +20,11 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
+    - name: Build(Release)
+      run: dotnet build --configuration Release --no-restore
     - name: Deploy to IIS
       run: |
         Stop-IISSite -Name soft-craft-api -Confirm:$false
