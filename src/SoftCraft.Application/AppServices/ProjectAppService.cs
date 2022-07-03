@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using DotNetCodeGenerator;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using ProjectManager;
@@ -91,7 +92,7 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                     {
                         property.RelationalEntityPrimaryKeyType =
                             (PrimaryKeyType) entityProperty.RelationalEntity.PrimaryKeyType;
-                        property.RelationalEntityName = entityProperty.Name;
+                        property.RelationalEntityName = entityProperty.RelationalEntity.Name;
 
                         if (entityProperty.RelationType != null)
                         {
@@ -117,7 +118,6 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                 }
 
                 var entityResult = await client.CreateEntityAsync(dotNetCodeGeneratorEntity);
-
                 var createEntityResult = await projectManagerClient.AddEntityToExistingProjectAsync(
                     new AddEntityRequest()
                     {
@@ -125,6 +125,32 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         EntityName = entity.Name,
                         ProjectName = project.UniqueName,
                         Stringified = entityResult.Stringified
+                    });
+
+
+                var createRepositoryInput = new EntityForRepository
+                {
+                    Name = entity.Name,
+                    PrimaryKeyType = (PrimaryKeyType) entity.PrimaryKeyType,
+                    Namespace = $"{project.UniqueName}.EntityFrameworkCore.Repositories",
+                    ProjectName = project.UniqueName,
+                    Usings =
+                    {
+                        $"{project.UniqueName}.Domain.Entities;",
+                    }
+                };
+
+                var repositoryInterfaceResult = await client.CreateRepositoryInterfaceAsync(createRepositoryInput);
+                var repositoryResult = await client.CreateRepositoryAsync(createRepositoryInput);
+
+                var createRepositoryResult = await projectManagerClient.AddRepositoryToExistingProjectAsync(
+                    new AddRepositoryRequest()
+                    {
+                        Id = project.Id.ToString(),
+                        EntityName = entity.Name,
+                        ProjectName = project.UniqueName,
+                        StringifiedRepositoryInterface = repositoryInterfaceResult.Stringified,
+                        StringifiedRepository = repositoryResult.Stringified
                     });
             }
         }

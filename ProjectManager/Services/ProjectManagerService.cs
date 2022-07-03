@@ -72,7 +72,7 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
             var replacedConstFileText =
                 constFileText.Replace("MultiTenancyEnabled = true", "MultiTenancyEnabled = false");
             await File.WriteAllTextAsync(Path.Combine(coreFolderPath, request.Name + "Consts.cs"),
-                replacedConstFileText); 
+                replacedConstFileText);
         }
 
         return new ProjectReply()
@@ -103,6 +103,30 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         dbContext = await HelperClass.HelperClass.AddEntityToDbContext(dbContextFilePath, request.ProjectName,
             request.EntityName);
         await File.WriteAllTextAsync(dbContextFilePath, dbContext.ToString());
+
+        return new ProjectReply()
+        {
+            Id = request.Id
+        };
+    }
+
+    public override async Task<ProjectReply> AddRepositoryToExistingProject(AddRepositoryRequest request,
+        ServerCallContext context)
+    {
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.Id);
+        var repositoriesFolderPath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.EntityFrameworkCore\\EntityFrameworkCore\\Repositories\\Extensions\\{request.EntityName}");
+
+        if (!Directory.Exists(repositoriesFolderPath))
+        {
+            Directory.CreateDirectory(repositoriesFolderPath);
+        }
+
+        await File.WriteAllTextAsync(
+            Path.Combine(repositoriesFolderPath, "I" + request.EntityName + "Repository" + ".cs"),
+            request.StringifiedRepositoryInterface);
+        await File.WriteAllTextAsync(Path.Combine(repositoriesFolderPath, request.EntityName + "Repository" + ".cs"),
+            request.StringifiedRepository);
 
         return new ProjectReply()
         {

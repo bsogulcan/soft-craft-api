@@ -1,5 +1,6 @@
 using System.Text;
 using Grpc.Core;
+using Humanizer;
 
 namespace DotNetCodeGenerator.Services;
 
@@ -86,7 +87,13 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
 
                     stringBuilder.Append(
                         $"public virtual {property.RelationalEntityName + (property.Nullable ? "? " : " ")}" +
-                        property.RelationalEntityName + " { get; set; }" + Environment.NewLine);
+                        property.Name + " { get; set; }" + Environment.NewLine);
+                }
+                else // OneToMany
+                {
+                    stringBuilder.Append(
+                        $"public virtual ICollection<{property.RelationalEntityName}>" +
+                        property.Name.Pluralize() + " { get; set; }" + Environment.NewLine);
                 }
             }
         }
@@ -95,6 +102,91 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         stringBuilder.Append("}");
         stringBuilder.Append(Environment.NewLine);
         stringBuilder.Append("}");
+
+        entityResult.Stringified = stringBuilder.ToString();
+        return entityResult;
+    }
+
+    public override async Task<EntityResult> CreateRepositoryInterface(EntityForRepository request,
+        ServerCallContext context)
+    {
+        var entityResult = new EntityResult();
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using Abp.Domain.Repositories;" + Environment.NewLine);
+
+        for (var i = 0; i < request.Usings.Count; i++)
+        {
+            stringBuilder.Append("using " + request.Usings[i] + Environment.NewLine);
+        }
+
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append($"namespace {request.Namespace}");
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append('{' + Environment.NewLine);
+
+        stringBuilder.Append('\t' +
+                             $"public interface I{request.Name}Repository : IRepository<{request.Name}, {GetPrimaryKey(request.PrimaryKeyType)}>");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append("{");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append("}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append("}");
+
+        entityResult.Stringified = stringBuilder.ToString();
+        return entityResult;
+    }
+
+    public override async Task<EntityResult> CreateRepository(EntityForRepository request,
+        ServerCallContext context)
+    {
+        var entityResult = new EntityResult();
+
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using Abp.EntityFrameworkCore;" + Environment.NewLine);
+
+        for (var i = 0; i < request.Usings.Count; i++)
+        {
+            stringBuilder.Append("using " + request.Usings[i] + Environment.NewLine);
+        }
+
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append($"namespace {request.Namespace}");
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append('{' + Environment.NewLine);
+
+        //TODO: Create Repository
+        stringBuilder.Append('\t' +
+                             $"public class {request.Name}Repository : {request.ProjectName}RepositoryBase<{request.Name},{GetPrimaryKey(request.PrimaryKeyType)}>,I{request.Name}Repository");
+
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append("{");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append('\t');
+        stringBuilder.Append(
+            $"public {request.Name}Repository(IDbContextProvider<{request.ProjectName}DbContext> dbContextProvider) : base(dbContextProvider)");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append('\t');
+        stringBuilder.Append("{");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append('\t');
+        stringBuilder.Append("}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append("}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append("}");
+
 
         entityResult.Stringified = stringBuilder.ToString();
         return entityResult;

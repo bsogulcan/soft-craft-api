@@ -6,6 +6,8 @@ package dotNetCodeGenerator;
 
 service DotNetCodeGenerator {
   rpc CreateEntity (Entity) returns (EntityResult);
+  rpc CreateRepositoryInterface (EntityForRepository) returns (EntityResult);
+  rpc CreateRepository (EntityForRepository) returns (EntityResult);
 }
 
 message Entity {
@@ -16,6 +18,14 @@ message Entity {
   bool fullAudited = 5;
   TenantType tenantType = 6;
   repeated Property properties = 7;
+}
+
+message EntityForRepository {
+  repeated string usings = 1;
+  string namespace = 2;
+  string name = 3;
+  PrimaryKeyType primaryKeyType = 4;
+  string projectName = 5;
 }
 
 message EntityResult{
