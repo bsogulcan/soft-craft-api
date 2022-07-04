@@ -134,6 +134,62 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         };
     }
 
+    public override async Task<ProjectReply> AddEnumToExistingProject(AddEnumRequest request, ServerCallContext context)
+    {
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.Id);
+        var enumFolderPath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.Core\\Domain\\EntityHelper");
+
+        if (!Directory.Exists(enumFolderPath))
+        {
+            Directory.CreateDirectory(enumFolderPath);
+        }
+
+        await File.WriteAllTextAsync(
+            Path.Combine(enumFolderPath, request.EnumName + ".cs"),
+            request.Stringified);
+
+        return new ProjectReply()
+        {
+            Id = request.Id
+        };
+    }
+
+    public override async Task<ProjectReply> AddDtosToExistingProject(AddDtosRequest request, ServerCallContext context)
+    {
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.Id);
+        var dtosFolderPath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.Application\\Domain\\{request.EntityName}\\Dtos");
+
+        if (!Directory.Exists(dtosFolderPath))
+        {
+            Directory.CreateDirectory(dtosFolderPath);
+        }
+        
+        await File.WriteAllTextAsync(
+            Path.Combine(dtosFolderPath, request.EntityName + "FullOutput.cs"),
+            request.FullOutputStringify);
+        await File.WriteAllTextAsync(
+            Path.Combine(dtosFolderPath, request.EntityName + "PartOutput.cs"),
+            request.PartOutputStringify);
+        await File.WriteAllTextAsync(
+            Path.Combine(dtosFolderPath, "Create" + request.EntityName + "Input.cs"),
+            request.CreateInputStringify);
+        await File.WriteAllTextAsync(
+            Path.Combine(dtosFolderPath, "Update" + request.EntityName + "Input.cs"),
+            request.UpdateInputStringify);
+        await File.WriteAllTextAsync(
+            Path.Combine(dtosFolderPath, "Get" + request.EntityName + "Input.cs"),
+            request.GetInputStringify);
+        await File.WriteAllTextAsync(
+            Path.Combine(dtosFolderPath, "Delete" + request.EntityName + "Input.cs"),
+            request.DeleteInputStringify);
+        return new ProjectReply()
+        {
+            Id = request.Id
+        };
+    }
+
     private async Task RunScript(string scriptContents, string folderPath)
     {
         using var ps = PowerShell.Create();

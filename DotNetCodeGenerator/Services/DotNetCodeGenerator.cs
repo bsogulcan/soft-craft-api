@@ -192,6 +192,345 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         return entityResult;
     }
 
+    public override async Task<EntityResult> CreateEnum(Enum request, ServerCallContext context)
+    {
+        var entityResult = new EntityResult();
+        var stringBuilder = new StringBuilder();
+
+        stringBuilder.Append($"namespace {request.Namespace}");
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append('{' + Environment.NewLine);
+        stringBuilder.Append('\t' + $"public enum {request.Name}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append("{");
+        stringBuilder.Append(Environment.NewLine);
+
+        foreach (var value in request.Values)
+        {
+            stringBuilder.Append('\t');
+            stringBuilder.Append('\t');
+            stringBuilder.Append(value.Name + " = " + value.Value + ",");
+            stringBuilder.Append(Environment.NewLine);
+        }
+
+        stringBuilder.Append('\t');
+        stringBuilder.Append("}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append("}");
+
+        entityResult.Stringified = stringBuilder.ToString();
+        return entityResult;
+    }
+
+    public override async Task<DtoResult> CreateDtos(Entity request, ServerCallContext context)
+    {
+        var dtoResult = new DtoResult();
+        dtoResult.FullOutputStringify = GenerateFullOutputDto(request);
+        dtoResult.PartOutputStringify = GeneratePartOutputDto(request);
+        dtoResult.CreateInputStringify = GenerateCreateInputDto(request);
+        dtoResult.UpdateInputStringify = GenerateUpdateInputDto(request);
+        dtoResult.DeleteInputStringify = GenerateDeleteInputDto(request);
+        dtoResult.GetInputStringify = GenerateGetInputDto(request);
+        return dtoResult;
+    }
+
+    private string GenerateGetInputDto(Entity request)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using Abp.Application.Services.Dto;" + Environment.NewLine);
+        for (var i = 0; i < request.Usings.Count; i++)
+        {
+            stringBuilder.Append("using " + request.Usings[i] + Environment.NewLine);
+        }
+
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append($"namespace {request.Namespace}");
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append('{' + Environment.NewLine);
+
+        stringBuilder.Append('\t' +
+                             $"public class Get{request.Name}Input : EntityDto<{GetPrimaryKey(request.PrimaryKeyType)}>" +
+                             Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append("{" + Environment.NewLine);
+
+        stringBuilder.Append('\t');
+        stringBuilder.Append("}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append("}");
+
+        return stringBuilder.ToString();
+    }
+
+    private string GenerateDeleteInputDto(Entity request)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using Abp.Application.Services.Dto;" + Environment.NewLine);
+        for (var i = 0; i < request.Usings.Count; i++)
+        {
+            stringBuilder.Append("using " + request.Usings[i] + Environment.NewLine);
+        }
+
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append($"namespace {request.Namespace}");
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append('{' + Environment.NewLine);
+
+        stringBuilder.Append('\t' +
+                             $"public class Delete{request.Name}Input : EntityDto<{GetPrimaryKey(request.PrimaryKeyType)}>" +
+                             Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append("{" + Environment.NewLine);
+
+        stringBuilder.Append('\t');
+        stringBuilder.Append("}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append("}");
+
+        return stringBuilder.ToString();
+    }
+
+    private string GeneratePartOutputDto(Entity request)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using Abp.Application.Services.Dto;" + Environment.NewLine);
+        for (var i = 0; i < request.Usings.Count; i++)
+        {
+            stringBuilder.Append("using " + request.Usings[i] + Environment.NewLine);
+        }
+
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append($"namespace {request.Namespace}");
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append('{' + Environment.NewLine);
+
+        stringBuilder.Append('\t' +
+                             $"public class {request.Name}PartOutput : EntityDto<{GetPrimaryKey(request.PrimaryKeyType)}>" +
+                             Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append("{" + Environment.NewLine);
+        for (var i = 0; i < request.Properties.Count; i++)
+        {
+            var property = request.Properties[i];
+
+            stringBuilder.Append('\t');
+            stringBuilder.Append('\t');
+
+            if (!property.IsRelationalProperty)
+            {
+                stringBuilder.Append($"public {property.Type + (property.Nullable ? "? " : " ")} " +
+                                     property.Name + " { get; set; }" + Environment.NewLine);
+            }
+            else
+            {
+                stringBuilder.Append(
+                    $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")}" +
+                    property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
+            }
+        }
+
+        stringBuilder.Append('\t');
+        stringBuilder.Append("}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append("}");
+
+        return stringBuilder.ToString();
+    }
+
+    private string GenerateFullOutputDto(Entity request)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using Abp.Application.Services.Dto;" + Environment.NewLine);
+        for (var i = 0; i < request.Usings.Count; i++)
+        {
+            stringBuilder.Append("using " + request.Usings[i] + Environment.NewLine);
+        }
+
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append($"namespace {request.Namespace}");
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append('{' + Environment.NewLine);
+
+        stringBuilder.Append('\t' +
+                             $"public class {request.Name}FullOutput : EntityDto<{GetPrimaryKey(request.PrimaryKeyType)}>" +
+                             Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append("{" + Environment.NewLine);
+        for (var i = 0; i < request.Properties.Count; i++)
+        {
+            var property = request.Properties[i];
+
+            stringBuilder.Append('\t');
+            stringBuilder.Append('\t');
+
+            if (!property.IsRelationalProperty)
+            {
+                stringBuilder.Append($"public {property.Type + (property.Nullable ? "? " : " ")}" +
+                                     property.Name + " { get; set; }" + Environment.NewLine);
+            }
+            else
+            {
+                if (property.RelationType == RelationType.OneToOne)
+                {
+                    // public int LineId { get; set; }
+                    // public virtual Line Line { get; set; }
+                    stringBuilder.Append(
+                        $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")} " +
+                        property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
+
+                    stringBuilder.Append('\t');
+                    stringBuilder.Append('\t');
+
+                    stringBuilder.Append(
+                        $"public {property.RelationalEntityName + "PartOutput" + (property.Nullable ? "? " : " ")} " +
+                        property.Name + " { get; set; }" + Environment.NewLine);
+                }
+                else // OneToMany
+                {
+                    stringBuilder.Append(
+                        $"public List<{property.RelationalEntityName + "PartOutput"}>" +
+                        property.Name.Pluralize() + " { get; set; }" + Environment.NewLine);
+                }
+            }
+        }
+
+        stringBuilder.Append('\t');
+        stringBuilder.Append("}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append("}");
+
+        return stringBuilder.ToString();
+    }
+
+    private string GenerateCreateInputDto(Entity request)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using Abp.Application.Services.Dto;" + Environment.NewLine);
+        for (var i = 0; i < request.Usings.Count; i++)
+        {
+            stringBuilder.Append("using " + request.Usings[i] + Environment.NewLine);
+        }
+
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append($"namespace {request.Namespace}");
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append('{' + Environment.NewLine);
+
+        stringBuilder.Append('\t' +
+                             $"public class Create{request.Name}Input" +
+                             Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append("{" + Environment.NewLine);
+        for (var i = 0; i < request.Properties.Count; i++)
+        {
+            var property = request.Properties[i];
+
+            stringBuilder.Append('\t');
+            stringBuilder.Append('\t');
+
+            if (!property.IsRelationalProperty)
+            {
+                stringBuilder.Append($"public {property.Type + (property.Nullable ? "? " : " ")}" +
+                                     property.Name + " { get; set; }" + Environment.NewLine);
+            }
+            else
+            {
+                if (property.RelationType == RelationType.OneToOne)
+                {
+                    // public int LineId { get; set; }
+                    stringBuilder.Append(
+                        $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")} " +
+                        property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
+                }
+                else // OneToMany
+                {
+                    stringBuilder.Append(
+                        $"public List<{GetPrimaryKey(property.RelationalEntityPrimaryKeyType)}>{(property.Nullable ? "? " : " ")}" +
+                        property.Name.Pluralize() + " { get; set; }" + Environment.NewLine);
+                }
+            }
+        }
+
+        stringBuilder.Append('\t');
+        stringBuilder.Append("}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append("}");
+
+        return stringBuilder.ToString();
+    }
+
+    private string GenerateUpdateInputDto(Entity request)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using Abp.Application.Services.Dto;" + Environment.NewLine);
+        for (var i = 0; i < request.Usings.Count; i++)
+        {
+            stringBuilder.Append("using " + request.Usings[i] + Environment.NewLine);
+        }
+
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append($"namespace {request.Namespace}");
+        stringBuilder.Append(Environment.NewLine);
+
+        stringBuilder.Append('{' + Environment.NewLine);
+
+        stringBuilder.Append('\t' +
+                             $"public class Update{request.Name}Input : EntityDto<{GetPrimaryKey(request.PrimaryKeyType)}>" +
+                             Environment.NewLine);
+        stringBuilder.Append('\t');
+        stringBuilder.Append("{" + Environment.NewLine);
+        for (var i = 0; i < request.Properties.Count; i++)
+        {
+            var property = request.Properties[i];
+
+            stringBuilder.Append('\t');
+            stringBuilder.Append('\t');
+
+            if (!property.IsRelationalProperty)
+            {
+                stringBuilder.Append($"public {property.Type + (property.Nullable ? "? " : " ")}" +
+                                     property.Name + " { get; set; }" + Environment.NewLine);
+            }
+            else
+            {
+                if (property.RelationType == RelationType.OneToOne)
+                {
+                    // public int LineId { get; set; }
+                    stringBuilder.Append(
+                        $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")} " +
+                        property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
+                }
+                else // OneToMany
+                {
+                    stringBuilder.Append(
+                        $"public List<{GetPrimaryKey(property.RelationalEntityPrimaryKeyType)}>{(property.Nullable ? "? " : " ")}" +
+                        property.Name.Pluralize() + " { get; set; }" + Environment.NewLine);
+                }
+            }
+        }
+
+        stringBuilder.Append('\t');
+        stringBuilder.Append("}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append("}");
+
+        return stringBuilder.ToString();
+    }
+
+
     private string GetPrimaryKey(PrimaryKeyType primaryKeyType)
     {
         return primaryKeyType switch

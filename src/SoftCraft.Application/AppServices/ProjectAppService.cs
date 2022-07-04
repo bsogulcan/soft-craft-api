@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using DotNetCodeGenerator;
 using Grpc.Net.Client;
@@ -102,9 +103,9 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                     else if (entityProperty.IsEnumProperty)
                     {
                         if (dotNetCodeGeneratorEntity.Usings.FindIndex(x =>
-                                x.Contains($"{project.UniqueName}.Domain.Enums;")) == -1)
+                                x.Contains($"{project.UniqueName}.Domain.EntityHelper;")) == -1)
                         {
-                            dotNetCodeGeneratorEntity.Usings.Add($"{project.UniqueName}.Domain.Enums;");
+                            dotNetCodeGeneratorEntity.Usings.Add($"{project.UniqueName}.Domain.EntityHelper;");
                         }
 
                         property.Type = entityProperty.Enumerate.Name;
@@ -151,6 +152,73 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         ProjectName = project.UniqueName,
                         StringifiedRepositoryInterface = repositoryInterfaceResult.Stringified,
                         StringifiedRepository = repositoryResult.Stringified
+                    });
+
+                dotNetCodeGeneratorEntity.Namespace = $"{project.UniqueName}.Domain.{entity.Name}.Dtos";
+                dotNetCodeGeneratorEntity.Usings.Clear();
+                if (entity.Properties.Any(x => x.IsRelationalProperty))
+                {
+                    dotNetCodeGeneratorEntity.Usings.Add("System.Collections.Generic;");
+                    foreach (var property in entity.Properties.Where(x => x.IsRelationalProperty))
+                    {
+                        dotNetCodeGeneratorEntity.Usings.Add(
+                            $"{project.UniqueName}.Domain.{property.RelationalEntity.Name}.Dtos;");
+                    }
+                }
+
+                if (entity.Properties.Any(x => x.IsEnumProperty))
+                {
+                    dotNetCodeGeneratorEntity.Usings.Add($"{project.UniqueName}.Domain.EntityHelper;");
+                }
+
+                var createDtosResult = await client.CreateDtosAsync(dotNetCodeGeneratorEntity);
+                var addDtosToExistingProjectReply = await projectManagerClient.AddDtosToExistingProjectAsync(
+                    new AddDtosRequest()
+                    {
+                        Id = project.Id.ToString(),
+                        EntityName = entity.Name,
+                        ProjectName = project.UniqueName,
+                        CreateInputStringify = createDtosResult.CreateInputStringify,
+                        UpdateInputStringify = createDtosResult.UpdateInputStringify,
+                        GetInputStringify = createDtosResult.GetInputStringify,
+                        DeleteInputStringify = createDtosResult.DeleteInputStringify,
+                        FullOutputStringify = createDtosResult.FullOutputStringify,
+                        PartOutputStringify = createDtosResult.PartOutputStringify,
+                    });
+            }
+
+            foreach (var enumerate in project.Enumerates)
+            {
+                using var dotNetCodeGeneratorChannel =
+                    GrpcChannel.ForAddress(_configuration["MicroServices:DotNetCodeGeneratorUrl"]);
+                var client =
+                    new DotNetCodeGenerator.DotNetCodeGenerator.DotNetCodeGeneratorClient(dotNetCodeGeneratorChannel);
+
+                var createEnumInput = new DotNetCodeGenerator.Enum()
+                {
+                    Name = enumerate.Name,
+                    Namespace = $"{project.UniqueName}.Domain.EntityHelper",
+                    Values = { }
+                };
+
+                foreach (var enumerateValue in enumerate.EnumerateValues)
+                {
+                    createEnumInput.Values.Add(new EnumValue()
+                    {
+                        Name = enumerateValue.Name,
+                        Value = enumerateValue.Value
+                    });
+                }
+
+                var createEnumResult = await client.CreateEnumAsync(createEnumInput);
+
+                var createEntityResult = await projectManagerClient.AddEnumToExistingProjectAsync(
+                    new AddEnumRequest()
+                    {
+                        Id = project.Id.ToString(),
+                        EnumName = enumerate.Name,
+                        ProjectName = project.UniqueName,
+                        Stringified = createEnumResult.Stringified
                     });
             }
         }

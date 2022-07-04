@@ -10,6 +10,8 @@ service ProjectManager{
   rpc CreateAbpBoilerplateProject(ProjectRequest) returns (ProjectReply);
   rpc AddEntityToExistingProject(AddEntityRequest) returns (ProjectReply);
   rpc AddRepositoryToExistingProject(AddRepositoryRequest) returns (ProjectReply);
+  rpc AddEnumToExistingProject(AddEnumRequest) returns (ProjectReply);
+  rpc AddDtosToExistingProject(AddDtosRequest) returns (ProjectReply);
 }
 
 // The request message containing the user's name.
@@ -38,6 +40,25 @@ message AddRepositoryRequest{
   string entityName = 3;
   string stringifiedRepositoryInterface = 4;
   string stringifiedRepository = 5;
+}
+
+message AddEnumRequest{
+  string id = 1;
+  string projectName = 2;
+  string enumName = 3;
+  string stringified = 4;
+}
+
+message AddDtosRequest{
+  string id = 1;
+  string fullOutputStringify = 2;
+  string partOutputStringify = 3;
+  string createInputStringify = 4;
+  string updateInputStringify = 5;
+  string getInputStringify = 6;
+  string deleteInputStringify = 7;
+  string projectName = 8;
+  string entityName = 9;
 }
 
 enum LogManagement{
