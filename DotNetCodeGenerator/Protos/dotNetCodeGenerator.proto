@@ -81,4 +81,7 @@ message DtoResult{
   string updateInputStringify = 4;
   string getInputStringify = 5;
   string deleteInputStringify = 6;
+  string dtosToDomainStringify = 7;
+  string domainToDtosStringify = 8;
+
 }

@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Management.Automation;
 using System.Text;
 using Grpc.Core;
+using ProjectManager.HelperClass;
 
 namespace ProjectManager.Services;
 
@@ -165,7 +166,7 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         {
             Directory.CreateDirectory(dtosFolderPath);
         }
-        
+
         await File.WriteAllTextAsync(
             Path.Combine(dtosFolderPath, request.EntityName + "FullOutput.cs"),
             request.FullOutputStringify);
@@ -184,6 +185,25 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         await File.WriteAllTextAsync(
             Path.Combine(dtosFolderPath, "Delete" + request.EntityName + "Input.cs"),
             request.DeleteInputStringify);
+
+        var managerFolderPath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.Application\\Manager");
+        if (!Directory.Exists(managerFolderPath))
+        {
+            Directory.CreateDirectory(managerFolderPath);
+            await File.WriteAllTextAsync(
+                Path.Combine(managerFolderPath, "MapperManager.cs"),
+                MapperManagerHelper.GetMapperManagerBaseStringify(request.ProjectName));
+
+            await MapperManagerHelper.AddMapperMethodsToApplicationModule(Path.Combine(projectFolderPath,
+                    $"aspnet-core\\src\\{request.ProjectName}.Application\\{request.ProjectName}ApplicationModule.cs"),
+                request.ProjectName);
+        }
+
+        await MapperManagerHelper.WriteAutoMapperConfigurations(Path.Combine(managerFolderPath, "MapperManager.cs"),
+            request);
+
+
         return new ProjectReply()
         {
             Id = request.Id

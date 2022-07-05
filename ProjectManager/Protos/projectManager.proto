@@ -59,6 +59,8 @@ message AddDtosRequest{
   string deleteInputStringify = 7;
   string projectName = 8;
   string entityName = 9;
+  string dtosToDomainStringify = 10;
+  string domainToDtosStringify = 11;
 }
 
 enum LogManagement{

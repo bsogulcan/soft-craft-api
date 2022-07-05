@@ -1,4 +1,5 @@
 using System.Text;
+using DotNetCodeGenerator.Extensions;
 using Grpc.Core;
 using Humanizer;
 
@@ -233,7 +234,50 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         dtoResult.UpdateInputStringify = GenerateUpdateInputDto(request);
         dtoResult.DeleteInputStringify = GenerateDeleteInputDto(request);
         dtoResult.GetInputStringify = GenerateGetInputDto(request);
+
+        dtoResult.DtosToDomainStringify = GenerateDtosToDomainStringify(request);
+        dtoResult.DomainToDtosStringify = GenerateDomainToDtosStringify(request);
         return dtoResult;
+    }
+
+    #region HelperMethods
+
+    private string GenerateDtosToDomainStringify(Entity request)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder
+            .Append($"cfg.CreateMap<{request.Name}, Create{request.Name}Input>();")
+            .NewLine();
+        stringBuilder.Append($"cfg.CreateMap<{request.Name}, Update{request.Name}Input>();")
+            .NewLine();
+        stringBuilder.Append($"cfg.CreateMap<{request.Name}, Delete{request.Name}Input>();")
+            .NewLine();
+        stringBuilder.Append($"cfg.CreateMap<{request.Name}, Get{request.Name}Input>();")
+            .NewLine();
+        stringBuilder.Append($"cfg.CreateMap<{request.Name}, {request.Name}FullOutput>();")
+            .NewLine();
+        stringBuilder.Append($"cfg.CreateMap<{request.Name}, {request.Name}PartOutput>();");
+
+
+        return stringBuilder.ToString();
+    }
+
+    private string GenerateDomainToDtosStringify(Entity request)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append($"cfg.CreateMap<Create{request.Name}Input, {request.Name}>();")
+            .NewLine();
+        stringBuilder.Append($"cfg.CreateMap<Update{request.Name}Input, {request.Name}>();")
+            .NewLine();
+        stringBuilder.Append($"cfg.CreateMap<Delete{request.Name}Input, {request.Name}>();")
+            .NewLine();
+        stringBuilder.Append($"cfg.CreateMap<Get{request.Name}Input, {request.Name}>();")
+            .NewLine();
+        stringBuilder.Append($"cfg.CreateMap<{request.Name}FullOutput, {request.Name}>();")
+            .NewLine();
+        stringBuilder.Append($"cfg.CreateMap<{request.Name}PartOutput, {request.Name}>();");
+
+        return stringBuilder.ToString();
     }
 
     private string GenerateGetInputDto(Entity request)
@@ -530,7 +574,6 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         return stringBuilder.ToString();
     }
 
-
     private string GetPrimaryKey(PrimaryKeyType primaryKeyType)
     {
         return primaryKeyType switch
@@ -541,4 +584,6 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             _ => throw new Exception("PrimaryKey does not match any enum type!")
         };
     }
+
+    #endregion
 }

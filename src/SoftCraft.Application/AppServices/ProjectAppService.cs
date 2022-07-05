@@ -184,6 +184,8 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         DeleteInputStringify = createDtosResult.DeleteInputStringify,
                         FullOutputStringify = createDtosResult.FullOutputStringify,
                         PartOutputStringify = createDtosResult.PartOutputStringify,
+                        DtosToDomainStringify = createDtosResult.DtosToDomainStringify,
+                        DomainToDtosStringify = createDtosResult.DomainToDtosStringify
                     });
             }
 
