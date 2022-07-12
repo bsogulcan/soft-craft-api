@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Management.Automation;
 using System.Text;
 using Grpc.Core;
+using ProjectManager.Extensions;
 using ProjectManager.HelperClass;
 
 namespace ProjectManager.Services;
@@ -38,7 +39,8 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
 
         if (Directory.Exists(projectFile))
         {
-            throw new Exception("Base project all ready created");
+            RecursiveDelete(new DirectoryInfo(projectFile));
+            //throw new Exception("Base project all ready created");
         }
 
         Directory.CreateDirectory(projectFile);
@@ -240,6 +242,9 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
             Directory.CreateDirectory(dtosFolderPath);
         }
 
+        await WritePermissionNames(projectFolderPath, request);
+        await WriteAuthorizationProvider(projectFolderPath, request);
+
         await File.WriteAllTextAsync(
             Path.Combine(dtosFolderPath, $"I{request.EntityName}AppService.cs"),
             request.AppServiceInterfaceStringify);
@@ -252,6 +257,7 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
             Id = request.Id
         };
     }
+
 
     public override async Task<ProjectReply> AddConfigurationToExistingProject(AddEntityRequest request,
         ServerCallContext context)
@@ -288,6 +294,55 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
 
     #region Helper Methods
 
+    private async Task WritePermissionNames(string projectFolderPath, AddAppServiceRequest request)
+    {
+        var permissionNamesFilePath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.Core\\Authorization\\PermissionNames.cs");
+        var permissionNameFileContent = await File.ReadAllTextAsync(permissionNamesFilePath);
+        var permissionNameStringBuilder = new StringBuilder(permissionNameFileContent);
+
+        foreach (var permissionName in request.PermissionNames.Split(Environment.NewLine))
+        {
+            var tempStringBuilder = new StringBuilder().InsertTab(2).Append(permissionName).NewLine();
+
+            var permissionNameInsertableIndex =
+                permissionNameStringBuilder.ToString().IndexOf("}", StringComparison.Ordinal) - 4;
+            permissionNameStringBuilder.Insert(permissionNameInsertableIndex, tempStringBuilder.ToString());
+        }
+
+        permissionNameStringBuilder.NewLine(2);
+        await File.WriteAllTextAsync(
+            permissionNamesFilePath,
+            permissionNameStringBuilder.ToString());
+    }
+
+    private async Task WriteAuthorizationProvider(string projectFolderPath, AddAppServiceRequest request)
+    {
+        var authorizationProviderFilePath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.Core\\Authorization\\{request.ProjectName}AuthorizationProvider.cs");
+        var authorizationProviderFileContent = await File.ReadAllTextAsync(authorizationProviderFilePath);
+        var authorizationProviderStringBuilder = new StringBuilder(authorizationProviderFileContent);
+
+        var setPermissionStartIndex = authorizationProviderStringBuilder.ToString()
+            .IndexOf("public override void SetPermissions(IPermissionDefinitionContext context)",
+                StringComparison.Ordinal);
+
+        foreach (var authorizationProvider in request.AuthorizationProviders.Split(Environment.NewLine))
+        {
+            var tempStringBuilder = new StringBuilder().InsertTab(3).Append(authorizationProvider).NewLine();
+
+            var authorizationProviderInsertableIndex =
+                authorizationProviderStringBuilder.ToString()
+                    .IndexOf("}", setPermissionStartIndex, StringComparison.Ordinal) - 8;
+            authorizationProviderStringBuilder.Insert(authorizationProviderInsertableIndex, tempStringBuilder.ToString());
+        }
+
+        authorizationProviderStringBuilder.NewLine(2);
+        await File.WriteAllTextAsync(
+            authorizationProviderFilePath,
+            authorizationProviderStringBuilder.ToString());
+    }
+
     private async Task RunScript(string scriptContents, string folderPath)
     {
         using var ps = PowerShell.Create();
@@ -298,6 +353,26 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         // {
         //     Console.WriteLine(item.BaseObject.ToString());
         // }
+    }
+
+    private void RecursiveDelete(DirectoryInfo baseDir)
+    {
+        if (!baseDir.Exists)
+            return;
+
+        foreach (var dir in baseDir.EnumerateDirectories())
+        {
+            RecursiveDelete(dir);
+        }
+
+        var files = baseDir.GetFiles();
+        foreach (var file in files)
+        {
+            file.IsReadOnly = false;
+            file.Delete();
+        }
+
+        baseDir.Delete();
     }
 
     #endregion

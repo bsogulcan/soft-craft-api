@@ -294,8 +294,55 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
 
         result.AppServiceInterfaceStringify = appServiceInterfaceStringBuilder.ToString();
 
+
+        var permissionNameStringBuilder = new StringBuilder();
+        permissionNameStringBuilder.Append($"public const string {request.EntityName} = \"{request.EntityName}\";")
+            .NewLine()
+            .Append(
+                $"public const string {request.EntityName}_Create = \"{request.EntityName}.Create\";")
+            .NewLine()
+            .Append($"public const string {request.EntityName}_Update = \"{request.EntityName}.Update\";")
+            .NewLine()
+            .Append($"public const string {request.EntityName}_GetList = \"{request.EntityName}.GetList\";")
+            .NewLine()
+            .Append($"public const string {request.EntityName}_Get = \"{request.EntityName}.Get\";")
+            .NewLine()
+            .Append($"public const string {request.EntityName}_Delete = \"{request.EntityName}.Delete\";")
+            .NewLine()
+            .Append($"public const string {request.EntityName}_Navigation = \"{request.EntityName}.Navigation\";");
+
+        result.PermissionNames = permissionNameStringBuilder.ToString();
+
+        var authorizationProviderStringBuilder = new StringBuilder();
+        authorizationProviderStringBuilder.Append(
+                $"context.CreatePermission(PermissionNames.{request.EntityName}, L(PermissionNames.{request.EntityName}));")
+            .NewLine()
+            .Append(
+                $"context.CreatePermission(PermissionNames.{request.EntityName}_Create, L(PermissionNames.{request.EntityName}_Create));")
+            .NewLine()
+            .Append(
+                $"context.CreatePermission(PermissionNames.{request.EntityName}_Update, L(PermissionNames.{request.EntityName}_Update));")
+            .NewLine()
+            .Append(
+                $"context.CreatePermission(PermissionNames.{request.EntityName}_GetList, L(PermissionNames.{request.EntityName}_GetList));")
+            .NewLine()
+            .Append(
+                $"context.CreatePermission(PermissionNames.{request.EntityName}_Get, L(PermissionNames.{request.EntityName}_Get));")
+            .NewLine()
+            .Append(
+                $"context.CreatePermission(PermissionNames.{request.EntityName}_Delete, L(PermissionNames.{request.EntityName}_Delete));")
+            .NewLine()
+            .Append(
+                $"context.CreatePermission(PermissionNames.{request.EntityName}_Navigation, L(PermissionNames.{request.EntityName}_Navigation));");
+
+        result.AuthorizationProviders = authorizationProviderStringBuilder.ToString();
+
         var appServiceStringBuilder = new StringBuilder();
         appServiceStringBuilder.Append("using Abp.Application.Services;")
+            .NewLine()
+            .Append("using Abp.Authorization;")
+            .NewLine()
+            .Append($"using {request.ProjectName}.Authorization;")
             .NewLine()
             .Append($"using {request.ProjectName}.Domain.{request.EntityName}.Dtos;")
             .NewLine()
@@ -312,6 +359,10 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             .NewLine()
             .InsertTab();
 
+        appServiceStringBuilder.Append($"[AbpAuthorize(PermissionNames.{request.EntityName})]")
+            .NewLine()
+            .InsertTab();
+
         appServiceStringBuilder.Append(
                 $"public class {request.EntityName}AppService : AsyncCrudAppService<Entities.{request.EntityName}, {request.EntityName}FullOutput, int, Get{request.EntityName}Input, Create{request.EntityName}Input, Update{request.EntityName}Input, Get{request.EntityName}Input, Delete{request.EntityName}Input>, I{request.EntityName}AppService")
             .NewLine()
@@ -325,8 +376,25 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             .NewLine()
             .InsertTab(2)
             .Append('{')
-            .NewLine(1)
-            .InsertTab(2)
+            .NewLine();
+
+        appServiceStringBuilder.InsertTab(3)
+            .Append($"CreatePermissionName = PermissionNames.{request.EntityName}_Create;")
+            .NewLine();
+        appServiceStringBuilder.InsertTab(3)
+            .Append($"UpdatePermissionName = PermissionNames.{request.EntityName}_Update;")
+            .NewLine();
+        appServiceStringBuilder.InsertTab(3)
+            .Append($"DeletePermissionName = PermissionNames.{request.EntityName}_Delete;")
+            .NewLine();
+        appServiceStringBuilder.InsertTab(3)
+            .Append($"GetPermissionName = PermissionNames.{request.EntityName}_Get;")
+            .NewLine();
+        appServiceStringBuilder.InsertTab(3)
+            .Append($"GetAllPermissionName = PermissionNames.{request.EntityName}_GetList;")
+            .NewLine();
+
+        appServiceStringBuilder.InsertTab(2)
             .Append('}')
             .NewLine();
 

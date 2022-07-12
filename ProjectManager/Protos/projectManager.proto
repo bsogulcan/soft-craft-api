@@ -71,6 +71,8 @@ message AddAppServiceRequest{
   string entityName = 3;
   string appServiceInterfaceStringify = 4;
   string appServiceStringify = 5;
+  string permissionNames = 6;
+  string authorizationProviders = 7;
 }
 
 enum LogManagement{

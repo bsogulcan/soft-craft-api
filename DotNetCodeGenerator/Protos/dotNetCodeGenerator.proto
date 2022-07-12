@@ -100,4 +100,6 @@ message AppServiceRequest{
 message AppServiceResult{
   string appServiceInterfaceStringify = 1;
   string appServiceStringify = 2;
+  string permissionNames = 3;
+  string authorizationProviders = 4;
 }

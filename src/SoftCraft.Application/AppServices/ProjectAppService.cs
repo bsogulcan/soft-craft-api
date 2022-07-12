@@ -106,7 +106,7 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         property.RelationalEntityName = entityProperty.RelationalEntity.Name;
                         property.RelationalPropertyName =
                             entityProperty.RelationalEntity.Properties.FirstOrDefault(x =>
-                                x.RelationalEntityId == entity.Id)
+                                    x.RelationalEntityId == entity.Id)
                                 ?.Name;
 
                         if (entityProperty.RelationType != null)
@@ -224,7 +224,9 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         EntityName = entity.Name,
                         ProjectName = project.UniqueName,
                         AppServiceStringify = createAppServiceResult.AppServiceStringify,
-                        AppServiceInterfaceStringify = createAppServiceResult.AppServiceInterfaceStringify
+                        AppServiceInterfaceStringify = createAppServiceResult.AppServiceInterfaceStringify,
+                        PermissionNames = createAppServiceResult.PermissionNames,
+                        AuthorizationProviders = createAppServiceResult.AuthorizationProviders
                     });
             }
 
