@@ -10,6 +10,8 @@ service DotNetCodeGenerator {
   rpc CreateRepository (EntityForRepository) returns (EntityResult);
   rpc CreateEnum (Enum) returns (EntityResult);
   rpc CreateDtos (Entity) returns (DtoResult);
+  rpc CreateAppService (AppServiceRequest) returns (AppServiceResult);
+  rpc CreateConfiguration (Entity) returns (EntityResult);
 }
 
 message Entity {
@@ -20,6 +22,7 @@ message Entity {
   bool fullAudited = 5;
   TenantType tenantType = 6;
   repeated Property properties = 7;
+  string projectName = 8;
 }
 
 message EntityForRepository {
@@ -43,6 +46,8 @@ message Property {
   optional PrimaryKeyType relationalEntityPrimaryKeyType = 5;
   optional string relationalEntityName = 6;
   optional RelationType relationType = 7;
+  int32 maxLength = 8;
+  optional bool manyToMany = 9;
 }
 
 message Enum{
@@ -83,5 +88,14 @@ message DtoResult{
   string deleteInputStringify = 6;
   string dtosToDomainStringify = 7;
   string domainToDtosStringify = 8;
+}
 
+message AppServiceRequest{
+  string projectName = 1;
+  string entityName = 2;
+}
+
+message AppServiceResult{
+  string appServiceInterfaceStringify = 1;
+  string appServiceStringify = 2;
 }

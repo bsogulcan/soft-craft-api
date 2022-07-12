@@ -12,6 +12,8 @@ service ProjectManager{
   rpc AddRepositoryToExistingProject(AddRepositoryRequest) returns (ProjectReply);
   rpc AddEnumToExistingProject(AddEnumRequest) returns (ProjectReply);
   rpc AddDtosToExistingProject(AddDtosRequest) returns (ProjectReply);
+  rpc AddAppServiceToExistingProject(AddAppServiceRequest) returns (ProjectReply);
+  rpc AddConfigurationToExistingProject(AddEntityRequest) returns (ProjectReply);
 }
 
 // The request message containing the user's name.
@@ -61,6 +63,14 @@ message AddDtosRequest{
   string entityName = 9;
   string dtosToDomainStringify = 10;
   string domainToDtosStringify = 11;
+}
+
+message AddAppServiceRequest{
+  string id = 1;
+  string projectName = 2;
+  string entityName = 3;
+  string appServiceInterfaceStringify = 4;
+  string appServiceStringify = 5;
 }
 
 enum LogManagement{

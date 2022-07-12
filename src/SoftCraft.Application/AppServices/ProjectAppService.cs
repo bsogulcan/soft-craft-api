@@ -71,6 +71,7 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                     PrimaryKeyType = (PrimaryKeyType) entity.PrimaryKeyType,
                     TenantType = (TenantType) entity.TenantType,
                     Namespace = $"{project.UniqueName}.Domain.Entities",
+                    ProjectName = project.UniqueName,
                     Usings =
                     {
                         "Abp.Domain.Entities.Auditing;",
@@ -86,7 +87,12 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         Name = entityProperty.Name,
                         //Type = GetNormalizedPropertyType(entityProperty.Type.Value),
                         Nullable = entityProperty.IsNullable,
-                        IsRelationalProperty = entityProperty.IsRelationalProperty
+                        IsRelationalProperty = entityProperty.IsRelationalProperty,
+                        MaxLength = entityProperty.MaxLength,
+                        ManyToMany = entityProperty.RelationalEntity != null &&
+                                     entityProperty.RelationalEntity.Properties.Any(x =>
+                                         x.IsRelationalProperty && x.RelationalEntityId == entity.Id
+                                         &&x.RelationType==Enums.RelationType.OneToMany)
                     };
 
                     if (entityProperty.IsRelationalProperty && entityProperty.RelationalEntityId.HasValue)
@@ -128,7 +134,15 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         Stringified = entityResult.Stringified
                     });
 
-
+                var createEntityConfigurationResult = await client.CreateConfigurationAsync(dotNetCodeGeneratorEntity);
+                var createConfigurationResult = await projectManagerClient.AddConfigurationToExistingProjectAsync(
+                    new AddEntityRequest()
+                    {
+                        Id = project.Id.ToString(),
+                        EntityName = entity.Name,
+                        ProjectName = project.UniqueName,
+                        Stringified = createEntityConfigurationResult.Stringified
+                    });
                 var createRepositoryInput = new EntityForRepository
                 {
                     Name = entity.Name,
@@ -186,6 +200,23 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         PartOutputStringify = createDtosResult.PartOutputStringify,
                         DtosToDomainStringify = createDtosResult.DtosToDomainStringify,
                         DomainToDtosStringify = createDtosResult.DomainToDtosStringify
+                    });
+
+                var createAppServiceResult = await client.CreateAppServiceAsync(new AppServiceRequest()
+                {
+                    EntityName = entity.Name,
+                    ProjectName = project.UniqueName
+                });
+
+
+                var addAppServiceResult = await projectManagerClient.AddAppServiceToExistingProjectAsync(
+                    new AddAppServiceRequest()
+                    {
+                        Id = project.Id.ToString(),
+                        EntityName = entity.Name,
+                        ProjectName = project.UniqueName,
+                        AppServiceStringify = createAppServiceResult.AppServiceStringify,
+                        AppServiceInterfaceStringify = createAppServiceResult.AppServiceInterfaceStringify
                     });
             }
 

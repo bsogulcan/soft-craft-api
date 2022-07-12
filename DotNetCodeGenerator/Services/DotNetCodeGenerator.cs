@@ -27,14 +27,15 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             stringBuilder.Append("using " + request.Usings[i] + Environment.NewLine);
         }
 
-        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.NewLine()
+            .Append($"namespace {request.Namespace}")
+            .NewLine();
 
-        stringBuilder.Append($"namespace {request.Namespace}");
-        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append('{')
+            .NewLine();
 
-        stringBuilder.Append('{' + Environment.NewLine);
-
-        stringBuilder.Append('\t' + $"public class {request.Name} : ");
+        stringBuilder.InsertTab()
+            .Append($"public class {request.Name} : ");
 
         if (request.FullAudited)
         {
@@ -55,17 +56,37 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                 break;
         }
 
-        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.NewLine()
+            .InsertTab()
+            .Append("{")
+            .NewLine();
 
-        stringBuilder.Append('\t' + "{");
-        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.InsertTab(2)
+            .Append($"public {request.Name}()")
+            .NewLine();
+
+        stringBuilder.InsertTab(2)
+            .Append("{")
+            .NewLine();
+
+        foreach (var relationalProperty in request.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType != RelationType.OneToOne))
+        {
+            stringBuilder.InsertTab(3)
+                .Append(
+                    $"{relationalProperty.Name.Pluralize()} = new HashSet<{relationalProperty.RelationalEntityName}>();")
+                .NewLine();
+        }
+
+        stringBuilder.InsertTab(2)
+            .Append("}")
+            .NewLine();
 
         for (var i = 0; i < request.Properties.Count; i++)
         {
             var property = request.Properties[i];
 
-            stringBuilder.Append('\t');
-            stringBuilder.Append('\t');
+            stringBuilder.InsertTab(2);
 
             if (!property.IsRelationalProperty)
             {
@@ -83,8 +104,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                         $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")}" +
                         property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
 
-                    stringBuilder.Append('\t');
-                    stringBuilder.Append('\t');
+                    stringBuilder.InsertTab(2);
 
                     stringBuilder.Append(
                         $"public virtual {property.RelationalEntityName + (property.Nullable ? "? " : " ")}" +
@@ -99,10 +119,10 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             }
         }
 
-        stringBuilder.Append('\t');
-        stringBuilder.Append("}");
-        stringBuilder.Append(Environment.NewLine);
-        stringBuilder.Append("}");
+        stringBuilder.InsertTab()
+            .Append("}")
+            .NewLine()
+            .Append("}");
 
         entityResult.Stringified = stringBuilder.ToString();
         return entityResult;
@@ -238,6 +258,166 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         dtoResult.DtosToDomainStringify = GenerateDtosToDomainStringify(request);
         dtoResult.DomainToDtosStringify = GenerateDomainToDtosStringify(request);
         return dtoResult;
+    }
+
+    public override async Task<AppServiceResult> CreateAppService(AppServiceRequest request, ServerCallContext context)
+    {
+        var result = new AppServiceResult();
+        var appServiceInterfaceStringBuilder = new StringBuilder();
+        appServiceInterfaceStringBuilder.Append("using Abp.Application.Services;")
+            .NewLine()
+            .Append($"using {request.ProjectName}.Domain.{request.EntityName}.Dtos;")
+            .NewLine(2);
+
+        appServiceInterfaceStringBuilder.Append($"namespace {request.ProjectName}.Domain.{request.EntityName}")
+            .NewLine()
+            .Append('{')
+            .NewLine()
+            .InsertTab();
+
+        appServiceInterfaceStringBuilder
+            .Append(
+                $"public interface I{request.EntityName}AppService:IAsyncCrudAppService<{request.EntityName}FullOutput,int,Get{request.EntityName}Input,Create{request.EntityName}Input,Update{request.EntityName}Input,Get{request.EntityName}Input,Delete{request.EntityName}Input>")
+            .NewLine()
+            .InsertTab()
+            .Append('{')
+            .NewLine();
+
+
+        appServiceInterfaceStringBuilder
+            .NewLine()
+            .InsertTab()
+            .Append('}');
+        appServiceInterfaceStringBuilder
+            .NewLine()
+            .Append('}');
+
+        result.AppServiceInterfaceStringify = appServiceInterfaceStringBuilder.ToString();
+
+        var appServiceStringBuilder = new StringBuilder();
+        appServiceStringBuilder.Append("using Abp.Application.Services;")
+            .NewLine()
+            .Append($"using {request.ProjectName}.Domain.{request.EntityName}.Dtos;")
+            .NewLine()
+            .Append($"using {request.ProjectName}.Domain.{request.EntityName};")
+            .NewLine()
+            .Append($"using {request.ProjectName}.Domain.Entities;")
+            .NewLine()
+            .Append($"using {request.ProjectName}.EntityFrameworkCore.Repositories;")
+            .NewLine(2);
+
+        appServiceStringBuilder.Append($"namespace {request.ProjectName}.Domain.{request.EntityName}")
+            .NewLine()
+            .Append('{')
+            .NewLine()
+            .InsertTab();
+
+        appServiceStringBuilder.Append(
+                $"public class {request.EntityName}AppService : AsyncCrudAppService<Entities.{request.EntityName}, {request.EntityName}FullOutput, int, Get{request.EntityName}Input, Create{request.EntityName}Input, Update{request.EntityName}Input, Get{request.EntityName}Input, Delete{request.EntityName}Input>, I{request.EntityName}AppService")
+            .NewLine()
+            .InsertTab()
+            .Append('{')
+            .NewLine();
+
+        appServiceStringBuilder.InsertTab(2)
+            .Append(
+                $"public {request.EntityName}AppService(I{request.EntityName}Repository {request.EntityName.ToLower()}Repository) : base({request.EntityName.ToLower()}Repository)")
+            .NewLine()
+            .InsertTab(2)
+            .Append('{')
+            .NewLine(1)
+            .InsertTab(2)
+            .Append('}')
+            .NewLine();
+
+        appServiceStringBuilder
+            .NewLine()
+            .InsertTab()
+            .Append('}');
+        appServiceStringBuilder
+            .NewLine()
+            .Append('}');
+
+        result.AppServiceStringify = appServiceStringBuilder.ToString();
+        return result;
+    }
+
+    public override async Task<EntityResult> CreateConfiguration(Entity request, ServerCallContext context)
+    {
+        var entityResult = new EntityResult
+        {
+            Entity = request
+        };
+
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append($"using {request.ProjectName}.Domain.Entities;").NewLine();
+        stringBuilder.Append($"using Microsoft.EntityFrameworkCore;").NewLine();
+        stringBuilder.Append($"using Microsoft.EntityFrameworkCore.Metadata.Builders;").NewLine();
+
+        stringBuilder.NewLine()
+            .Append($"namespace {request.ProjectName}.Domain.Configurations")
+            .NewLine()
+            .Append("{");
+
+        stringBuilder.NewLine()
+            .InsertTab()
+            .Append($"public class {request.Name}Configuration : IEntityTypeConfiguration<{request.Name}>");
+
+        stringBuilder.NewLine()
+            .InsertTab()
+            .Append("{");
+
+        stringBuilder.NewLine()
+            .InsertTab(2)
+            .Append($"public void Configure(EntityTypeBuilder<{request.Name}> builder)");
+
+        stringBuilder.NewLine()
+            .InsertTab(2)
+            .Append("{");
+
+        stringBuilder.NewLine()
+            .InsertTab(3)
+            .Append($"builder.ToTable(\"{request.Name.Pluralize()}\");");
+
+        stringBuilder.NewLine()
+            .InsertTab(3)
+            .Append($"builder.HasKey(x => x.Id);");
+
+        foreach (var property in request.Properties.Where(x => x.MaxLength > 0))
+        {
+            stringBuilder.NewLine()
+                .InsertTab(3)
+                .Append($"builder.Property(x => x.{property.Name}).HasMaxLength({property.MaxLength});");
+        }
+
+        foreach (var property in request.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType != RelationType.OneToOne && !x.ManyToMany))
+        {
+            stringBuilder.NewLine(2)
+                .InsertTab(3)
+                .Append($"builder.HasMany(x => x.{property.Name.Pluralize()})")
+                .NewLine().InsertTab(4)
+                .Append($".WithOne(y => y.{request.Name})")
+                .NewLine().InsertTab(4)
+                .Append($".HasForeignKey(y => y.{request.Name}Id)")
+                .NewLine().InsertTab(4)
+                .Append($".OnDelete(DeleteBehavior.ClientSetNull);");
+        }
+
+
+        stringBuilder.NewLine()
+            .InsertTab(2)
+            .Append("}");
+
+        stringBuilder.NewLine()
+            .InsertTab()
+            .Append("}");
+
+        stringBuilder.NewLine()
+            .Append("}");
+
+        entityResult.Stringified = stringBuilder.ToString();
+        return entityResult;
     }
 
     #region HelperMethods

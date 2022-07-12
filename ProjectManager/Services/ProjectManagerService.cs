@@ -76,6 +76,24 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
                 replacedConstFileText);
         }
 
+        var applicationFolderPath = Path.Combine(projectFile, "aspnet-core", "src",
+            request.Name + ".Application");
+        var applicationCsProjContent =
+            await File.ReadAllTextAsync(Path.Combine(applicationFolderPath, request.Name + ".Application.csproj"));
+
+        var applicationCsProjContentStringBuild = new StringBuilder(applicationCsProjContent);
+        var coreCsProjString = $"<ProjectReference Include=\"..\\{request.Name}.Core\\{request.Name}.Core.csproj\" />";
+        var projectReferenceIndex =
+            applicationCsProjContent.IndexOf(coreCsProjString, StringComparison.Ordinal);
+
+
+        applicationCsProjContentStringBuild.Insert(projectReferenceIndex + coreCsProjString.Length,
+            $"\r\n    <ProjectReference Include=\"..\\{request.Name}.EntityFrameworkCore\\{request.Name}.EntityFrameworkCore.csproj\" />");
+
+        await File.WriteAllTextAsync(Path.Combine(applicationFolderPath, request.Name + ".Application.csproj"),
+            applicationCsProjContentStringBuild.ToString());
+
+
         return new ProjectReply()
         {
             Id = request.Id
@@ -210,6 +228,55 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         };
     }
 
+    public override async Task<ProjectReply> AddAppServiceToExistingProject(AddAppServiceRequest request,
+        ServerCallContext context)
+    {
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.Id);
+        var dtosFolderPath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.Application\\Domain\\{request.EntityName}");
+
+        if (!Directory.Exists(dtosFolderPath))
+        {
+            Directory.CreateDirectory(dtosFolderPath);
+        }
+
+        await File.WriteAllTextAsync(
+            Path.Combine(dtosFolderPath, $"I{request.EntityName}AppService.cs"),
+            request.AppServiceInterfaceStringify);
+
+        await File.WriteAllTextAsync(
+            Path.Combine(dtosFolderPath, $"{request.EntityName}AppService.cs"),
+            request.AppServiceStringify);
+        return new ProjectReply()
+        {
+            Id = request.Id
+        };
+    }
+
+    public override async Task<ProjectReply> AddConfigurationToExistingProject(AddEntityRequest request,
+        ServerCallContext context)
+    {
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.Id);
+        var configurationsFolderPath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.Core\\Domain\\Configurations");
+
+        if (!Directory.Exists(configurationsFolderPath))
+        {
+            Directory.CreateDirectory(configurationsFolderPath);
+        }
+
+        await File.WriteAllTextAsync(
+            Path.Combine(configurationsFolderPath, $"{request.EntityName}Configuration.cs"),
+            request.Stringified);
+
+        return new ProjectReply()
+        {
+            Id = request.Id
+        };
+    }
+
+    #region Helper Methods
+
     private async Task RunScript(string scriptContents, string folderPath)
     {
         using var ps = PowerShell.Create();
@@ -221,4 +288,6 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         //     Console.WriteLine(item.BaseObject.ToString());
         // }
     }
+
+    #endregion
 }
