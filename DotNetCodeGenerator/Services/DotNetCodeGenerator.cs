@@ -404,6 +404,19 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                 .Append($".OnDelete(DeleteBehavior.ClientSetNull);");
         }
 
+        foreach (var property in request.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne && x.OneToOne))
+        {
+            stringBuilder.NewLine(2)
+                .InsertTab(3)
+                .Append($"builder.HasOne(x => x.{property.Name})")
+                .NewLine().InsertTab(4)
+                .Append($".WithOne(y => y.{property.RelationalPropertyName})")
+                .NewLine().InsertTab(4)
+                .Append($".HasForeignKey<{property.RelationalEntityName}>(y => y.{request.Name}Id);")
+                .NewLine();
+        }
+
 
         stringBuilder.NewLine()
             .InsertTab(2)
@@ -544,20 +557,24 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         for (var i = 0; i < request.Properties.Count; i++)
         {
             var property = request.Properties[i];
-
-            stringBuilder.Append('\t');
-            stringBuilder.Append('\t');
-
             if (!property.IsRelationalProperty)
             {
+                stringBuilder.InsertTab(2);
                 stringBuilder.Append($"public {property.Type + (property.Nullable ? "? " : " ")} " +
                                      property.Name + " { get; set; }" + Environment.NewLine);
             }
             else
             {
-                stringBuilder.Append(
-                    $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")}" +
-                    property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
+                if (property.RelationType == RelationType.OneToOne)
+                {
+                    stringBuilder.InsertTab(2);
+                    stringBuilder.Append(
+                        $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")}" +
+                        property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
+                }
+                else // OneToMany
+                {
+                }
             }
         }
 
@@ -594,8 +611,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         {
             var property = request.Properties[i];
 
-            stringBuilder.Append('\t');
-            stringBuilder.Append('\t');
+            stringBuilder.InsertTab(2);
 
             if (!property.IsRelationalProperty)
             {
@@ -661,11 +677,9 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         {
             var property = request.Properties[i];
 
-            stringBuilder.Append('\t');
-            stringBuilder.Append('\t');
-
             if (!property.IsRelationalProperty)
             {
+                stringBuilder.InsertTab(2);
                 stringBuilder.Append($"public {property.Type + (property.Nullable ? "? " : " ")}" +
                                      property.Name + " { get; set; }" + Environment.NewLine);
             }
@@ -673,6 +687,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             {
                 if (property.RelationType == RelationType.OneToOne)
                 {
+                    stringBuilder.InsertTab(2);
                     // public int LineId { get; set; }
                     stringBuilder.Append(
                         $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")} " +
@@ -680,9 +695,10 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                 }
                 else // OneToMany
                 {
-                    stringBuilder.Append(
-                        $"public List<{GetPrimaryKey(property.RelationalEntityPrimaryKeyType)}>{(property.Nullable ? "? " : " ")}" +
-                        property.Name.Pluralize() + " { get; set; }" + Environment.NewLine);
+                    //Note: Many relations types cannot insert now. Check this later
+                    // stringBuilder.Append(
+                    //     $"public List<{GetPrimaryKey(property.RelationalEntityPrimaryKeyType)}>{(property.Nullable ? "? " : " ")}" +
+                    //     property.Name.Pluralize() + " { get; set; }" + Environment.NewLine);
                 }
             }
         }
@@ -720,11 +736,9 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         {
             var property = request.Properties[i];
 
-            stringBuilder.Append('\t');
-            stringBuilder.Append('\t');
-
             if (!property.IsRelationalProperty)
             {
+                stringBuilder.InsertTab(2);
                 stringBuilder.Append($"public {property.Type + (property.Nullable ? "? " : " ")}" +
                                      property.Name + " { get; set; }" + Environment.NewLine);
             }
@@ -733,15 +747,16 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                 if (property.RelationType == RelationType.OneToOne)
                 {
                     // public int LineId { get; set; }
+                    stringBuilder.InsertTab(2);
                     stringBuilder.Append(
                         $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")} " +
                         property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
                 }
                 else // OneToMany
                 {
-                    stringBuilder.Append(
-                        $"public List<{GetPrimaryKey(property.RelationalEntityPrimaryKeyType)}>{(property.Nullable ? "? " : " ")}" +
-                        property.Name.Pluralize() + " { get; set; }" + Environment.NewLine);
+                    // stringBuilder.Append(
+                    //     $"public List<{GetPrimaryKey(property.RelationalEntityPrimaryKeyType)}>{(property.Nullable ? "? " : " ")}" +
+                    //     property.Name.Pluralize() + " { get; set; }" + Environment.NewLine);
                 }
             }
         }

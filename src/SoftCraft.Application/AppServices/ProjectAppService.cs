@@ -92,7 +92,11 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         ManyToMany = entityProperty.RelationalEntity != null &&
                                      entityProperty.RelationalEntity.Properties.Any(x =>
                                          x.IsRelationalProperty && x.RelationalEntityId == entity.Id
-                                         &&x.RelationType==Enums.RelationType.OneToMany)
+                                                                && x.RelationType == Enums.RelationType.OneToMany),
+                        OneToOne = entityProperty.RelationalEntity != null &&
+                                   entityProperty.RelationalEntity.Properties.Any(x =>
+                                       x.IsRelationalProperty && x.RelationalEntityId == entity.Id
+                                                              && x.RelationType == Enums.RelationType.OneToOne),
                     };
 
                     if (entityProperty.IsRelationalProperty && entityProperty.RelationalEntityId.HasValue)
@@ -100,6 +104,10 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         property.RelationalEntityPrimaryKeyType =
                             (PrimaryKeyType) entityProperty.RelationalEntity.PrimaryKeyType;
                         property.RelationalEntityName = entityProperty.RelationalEntity.Name;
+                        property.RelationalPropertyName =
+                            entityProperty.RelationalEntity.Properties.FirstOrDefault(x =>
+                                x.RelationalEntityId == entity.Id)
+                                ?.Name;
 
                         if (entityProperty.RelationType != null)
                         {

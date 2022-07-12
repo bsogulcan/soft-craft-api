@@ -269,6 +269,17 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
             Path.Combine(configurationsFolderPath, $"{request.EntityName}Configuration.cs"),
             request.Stringified);
 
+        var dbContextFilePath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.EntityFrameworkCore\\EntityFrameworkCore\\{request.ProjectName}DbContext.cs");
+
+        var dbContext =
+            await HelperClass.HelperClass.AddConfigurationNamespaceToDbContext(dbContextFilePath, request.ProjectName);
+
+        dbContext = await HelperClass.HelperClass.AddConfigurationToDbContext(dbContext, request.ProjectName,
+            request.EntityName);
+        await File.WriteAllTextAsync(dbContextFilePath, dbContext.ToString());
+
+
         return new ProjectReply()
         {
             Id = request.Id
