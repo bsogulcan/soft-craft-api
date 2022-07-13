@@ -290,6 +290,63 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         };
     }
 
+    public override async Task<ProjectReply> AddTypeScriptDtosToExistingProject(AddDtosRequest request,
+        ServerCallContext context)
+    {
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.Id);
+        var serviceFolderPath = Path.Combine(projectFolderPath,
+            $"angular\\src\\shared\\services\\{request.EntityName}\\dtos");
+
+        if (!Directory.Exists(serviceFolderPath))
+        {
+            Directory.CreateDirectory(serviceFolderPath);
+        }
+
+        await File.WriteAllTextAsync(Path.Combine(serviceFolderPath, $"{request.EntityName}FullOutput.ts"),
+            request.FullOutputStringify);
+
+        await File.WriteAllTextAsync(Path.Combine(serviceFolderPath, $"{request.EntityName}PartOutput.ts"),
+            request.PartOutputStringify);
+
+        await File.WriteAllTextAsync(Path.Combine(serviceFolderPath, $"Create{request.EntityName}Input.ts"),
+            request.CreateInputStringify);
+
+        await File.WriteAllTextAsync(Path.Combine(serviceFolderPath, $"Update{request.EntityName}Input.ts"),
+            request.UpdateInputStringify);
+
+        await File.WriteAllTextAsync(Path.Combine(serviceFolderPath, $"Get{request.EntityName}Input.ts"),
+            request.GetInputStringify);
+
+        await File.WriteAllTextAsync(Path.Combine(serviceFolderPath, $"Delete{request.EntityName}Input.ts"),
+            request.DeleteInputStringify);
+
+        return new ProjectReply()
+        {
+            Id = request.Id
+        };
+    }
+
+    public override async Task<ProjectReply> AddTypeScriptServiceToExistingProject(AddTypeScriptServiceRequest request,
+        ServerCallContext context)
+    {
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.Id);
+        var serviceFolderPath = Path.Combine(projectFolderPath,
+            $"angular\\src\\shared\\services\\{request.EntityName}");
+
+        if (!Directory.Exists(serviceFolderPath))
+        {
+            Directory.CreateDirectory(serviceFolderPath);
+        }
+
+        await File.WriteAllTextAsync(Path.Combine(serviceFolderPath, $"{request.EntityName.ToCamelCase()}.service.ts"),
+            request.ServiceStringify);
+
+        return new ProjectReply()
+        {
+            Id = request.Id
+        };
+    }
+
     #region Helper Methods
 
     private async Task WritePermissionNames(string projectFolderPath, AddAppServiceRequest request)
@@ -332,7 +389,8 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
             var authorizationProviderInsertableIndex =
                 authorizationProviderStringBuilder.ToString()
                     .IndexOf("}", setPermissionStartIndex, StringComparison.Ordinal) - 8;
-            authorizationProviderStringBuilder.Insert(authorizationProviderInsertableIndex, tempStringBuilder.ToString());
+            authorizationProviderStringBuilder.Insert(authorizationProviderInsertableIndex,
+                tempStringBuilder.ToString());
         }
 
         authorizationProviderStringBuilder.NewLine(2);

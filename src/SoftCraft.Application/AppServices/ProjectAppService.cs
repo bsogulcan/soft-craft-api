@@ -7,6 +7,7 @@ using SoftCraft.AppServices.Project.Dtos;
 using SoftCraft.Enums;
 using SoftCraft.Manager.MicroServiceManager.DotNetCodeGeneratorServiceManager;
 using SoftCraft.Manager.MicroServiceManager.ProjectManagerServiceManager;
+using SoftCraft.Manager.MicroServiceManager.TypeScriptCodeGeneratorServiceManager;
 using SoftCraft.Repositories;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -21,18 +22,21 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
     private readonly IConfiguration _configuration;
     private readonly IProjectManagerServiceManager _projectManagerServiceManager;
     private readonly IDotNetCodeGeneratorServiceManager _dotNetCodeGeneratorServiceManager;
+    private readonly ITypeScriptCodeGeneratorServiceManager _typeScriptCodeGeneratorServiceManager;
 
     public ProjectAppService(IProjectRepository projectRepository,
         ICurrentUser currentUser,
         IConfiguration configuration,
         IProjectManagerServiceManager projectManagerServiceManager,
-        IDotNetCodeGeneratorServiceManager dotNetCodeGeneratorServiceManager
+        IDotNetCodeGeneratorServiceManager dotNetCodeGeneratorServiceManager,
+        ITypeScriptCodeGeneratorServiceManager typeScriptCodeGeneratorServiceManager
     ) : base(projectRepository)
     {
         _currentUser = currentUser;
         _configuration = configuration;
         _projectManagerServiceManager = projectManagerServiceManager;
         _dotNetCodeGeneratorServiceManager = dotNetCodeGeneratorServiceManager;
+        _typeScriptCodeGeneratorServiceManager = typeScriptCodeGeneratorServiceManager;
     }
 
     public override Task<ProjectPartOutput> UpdateAsync(long id, UpdateProjectDto input)
@@ -125,6 +129,34 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         PermissionNames = createAppServiceResult.PermissionNames,
                         AuthorizationProviders = createAppServiceResult.AuthorizationProviders
                     });
+
+                var typeScriptDtosResult = await _typeScriptCodeGeneratorServiceManager.CreateDtosAsync(entity);
+                var addDtpRequestInput = new AddDtosRequest
+                {
+                    Id = project.Id.ToString(),
+                    EntityName = entity.Name,
+                    FullOutputStringify = typeScriptDtosResult.FullOutputStringify,
+                    PartOutputStringify = typeScriptDtosResult.PartOutputStringify,
+                    CreateInputStringify = typeScriptDtosResult.CreateInputStringify,
+                    UpdateInputStringify = typeScriptDtosResult.UpdateInputStringify,
+                    GetInputStringify = typeScriptDtosResult.GetInputStringify,
+                    DeleteInputStringify = typeScriptDtosResult.DeleteInputStringify
+                };
+
+                var addTypeScriptDtosToExistingProjectResult = await _projectManagerServiceManager
+                    .AddTypeScriptDtosToExistingProjectAsync(addDtpRequestInput);
+
+                var createTypeScriptServiceResult =
+                    await _typeScriptCodeGeneratorServiceManager.CreateServiceAsync(entity);
+                var addTypeScrtipServiceInput = new AddTypeScriptServiceRequest()
+                {
+                    EntityName = entity.Name,
+                    Id = project.Id.ToString(),
+                    ServiceStringify = createTypeScriptServiceResult.Stringify
+                };
+                var addTypeScriptServiceResult =
+                    await _projectManagerServiceManager.AddTypeScriptServiceToExistingProjectAsync(
+                        addTypeScrtipServiceInput);
             }
 
             foreach (var enumerate in project.Enumerates)

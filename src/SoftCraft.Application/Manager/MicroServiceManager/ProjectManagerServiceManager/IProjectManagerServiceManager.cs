@@ -17,4 +17,8 @@ public interface IProjectManagerServiceManager : ITransientDependency
     Task<ProjectReply> AddDtosToExistingProjectAsync(AddDtosRequest addDtosRequest);
     Task<ProjectReply> AddAppServiceToExistingProjectAsync(AddAppServiceRequest addAppServiceRequest);
     Task<ProjectReply> AddEnumToExistingProjectAsync(AddEnumRequest addEnumRequest);
+    Task<ProjectReply> AddTypeScriptDtosToExistingProjectAsync(AddDtosRequest addDtosRequest);
+
+    Task<ProjectReply> AddTypeScriptServiceToExistingProjectAsync(
+        AddTypeScriptServiceRequest addTypeScriptServiceRequest);
 }

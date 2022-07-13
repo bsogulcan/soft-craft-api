@@ -22,6 +22,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         };
 
         var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using System;" + Environment.NewLine);
         for (var i = 0; i < request.Usings.Count; i++)
         {
             stringBuilder.Append("using " + request.Usings[i] + Environment.NewLine);
@@ -544,6 +545,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
     private string GenerateGetInputDto(Entity request)
     {
         var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using System;" + Environment.NewLine);
         stringBuilder.Append("using Abp.Application.Services.Dto;" + Environment.NewLine);
         for (var i = 0; i < request.Usings.Count; i++)
         {
@@ -574,6 +576,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
     private string GenerateDeleteInputDto(Entity request)
     {
         var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using System;" + Environment.NewLine);
         stringBuilder.Append("using Abp.Application.Services.Dto;" + Environment.NewLine);
         for (var i = 0; i < request.Usings.Count; i++)
         {
@@ -604,6 +607,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
     private string GeneratePartOutputDto(Entity request)
     {
         var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using System;" + Environment.NewLine);
         stringBuilder.Append("using Abp.Application.Services.Dto;" + Environment.NewLine);
         for (var i = 0; i < request.Usings.Count; i++)
         {
@@ -657,6 +661,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
     private string GenerateFullOutputDto(Entity request)
     {
         var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using System;" + Environment.NewLine);
         stringBuilder.Append("using Abp.Application.Services.Dto;" + Environment.NewLine);
         for (var i = 0; i < request.Usings.Count; i++)
         {
@@ -723,6 +728,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
     private string GenerateCreateInputDto(Entity request)
     {
         var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using System;" + Environment.NewLine);
         stringBuilder.Append("using Abp.Application.Services.Dto;" + Environment.NewLine);
         for (var i = 0; i < request.Usings.Count; i++)
         {
@@ -782,6 +788,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
     private string GenerateUpdateInputDto(Entity request)
     {
         var stringBuilder = new StringBuilder();
+        stringBuilder.Append("using System;" + Environment.NewLine);
         stringBuilder.Append("using Abp.Application.Services.Dto;" + Environment.NewLine);
         for (var i = 0; i < request.Usings.Count; i++)
         {

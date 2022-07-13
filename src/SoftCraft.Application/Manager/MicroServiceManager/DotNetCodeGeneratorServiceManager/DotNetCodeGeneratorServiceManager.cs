@@ -3,6 +3,7 @@ using System.Linq;
 using System.Management.Automation.Language;
 using System.Threading.Tasks;
 using DotNetCodeGenerator;
+using Extensions;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using SoftCraft.Entities;
@@ -224,7 +225,7 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
             }
             else
             {
-                property.Type = GetNormalizedPropertyType(entityProperty.Type);
+                property.Type = Extensions.PropertyTypeExtensions.GetNormalizedPropertyType(entityProperty.Type);
             }
 
             dotNetCodeGeneratorEntity.Properties.Add(property);
@@ -234,19 +235,5 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
     }
 
 
-    private static string GetNormalizedPropertyType(PropertyType? type)
-    {
-        return type switch
-        {
-            PropertyType.String => "string",
-            PropertyType.Int => "int",
-            PropertyType.Bool => "bool",
-            PropertyType.Long => "long",
-            PropertyType.Float => "float",
-            PropertyType.Double => "double",
-            PropertyType.Decimal => "decimal",
-            PropertyType.DateTime => "DateTime",
-            _ => "UndefinedType"
-        };
-    }
+   
 }

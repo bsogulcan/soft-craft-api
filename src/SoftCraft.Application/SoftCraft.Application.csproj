@@ -10,6 +10,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\DotNetCodeGenerator\DotNetCodeGenerator.csproj" />
         <ProjectReference Include="..\..\ProjectManager\ProjectManager.csproj" />
+        <ProjectReference Include="..\..\TypeScriptCodeGenerator\TypeScriptCodeGenerator.csproj" />
         <ProjectReference Include="..\SoftCraft.Domain\SoftCraft.Domain.csproj" />
         <ProjectReference Include="..\SoftCraft.Application.Contracts\SoftCraft.Application.Contracts.csproj" />
     </ItemGroup>

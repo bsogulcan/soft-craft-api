@@ -4,9 +4,7 @@ option csharp_namespace = "ProjectManager";
 
 package projectManager;
 
-// The greeting service definition.
 service ProjectManager{
-  // Sends a greeting
   rpc CreateAbpBoilerplateProject(ProjectRequest) returns (ProjectReply);
   rpc AddEntityToExistingProject(AddEntityRequest) returns (ProjectReply);
   rpc AddRepositoryToExistingProject(AddRepositoryRequest) returns (ProjectReply);
@@ -14,6 +12,8 @@ service ProjectManager{
   rpc AddDtosToExistingProject(AddDtosRequest) returns (ProjectReply);
   rpc AddAppServiceToExistingProject(AddAppServiceRequest) returns (ProjectReply);
   rpc AddConfigurationToExistingProject(AddEntityRequest) returns (ProjectReply);
+  rpc AddTypeScriptDtosToExistingProject(AddDtosRequest) returns (ProjectReply);
+  rpc AddTypeScriptServiceToExistingProject(AddTypeScriptServiceRequest) returns (ProjectReply);
 }
 
 // The request message containing the user's name.
@@ -73,6 +73,12 @@ message AddAppServiceRequest{
   string appServiceStringify = 5;
   string permissionNames = 6;
   string authorizationProviders = 7;
+}
+
+message AddTypeScriptServiceRequest{
+  string id = 1;
+  string entityName = 2;
+  string serviceStringify = 3;
 }
 
 enum LogManagement{

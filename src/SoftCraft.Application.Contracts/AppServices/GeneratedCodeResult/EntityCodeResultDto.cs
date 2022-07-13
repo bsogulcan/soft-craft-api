@@ -9,6 +9,7 @@ public class EntityCodeResultDto
         DtoResult = new DtoResultDto();
         RepositoryResult = new RepositoryResultDto();
         AppServiceResult = new AppServiceResultDto();
+        TypeScriptDtoResult = new TypeScriptDtoResultDto();
     }
 
     public long EntityId { get; set; }
@@ -18,4 +19,6 @@ public class EntityCodeResultDto
     public RepositoryResultDto RepositoryResult { get; set; }
     public AppServiceResultDto AppServiceResult { get; set; }
     public string ConfigurationResult { get; set; }
+    public TypeScriptDtoResultDto TypeScriptDtoResult { get; set; }
+    public string TypeScriptServiceResult { get; set; }
 }

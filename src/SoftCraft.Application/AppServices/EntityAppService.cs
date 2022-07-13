@@ -9,10 +9,12 @@ using ProjectManager;
 using SoftCraft.AppServices.Entity;
 using SoftCraft.AppServices.Entity.Dtos;
 using SoftCraft.AppServices.GeneratedCodeResult;
+using SoftCraft.AppServices.GeneratedCodeResult.Dtos;
 using SoftCraft.AppServices.Project.Dtos;
 using SoftCraft.Entities;
 using SoftCraft.Enums;
 using SoftCraft.Manager.MicroServiceManager.DotNetCodeGeneratorServiceManager;
+using SoftCraft.Manager.MicroServiceManager.TypeScriptCodeGeneratorServiceManager;
 using SoftCraft.Repositories;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -30,15 +32,18 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
     private readonly IProjectRepository _projectRepository;
     private readonly IConfiguration _configuration;
     private readonly IDotNetCodeGeneratorServiceManager _dotNetCodeGeneratorServiceManager;
+    private readonly ITypeScriptCodeGeneratorServiceManager _typeScriptCodeGeneratorServiceManager;
 
     public EntityAppService(IRepository<Entities.Entity, long> repository,
         IProjectRepository projectRepository,
         IConfiguration configuration,
-        IDotNetCodeGeneratorServiceManager dotNetCodeGeneratorServiceManager) : base(repository)
+        IDotNetCodeGeneratorServiceManager dotNetCodeGeneratorServiceManager,
+        ITypeScriptCodeGeneratorServiceManager typeScriptCodeGeneratorServiceManager) : base(repository)
     {
         _projectRepository = projectRepository;
         _configuration = configuration;
         _dotNetCodeGeneratorServiceManager = dotNetCodeGeneratorServiceManager;
+        _typeScriptCodeGeneratorServiceManager = typeScriptCodeGeneratorServiceManager;
     }
 
     public override async Task<EntityPartOutput> CreateAsync(CreateEntityInput input)
@@ -137,6 +142,17 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
             EntityId = entity.Id,
             EntityName = entity.Name
         };
+
+        var typeScripDtosResult = await _typeScriptCodeGeneratorServiceManager.CreateDtosAsync(entity);
+        entityCodeResultDto.TypeScriptDtoResult.FullOutput = typeScripDtosResult.FullOutputStringify;
+        entityCodeResultDto.TypeScriptDtoResult.PartOutput = typeScripDtosResult.PartOutputStringify;
+        entityCodeResultDto.TypeScriptDtoResult.CreateInput = typeScripDtosResult.CreateInputStringify;
+        entityCodeResultDto.TypeScriptDtoResult.UpdateInput = typeScripDtosResult.UpdateInputStringify;
+        entityCodeResultDto.TypeScriptDtoResult.GetInput = typeScripDtosResult.GetInputStringify;
+        entityCodeResultDto.TypeScriptDtoResult.DeleteInput = typeScripDtosResult.DeleteInputStringify;
+
+        var typeScriptServiceResult = await _typeScriptCodeGeneratorServiceManager.CreateServiceAsync(entity);
+        entityCodeResultDto.TypeScriptServiceResult = typeScriptServiceResult.Stringify;
 
         var entityResult =
             await _dotNetCodeGeneratorServiceManager.CreateEntityAsync(entity);

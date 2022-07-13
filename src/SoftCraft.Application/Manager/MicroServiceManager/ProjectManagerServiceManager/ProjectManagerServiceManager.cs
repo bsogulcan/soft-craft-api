@@ -94,4 +94,25 @@ public class ProjectManagerServiceManager : IProjectManagerServiceManager
         var result = await projectManagerClient.AddEnumToExistingProjectAsync(addEnumRequest);
         return result;
     }
+
+    public async Task<ProjectReply> AddTypeScriptDtosToExistingProjectAsync(AddDtosRequest addDtosRequest)
+    {
+        using var projectManagerChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
+        var projectManagerClient =
+            new ProjectManager.ProjectManager.ProjectManagerClient(projectManagerChannel);
+        var result = await projectManagerClient.AddTypeScriptDtosToExistingProjectAsync(addDtosRequest);
+        return result;
+    }
+
+    public async Task<ProjectReply> AddTypeScriptServiceToExistingProjectAsync(
+        AddTypeScriptServiceRequest addTypeScriptServiceRequest)
+    {
+        using var projectManagerChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
+        var projectManagerClient =
+            new ProjectManager.ProjectManager.ProjectManagerClient(projectManagerChannel);
+        var result = await projectManagerClient.AddTypeScriptServiceToExistingProjectAsync(addTypeScriptServiceRequest);
+        return result;
+    }
 }

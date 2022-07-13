@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Humanizer;
+using SoftCraft.Enums;
 
 namespace Extensions;
 
@@ -20,7 +21,7 @@ public static class StringExtensions
         return input.ToUpper();
     }
 
-    public static string ToCamelCase(string input)
+    public static string ToCamelCase(this string input)
     {
         var x = input.Replace("_", "");
         if (x.Length == 0) return input;
@@ -47,5 +48,40 @@ public static class StringExtensions
                         ? $"_{c}".ToLower()
                         : $"{c}"))
                 .Split(new[] {'_'}, StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    public static string ToTypeScriptDataType(this string referenceType, bool nullable = false,
+        bool isRelationalProperty = false, int relationType = 0)
+    {
+        var lowerCaseReferenceType = referenceType.Trim().ToLower();
+
+        string type = lowerCaseReferenceType switch
+        {
+            "string" => "string",
+            "int" or "long" or "float" or "double" or "decimal" => "number",
+            "boolean" => "bool",
+            "datetime" => "Date",
+            _ => string.Empty
+        };
+
+        if (string.IsNullOrEmpty(type) && isRelationalProperty)
+        {
+            if ((RelationType) relationType == RelationType.OneToOne)
+            {
+                type = $"";
+                type = referenceType + "PartOutput";
+            }
+            else
+            {
+                type = $"Array<{referenceType}PartOutput>";
+            }
+        }
+
+        if (nullable)
+        {
+            type += " | undefined";
+        }
+
+        return type + ";";
     }
 }

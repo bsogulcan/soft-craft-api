@@ -6,6 +6,7 @@ package typeScriptCodeGenerator;
 
 service TypeScriptCodeGenerator {
   rpc CreateDtos (Entity) returns (DtoResult);
+  rpc CreateService (Entity) returns (ServiceResult);
 }
 
 message Entity {
@@ -32,6 +33,10 @@ message DtoResult{
   string updateInputStringify = 4;
   string getInputStringify = 5;
   string deleteInputStringify = 6;
+}
+
+message ServiceResult{
+  string stringify = 1;
 }
 
 enum PrimaryKeyType{
