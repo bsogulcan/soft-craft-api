@@ -4,17 +4,14 @@
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
     </PropertyGroup>
 
     <ItemGroup>
-        <Protobuf Include="Protos\projectManager.proto" GrpcServices="Server,Client" />
+        <Protobuf Include="Protos\typeScriptCodeGenerator.proto" GrpcServices="Server,Client" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Grpc.AspNetCore" Version="2.40.0" />
-        <PackageReference Include="Humanizer" Version="2.14.1" />
-        <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.2.4" />
     </ItemGroup>
 
     <ItemGroup>

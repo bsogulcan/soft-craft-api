@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using DotNetCodeGenerator;
 using Google.Protobuf.Collections;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using ProjectManager;
 using SoftCraft.AppServices.Entity;
 using SoftCraft.AppServices.Entity.Dtos;
+using SoftCraft.AppServices.GeneratedCodeResult;
 using SoftCraft.AppServices.Project.Dtos;
 using SoftCraft.Entities;
 using SoftCraft.Enums;
+using SoftCraft.Manager.MicroServiceManager.DotNetCodeGeneratorServiceManager;
 using SoftCraft.Repositories;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -26,13 +29,16 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
 {
     private readonly IProjectRepository _projectRepository;
     private readonly IConfiguration _configuration;
+    private readonly IDotNetCodeGeneratorServiceManager _dotNetCodeGeneratorServiceManager;
 
     public EntityAppService(IRepository<Entities.Entity, long> repository,
         IProjectRepository projectRepository,
-        IConfiguration configuration) : base(repository)
+        IConfiguration configuration,
+        IDotNetCodeGeneratorServiceManager dotNetCodeGeneratorServiceManager) : base(repository)
     {
         _projectRepository = projectRepository;
         _configuration = configuration;
+        _dotNetCodeGeneratorServiceManager = dotNetCodeGeneratorServiceManager;
     }
 
     public override async Task<EntityPartOutput> CreateAsync(CreateEntityInput input)
@@ -121,6 +127,54 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
             Console.WriteLine(e);
             throw;
         }
+    }
+
+    public async Task<EntityCodeResultDto> GetCodeResult(long id)
+    {
+        var entity = await Repository.GetAsync(id);
+        var entityCodeResultDto = new EntityCodeResultDto
+        {
+            EntityId = entity.Id,
+            EntityName = entity.Name
+        };
+
+        var entityResult =
+            await _dotNetCodeGeneratorServiceManager.CreateEntityAsync(entity);
+        entityCodeResultDto.EntityResult = entityResult.Stringified;
+
+        var createEntityConfigurationResult =
+            await _dotNetCodeGeneratorServiceManager.CreateConfigurationAsync(entity);
+        entityCodeResultDto.ConfigurationResult = createEntityConfigurationResult.Stringified;
+
+        var repositoryInterfaceResult =
+            await _dotNetCodeGeneratorServiceManager.CreateRepositoryInterfaceAsync(entity);
+        entityCodeResultDto.RepositoryResult.IRepositoryResult = repositoryInterfaceResult.Stringified;
+
+        var repositoryResult = await _dotNetCodeGeneratorServiceManager.CreateRepositoryAsync(entity);
+        entityCodeResultDto.RepositoryResult.RepositoryResult = repositoryResult.Stringified;
+
+        var createDtosResult = await _dotNetCodeGeneratorServiceManager.CreateDtosAsync(entity);
+        entityCodeResultDto.DtoResult.CreateInput = createDtosResult.CreateInputStringify;
+        entityCodeResultDto.DtoResult.UpdateInput = createDtosResult.UpdateInputStringify;
+        entityCodeResultDto.DtoResult.GetInput = createDtosResult.GetInputStringify;
+        entityCodeResultDto.DtoResult.DeleteInput = createDtosResult.DeleteInputStringify;
+        entityCodeResultDto.DtoResult.FullOutput = createDtosResult.FullOutputStringify;
+        entityCodeResultDto.DtoResult.PartOutput = createDtosResult.PartOutputStringify;
+        entityCodeResultDto.DtoResult.DtosToDomainMapResult = createDtosResult.DtosToDomainStringify;
+        entityCodeResultDto.DtoResult.DomainToDtosMapResult = createDtosResult.DomainToDtosStringify;
+
+        var createAppServiceResult = await _dotNetCodeGeneratorServiceManager.CreateAppServiceAsync(
+            new AppServiceRequest()
+            {
+                EntityName = entity.Name,
+                ProjectName = entity.Project.UniqueName
+            });
+        entityCodeResultDto.AppServiceResult.IAppServiceResult = createAppServiceResult.AppServiceInterfaceStringify;
+        entityCodeResultDto.AppServiceResult.AppServiceResult = createAppServiceResult.AppServiceStringify;
+        entityCodeResultDto.AppServiceResult.PermissionNamesResult = createAppServiceResult.PermissionNames;
+        entityCodeResultDto.AppServiceResult.AuthorizationResult = createAppServiceResult.AuthorizationProviders;
+
+        return entityCodeResultDto;
     }
 
     public override async Task<PagedResultDto<EntityPartOutput>> GetListAsync(GetEntityListInput input)

@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace ProjectManager.Extensions;
+namespace Extensions;
 
 public static class StringBuilderExtensions
 {

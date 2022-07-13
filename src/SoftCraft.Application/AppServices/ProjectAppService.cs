@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using DotNetCodeGenerator;
-using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using ProjectManager;
 using SoftCraft.AppServices.Project.Dtos;
 using SoftCraft.Enums;
+using SoftCraft.Manager.MicroServiceManager.DotNetCodeGeneratorServiceManager;
+using SoftCraft.Manager.MicroServiceManager.ProjectManagerServiceManager;
 using SoftCraft.Repositories;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Users;
-using PrimaryKeyType = DotNetCodeGenerator.PrimaryKeyType;
-using RelationType = DotNetCodeGenerator.RelationType;
-using TenantType = DotNetCodeGenerator.TenantType;
 
 namespace SoftCraft.AppServices;
 
@@ -23,14 +19,20 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
 {
     private readonly ICurrentUser _currentUser;
     private readonly IConfiguration _configuration;
+    private readonly IProjectManagerServiceManager _projectManagerServiceManager;
+    private readonly IDotNetCodeGeneratorServiceManager _dotNetCodeGeneratorServiceManager;
 
     public ProjectAppService(IProjectRepository projectRepository,
         ICurrentUser currentUser,
-        IConfiguration configuration
+        IConfiguration configuration,
+        IProjectManagerServiceManager projectManagerServiceManager,
+        IDotNetCodeGeneratorServiceManager dotNetCodeGeneratorServiceManager
     ) : base(projectRepository)
     {
         _currentUser = currentUser;
         _configuration = configuration;
+        _projectManagerServiceManager = projectManagerServiceManager;
+        _dotNetCodeGeneratorServiceManager = dotNetCodeGeneratorServiceManager;
     }
 
     public override Task<ProjectPartOutput> UpdateAsync(long id, UpdateProjectDto input)
@@ -44,96 +46,14 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
         {
             var project = await Repository.GetAsync(input.Id);
 
-            using var projectManagerChannel =
-                GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
-            var projectManagerClient =
-                new ProjectManager.ProjectManager.ProjectManagerClient(projectManagerChannel);
-
-            var result = await projectManagerClient.CreateAbpBoilerplateProjectAsync(new ProjectRequest()
-            {
-                Id = project.Id.ToString(),
-                Name = project.UniqueName,
-                LogManagement = (LogManagement) project.LogType,
-                MultiTenant = project.MultiTenant
-            });
+            var result = await _projectManagerServiceManager.CreateAbpBoilerplateProjectAsync(project.Id,
+                project.UniqueName, project.LogType, project.MultiTenant);
 
             foreach (var entity in project.Entities)
             {
-                using var dotNetCodeGeneratorChannel =
-                    GrpcChannel.ForAddress(_configuration["MicroServices:DotNetCodeGeneratorUrl"]);
-                var client =
-                    new DotNetCodeGenerator.DotNetCodeGenerator.DotNetCodeGeneratorClient(dotNetCodeGeneratorChannel);
-
-                var dotNetCodeGeneratorEntity = new DotNetCodeGenerator.Entity()
-                {
-                    Name = entity.Name,
-                    FullAudited = entity.IsFullAudited,
-                    PrimaryKeyType = (PrimaryKeyType) entity.PrimaryKeyType,
-                    TenantType = (TenantType) entity.TenantType,
-                    Namespace = $"{project.UniqueName}.Domain.Entities",
-                    ProjectName = project.UniqueName,
-                    Usings =
-                    {
-                        "Abp.Domain.Entities.Auditing;",
-                        "System.Collections.Generic;",
-                        "Abp.Domain.Entities;"
-                    }
-                };
-
-                foreach (var entityProperty in entity.Properties)
-                {
-                    var property = new DotNetCodeGenerator.Property()
-                    {
-                        Name = entityProperty.Name,
-                        //Type = GetNormalizedPropertyType(entityProperty.Type.Value),
-                        Nullable = entityProperty.IsNullable,
-                        IsRelationalProperty = entityProperty.IsRelationalProperty,
-                        MaxLength = entityProperty.MaxLength,
-                        ManyToMany = entityProperty.RelationalEntity != null &&
-                                     entityProperty.RelationalEntity.Properties.Any(x =>
-                                         x.IsRelationalProperty && x.RelationalEntityId == entity.Id
-                                                                && x.RelationType == Enums.RelationType.OneToMany),
-                        OneToOne = entityProperty.RelationalEntity != null &&
-                                   entityProperty.RelationalEntity.Properties.Any(x =>
-                                       x.IsRelationalProperty && x.RelationalEntityId == entity.Id
-                                                              && x.RelationType == Enums.RelationType.OneToOne),
-                    };
-
-                    if (entityProperty.IsRelationalProperty && entityProperty.RelationalEntityId.HasValue)
-                    {
-                        property.RelationalEntityPrimaryKeyType =
-                            (PrimaryKeyType) entityProperty.RelationalEntity.PrimaryKeyType;
-                        property.RelationalEntityName = entityProperty.RelationalEntity.Name;
-                        property.RelationalPropertyName =
-                            entityProperty.RelationalEntity.Properties.FirstOrDefault(x =>
-                                    x.RelationalEntityId == entity.Id)
-                                ?.Name;
-
-                        if (entityProperty.RelationType != null)
-                        {
-                            property.RelationType = (RelationType) entityProperty.RelationType;
-                        }
-                    }
-                    else if (entityProperty.IsEnumProperty)
-                    {
-                        if (dotNetCodeGeneratorEntity.Usings.FindIndex(x =>
-                                x.Contains($"{project.UniqueName}.Domain.EntityHelper;")) == -1)
-                        {
-                            dotNetCodeGeneratorEntity.Usings.Add($"{project.UniqueName}.Domain.EntityHelper;");
-                        }
-
-                        property.Type = entityProperty.Enumerate.Name;
-                    }
-                    else
-                    {
-                        property.Type = GetNormalizedPropertyType(entityProperty.Type);
-                    }
-
-                    dotNetCodeGeneratorEntity.Properties.Add(property);
-                }
-
-                var entityResult = await client.CreateEntityAsync(dotNetCodeGeneratorEntity);
-                var createEntityResult = await projectManagerClient.AddEntityToExistingProjectAsync(
+                var entityResult =
+                    await _dotNetCodeGeneratorServiceManager.CreateEntityAsync(entity);
+                var createEntityResult = await _projectManagerServiceManager.AddEntityToExistingProjectAsync(
                     new AddEntityRequest()
                     {
                         Id = project.Id.ToString(),
@@ -142,31 +62,24 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         Stringified = entityResult.Stringified
                     });
 
-                var createEntityConfigurationResult = await client.CreateConfigurationAsync(dotNetCodeGeneratorEntity);
-                var createConfigurationResult = await projectManagerClient.AddConfigurationToExistingProjectAsync(
-                    new AddEntityRequest()
-                    {
-                        Id = project.Id.ToString(),
-                        EntityName = entity.Name,
-                        ProjectName = project.UniqueName,
-                        Stringified = createEntityConfigurationResult.Stringified
-                    });
-                var createRepositoryInput = new EntityForRepository
-                {
-                    Name = entity.Name,
-                    PrimaryKeyType = (PrimaryKeyType) entity.PrimaryKeyType,
-                    Namespace = $"{project.UniqueName}.EntityFrameworkCore.Repositories",
-                    ProjectName = project.UniqueName,
-                    Usings =
-                    {
-                        $"{project.UniqueName}.Domain.Entities;",
-                    }
-                };
+                var createEntityConfigurationResult =
+                    await _dotNetCodeGeneratorServiceManager.CreateConfigurationAsync(entity);
+                var createConfigurationResult =
+                    await _projectManagerServiceManager.AddConfigurationToExistingProjectAsync(
+                        new AddEntityRequest()
+                        {
+                            Id = project.Id.ToString(),
+                            EntityName = entity.Name,
+                            ProjectName = project.UniqueName,
+                            Stringified = createEntityConfigurationResult.Stringified
+                        });
 
-                var repositoryInterfaceResult = await client.CreateRepositoryInterfaceAsync(createRepositoryInput);
-                var repositoryResult = await client.CreateRepositoryAsync(createRepositoryInput);
 
-                var createRepositoryResult = await projectManagerClient.AddRepositoryToExistingProjectAsync(
+                var repositoryInterfaceResult =
+                    await _dotNetCodeGeneratorServiceManager.CreateRepositoryInterfaceAsync(entity);
+                var repositoryResult = await _dotNetCodeGeneratorServiceManager.CreateRepositoryAsync(entity);
+
+                var createRepositoryResult = await _projectManagerServiceManager.AddRepositoryToExistingProjectAsync(
                     new AddRepositoryRequest()
                     {
                         Id = project.Id.ToString(),
@@ -176,25 +89,8 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         StringifiedRepository = repositoryResult.Stringified
                     });
 
-                dotNetCodeGeneratorEntity.Namespace = $"{project.UniqueName}.Domain.{entity.Name}.Dtos";
-                dotNetCodeGeneratorEntity.Usings.Clear();
-                if (entity.Properties.Any(x => x.IsRelationalProperty))
-                {
-                    dotNetCodeGeneratorEntity.Usings.Add("System.Collections.Generic;");
-                    foreach (var property in entity.Properties.Where(x => x.IsRelationalProperty))
-                    {
-                        dotNetCodeGeneratorEntity.Usings.Add(
-                            $"{project.UniqueName}.Domain.{property.RelationalEntity.Name}.Dtos;");
-                    }
-                }
-
-                if (entity.Properties.Any(x => x.IsEnumProperty))
-                {
-                    dotNetCodeGeneratorEntity.Usings.Add($"{project.UniqueName}.Domain.EntityHelper;");
-                }
-
-                var createDtosResult = await client.CreateDtosAsync(dotNetCodeGeneratorEntity);
-                var addDtosToExistingProjectReply = await projectManagerClient.AddDtosToExistingProjectAsync(
+                var createDtosResult = await _dotNetCodeGeneratorServiceManager.CreateDtosAsync(entity);
+                var addDtosToExistingProjectReply = await _projectManagerServiceManager.AddDtosToExistingProjectAsync(
                     new AddDtosRequest()
                     {
                         Id = project.Id.ToString(),
@@ -210,14 +106,15 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         DomainToDtosStringify = createDtosResult.DomainToDtosStringify
                     });
 
-                var createAppServiceResult = await client.CreateAppServiceAsync(new AppServiceRequest()
-                {
-                    EntityName = entity.Name,
-                    ProjectName = project.UniqueName
-                });
+                var createAppServiceResult = await _dotNetCodeGeneratorServiceManager.CreateAppServiceAsync(
+                    new AppServiceRequest()
+                    {
+                        EntityName = entity.Name,
+                        ProjectName = project.UniqueName
+                    });
 
 
-                var addAppServiceResult = await projectManagerClient.AddAppServiceToExistingProjectAsync(
+                var addAppServiceResult = await _projectManagerServiceManager.AddAppServiceToExistingProjectAsync(
                     new AddAppServiceRequest()
                     {
                         Id = project.Id.ToString(),
@@ -232,30 +129,8 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
 
             foreach (var enumerate in project.Enumerates)
             {
-                using var dotNetCodeGeneratorChannel =
-                    GrpcChannel.ForAddress(_configuration["MicroServices:DotNetCodeGeneratorUrl"]);
-                var client =
-                    new DotNetCodeGenerator.DotNetCodeGenerator.DotNetCodeGeneratorClient(dotNetCodeGeneratorChannel);
-
-                var createEnumInput = new DotNetCodeGenerator.Enum()
-                {
-                    Name = enumerate.Name,
-                    Namespace = $"{project.UniqueName}.Domain.EntityHelper",
-                    Values = { }
-                };
-
-                foreach (var enumerateValue in enumerate.EnumerateValues)
-                {
-                    createEnumInput.Values.Add(new EnumValue()
-                    {
-                        Name = enumerateValue.Name,
-                        Value = enumerateValue.Value
-                    });
-                }
-
-                var createEnumResult = await client.CreateEnumAsync(createEnumInput);
-
-                var createEntityResult = await projectManagerClient.AddEnumToExistingProjectAsync(
+                var createEnumResult = await _dotNetCodeGeneratorServiceManager.CreateEnumAsync(enumerate);
+                var createEntityResult = await _projectManagerServiceManager.AddEnumToExistingProjectAsync(
                     new AddEnumRequest()
                     {
                         Id = project.Id.ToString(),

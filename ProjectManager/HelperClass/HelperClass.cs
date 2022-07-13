@@ -1,6 +1,6 @@
 ﻿using System.Text;
+using Extensions;
 using Humanizer;
-using ProjectManager.Extensions;
 
 namespace ProjectManager.HelperClass;
 

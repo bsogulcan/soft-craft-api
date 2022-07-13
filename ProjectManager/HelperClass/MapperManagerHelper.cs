@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using ProjectManager.Extensions;
+using Extensions;
 
 namespace ProjectManager.HelperClass;
 

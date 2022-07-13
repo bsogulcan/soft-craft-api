@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+option csharp_namespace = "TypeScriptCodeGenerator";
+
+package typeScriptCodeGenerator;
+
+service TypeScriptCodeGenerator {
+  rpc CreateDtos (Entity) returns (DtoResult);
+}
+
+message Entity {
+  string projectName = 1;
+  string name = 2;
+  PrimaryKeyType primaryKeyType = 3;
+  repeated Property properties = 4;
+}
+
+message Property {
+  string type = 1;
+  string name = 2;
+  bool nullable = 3;
+  bool isRelationalProperty = 4;
+  optional PrimaryKeyType relationalEntityPrimaryKeyType = 5;
+  optional string relationalEntityName = 6;
+  optional RelationType relationType = 7;
+}
+
+message DtoResult{
+  string fullOutputStringify = 1;
+  string partOutputStringify = 2;
+  string createInputStringify = 3;
+  string updateInputStringify = 4;
+  string getInputStringify = 5;
+  string deleteInputStringify = 6;
+}
+
+enum PrimaryKeyType{
+  int = 0;
+  long = 1;
+  guid = 2;
+};
+
+enum TenantType{
+  none = 0;
+  may = 1;
+  must = 2;
+};
+
+enum RelationType{
+  OneToOne = 0;
+  OneToMany = 1;
+  ManyToMany = 2;
+};

@@ -1,9 +1,8 @@
-using System.Data.Common;
 using System.IO.Compression;
 using System.Management.Automation;
 using System.Text;
+using Extensions;
 using Grpc.Core;
-using ProjectManager.Extensions;
 using ProjectManager.HelperClass;
 
 namespace ProjectManager.Services;
@@ -257,7 +256,6 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
             Id = request.Id
         };
     }
-
 
     public override async Task<ProjectReply> AddConfigurationToExistingProject(AddEntityRequest request,
         ServerCallContext context)

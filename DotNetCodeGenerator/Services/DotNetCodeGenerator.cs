@@ -1,5 +1,5 @@
 using System.Text;
-using DotNetCodeGenerator.Extensions;
+using Extensions;
 using Grpc.Core;
 using Humanizer;
 
