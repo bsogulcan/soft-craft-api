@@ -14,6 +14,8 @@ service ProjectManager{
   rpc AddConfigurationToExistingProject(AddEntityRequest) returns (ProjectReply);
   rpc AddTypeScriptDtosToExistingProject(AddDtosRequest) returns (ProjectReply);
   rpc AddTypeScriptServiceToExistingProject(AddTypeScriptServiceRequest) returns (ProjectReply);
+
+  rpc FileDownLoad (FileInfo) returns (stream BytesContent);
 }
 
 // The request message containing the user's name.
@@ -84,4 +86,16 @@ message AddTypeScriptServiceRequest{
 enum LogManagement{
   Log4Net = 0;
   ElasticSearch = 1;
+}
+
+message FileInfo{
+  int64 projectId = 1;
+  string fileName = 2;
+  string fileExtension = 3;
+}
+message BytesContent{
+  int64 fileSize = 1;
+  bytes buffer = 2;
+  int32 readedByte = 3;
+  FileInfo info = 4;
 }

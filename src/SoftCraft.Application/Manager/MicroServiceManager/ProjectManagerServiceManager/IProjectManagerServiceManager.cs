@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 using ProjectManager;
 using SoftCraft.Entities;
 using SoftCraft.Enums;
@@ -21,4 +22,6 @@ public interface IProjectManagerServiceManager : ITransientDependency
 
     Task<ProjectReply> AddTypeScriptServiceToExistingProjectAsync(
         AddTypeScriptServiceRequest addTypeScriptServiceRequest);
+
+    Task<FileStream> GetProjectZipFile(Project project);
 }

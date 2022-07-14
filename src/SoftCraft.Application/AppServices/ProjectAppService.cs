@@ -1,6 +1,12 @@
 ﻿using System;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 using DotNetCodeGenerator;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using ProjectManager;
 using SoftCraft.AppServices.Project.Dtos;
@@ -171,6 +177,8 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         Stringified = createEnumResult.Stringified
                     });
             }
+
+            await _projectManagerServiceManager.GetProjectZipFile(project);
         }
         catch (Exception e)
         {

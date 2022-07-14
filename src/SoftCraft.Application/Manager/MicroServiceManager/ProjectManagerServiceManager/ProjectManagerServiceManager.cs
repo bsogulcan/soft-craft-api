@@ -1,9 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using ProjectManager;
 using SoftCraft.Entities;
 using SoftCraft.Enums;
+using FileInfo = ProjectManager.FileInfo;
 
 namespace SoftCraft.Manager.MicroServiceManager.ProjectManagerServiceManager;
 
@@ -114,5 +118,66 @@ public class ProjectManagerServiceManager : IProjectManagerServiceManager
             new ProjectManager.ProjectManager.ProjectManagerClient(projectManagerChannel);
         var result = await projectManagerClient.AddTypeScriptServiceToExistingProjectAsync(addTypeScriptServiceRequest);
         return result;
+    }
+
+    public async Task<FileStream> GetProjectZipFile(Project project)
+    {
+        using var projectManagerChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
+        var projectManagerClient =
+            new ProjectManager.ProjectManager.ProjectManagerClient(projectManagerChannel);
+
+        var fileInfo = new FileInfo
+        {
+            ProjectId = project.Id,
+            FileExtension = ".zip",
+            FileName = project.UniqueName
+        };
+
+        FileStream fileStream = null;
+
+        var request = projectManagerClient.FileDownLoad(fileInfo);
+
+        CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
+        int count = 0;
+        decimal chunkSize = 0;
+
+        var fileName =
+            @$"C:\SoftCraft\DownloadableProjects\{project.Id}-{project.UniqueName}.zip";
+
+        if (File.Exists(fileName))
+        {
+            File.Delete(fileName);
+        }
+
+
+        while (await request.ResponseStream.MoveNext(cancellationTokenSource.Token))
+        {
+            if (count++ == 0)
+            {
+                fileStream =
+                    new FileStream(
+                        fileName,
+                        FileMode.CreateNew);
+
+                //Depolanacak yerde dosya boyutu kadar alan tahsis ediliyor.
+                fileStream.SetLength(request.ResponseStream.Current.FileSize);
+            }
+
+            var buffer = request.ResponseStream.Current.Buffer.ToByteArray();
+
+            await fileStream.WriteAsync(buffer, 0, request.ResponseStream.Current.ReadedByte);
+
+            Console.WriteLine(
+                $"{Math.Round(((chunkSize += request.ResponseStream.Current.ReadedByte) * 100) / request.ResponseStream.Current.FileSize)}%");
+        }
+
+        Console.WriteLine("Yüklendi...");
+
+        await fileStream.DisposeAsync();
+        fileStream.Close();
+
+        return fileStream;
     }
 }

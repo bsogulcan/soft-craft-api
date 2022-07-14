@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Management.Automation;
 using System.Text;
 using Extensions;
+using Google.Protobuf;
 using Grpc.Core;
 using ProjectManager.HelperClass;
 
@@ -345,6 +346,47 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         {
             Id = request.Id
         };
+    }
+
+    public override async Task FileDownLoad(FileInfo request, IServerStreamWriter<BytesContent> responseStream,
+        ServerCallContext context)
+    {
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.ProjectId.ToString());
+        var zipPath = Path.Combine(_configuration["ProjectsFolderPath"],
+            request.ProjectId + request.FileName + ".zip");
+
+        if (File.Exists(zipPath))
+        {
+            File.Delete(zipPath);
+        }
+        ZipFile.CreateFromDirectory(projectFolderPath, zipPath);
+
+        //Client tarafından download edilmek istenen dosya bilgileri gönderilmiştir. Bu bilgilere karşılık olan dosya bulunmakta ve FileStream olarka işaretlenmektedir.
+        using FileStream fileStream = new FileStream(zipPath, FileMode.Open, FileAccess.Read);
+
+        //Her bir akışta gönderilecek veri parçasını belirliyoruz.
+        byte[] buffer = new byte[2048];
+
+        //Gönderilecek dosyanın bilgilerini veriyoruz.
+        BytesContent content = new BytesContent
+        {
+            FileSize = fileStream.Length,
+            Info = new FileInfo {FileName = request.ProjectId + "-" + request.FileName, FileExtension = ".zip"},
+            ReadedByte = 0
+        };
+
+        //Her bir buffer, 0. byte'tan itibaren 2048 adet okunmakta ve sonuç 'content.ReadedByte'a atanmaktadır.
+        while ((content.ReadedByte = fileStream.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            //Okunan buffer'ın stream edilebilmesi için 'message.proto' dosyasındaki 'bytes' türüne dönüştürülüyor.
+            content.Buffer = ByteString.CopyFrom(buffer);
+            //'BytesContent' nesnesi stream olarak gönderiliyor.
+            await responseStream.WriteAsync(content);
+        }
+
+        fileStream.Close();
+        
+        File.Delete(zipPath); 
     }
 
     #region Helper Methods
