@@ -359,15 +359,13 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         {
             File.Delete(zipPath);
         }
+
         ZipFile.CreateFromDirectory(projectFolderPath, zipPath);
 
-        //Client tarafından download edilmek istenen dosya bilgileri gönderilmiştir. Bu bilgilere karşılık olan dosya bulunmakta ve FileStream olarka işaretlenmektedir.
         using FileStream fileStream = new FileStream(zipPath, FileMode.Open, FileAccess.Read);
 
-        //Her bir akışta gönderilecek veri parçasını belirliyoruz.
         byte[] buffer = new byte[2048];
 
-        //Gönderilecek dosyanın bilgilerini veriyoruz.
         BytesContent content = new BytesContent
         {
             FileSize = fileStream.Length,
@@ -375,18 +373,66 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
             ReadedByte = 0
         };
 
-        //Her bir buffer, 0. byte'tan itibaren 2048 adet okunmakta ve sonuç 'content.ReadedByte'a atanmaktadır.
         while ((content.ReadedByte = fileStream.Read(buffer, 0, buffer.Length)) > 0)
         {
-            //Okunan buffer'ın stream edilebilmesi için 'message.proto' dosyasındaki 'bytes' türüne dönüştürülüyor.
             content.Buffer = ByteString.CopyFrom(buffer);
-            //'BytesContent' nesnesi stream olarak gönderiliyor.
             await responseStream.WriteAsync(content);
         }
 
         fileStream.Close();
-        
-        File.Delete(zipPath); 
+
+        File.Delete(zipPath);
+    }
+
+    public override async Task<ProjectReply> AddTypeScriptEnumToExistingProject(AddEnumRequest request,
+        ServerCallContext context)
+    {
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.Id);
+        var enumFolderPath = Path.Combine(projectFolderPath,
+            $"angular\\src\\shared\\services\\enums");
+
+        if (!Directory.Exists(enumFolderPath))
+        {
+            Directory.CreateDirectory(enumFolderPath);
+        }
+
+        await File.WriteAllTextAsync(
+            Path.Combine(enumFolderPath, request.EnumName + ".ts"),
+            request.Stringified);
+
+        return new ProjectReply()
+        {
+            Id = request.Id
+        };
+    }
+
+    public override async Task<ProjectReply> AddTypeScriptComponentsToExistingProject(ComponentResult request,
+        ServerCallContext context)
+    {
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.ProjectId.ToString());
+        var listComponentFolderPath = Path.Combine(projectFolderPath,
+            $"angular\\src\\app\\components\\{request.EntityName}");
+
+        if (!Directory.Exists(listComponentFolderPath))
+        {
+            Directory.CreateDirectory(listComponentFolderPath);
+        }
+
+        await File.WriteAllTextAsync(
+            Path.Combine(listComponentFolderPath, request.EntityName.ToCamelCase() + ".component.ts"),
+            request.ListComponent.ComponentTsStringify);
+
+        await File.WriteAllTextAsync(
+            Path.Combine(listComponentFolderPath, request.EntityName.ToCamelCase() + ".component.html"),
+            request.ListComponent.ComponentHtmlStringify);
+
+        await File.WriteAllTextAsync(
+            Path.Combine(listComponentFolderPath, request.EntityName.ToCamelCase() + ".component.css"),
+            request.ListComponent.ComponentCssStringify);
+        return new ProjectReply()
+        {
+            Id = request.ProjectId.ToString()
+        };
     }
 
     #region Helper Methods

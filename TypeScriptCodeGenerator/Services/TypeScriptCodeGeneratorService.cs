@@ -1,6 +1,7 @@
 using System.Text;
 using Extensions;
 using Grpc.Core;
+using TypeScriptCodeGenerator.Helpers;
 
 namespace TypeScriptCodeGenerator.Services;
 
@@ -79,12 +80,52 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
         return result;
     }
 
+    public override async Task<StringifyResult> CreateEnum(EnumRequest request, ServerCallContext context)
+    {
+        var stringifyResult = new StringifyResult();
+        var stringBuilder = new StringBuilder();
+
+        stringBuilder.Append($"export enum {request.Name} " + "{");
+        stringBuilder.Append(Environment.NewLine);
+        foreach (var value in request.Values)
+        {
+            stringBuilder.InsertTab();
+            stringBuilder.Append(value.Name + " = " + value.Value + ",");
+            stringBuilder.Append(Environment.NewLine);
+        }
+
+        stringBuilder.Append("}");
+
+        stringifyResult.Stringify = stringBuilder.ToString();
+        return stringifyResult;
+    }
+
+    public override async Task<ComponentResult> CreateComponents(Entity request, ServerCallContext context)
+    {
+        var result = new ComponentResult
+        {
+            ListComponent = new ComponentResultEto()
+            {
+                ComponentTsStringify = ComponentHelper.GetComponentTsStringify(request).ToString(),
+                ComponentHtmlStringify = ComponentHelper.GetComponentHtmlStringify(request).ToString(),
+                ComponentCssStringify = ComponentHelper.GetComponentCssStringify(request).ToString(),
+            }
+        };
+
+        return result;
+    }
 
     #region HelperMethods
 
     private StringBuilder GenerateCreateInput(Entity request)
     {
         var stringBuilder = new StringBuilder();
+
+        foreach (var enumProperty in request.Properties.Where(x => x.IsEnumerateProperty))
+        {
+            stringBuilder.Append("import {" + enumProperty.Type + "} from '../../enums/" + enumProperty.Type + "';")
+                .NewLine();
+        }
 
         stringBuilder
             .Append($"export class Create{request.Name}Input ")
@@ -117,7 +158,7 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             stringBuilder.InsertTab()
                 .Append(property.Name.ToCamelCase() + ": ")
                 .Append(property.Type.ToTypeScriptDataType(property.Nullable, property.IsRelationalProperty,
-                    (int) property.RelationType))
+                    (int) property.RelationType, property.IsEnumerateProperty))
                 .NewLine();
         }
 
@@ -135,6 +176,12 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             stringBuilder.Append("import {" + relationalProperty.RelationalEntityName +
                                  "PartOutput} from '../../" + relationalProperty.RelationalEntityName.ToCamelCase() +
                                  "/dtos/" + relationalProperty.RelationalEntityName + "PartOutput';").NewLine();
+        }
+
+        foreach (var enumProperty in request.Properties.Where(x => x.IsEnumerateProperty))
+        {
+            stringBuilder.Append("import {" + enumProperty.Type + "} from '../../enums/" + enumProperty.Type + "';")
+                .NewLine();
         }
 
         stringBuilder.NewLine()
@@ -167,7 +214,7 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             stringBuilder.InsertTab()
                 .Append(property.Name.ToCamelCase() + ": ")
                 .Append(property.Type.ToTypeScriptDataType(property.Nullable, property.IsRelationalProperty,
-                    (int) property.RelationType))
+                    (int) property.RelationType, property.IsEnumerateProperty))
                 .NewLine();
         }
 
@@ -185,6 +232,12 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             stringBuilder.Append("import {" + relationalProperty.RelationalEntityName +
                                  "PartOutput} from '../../" + relationalProperty.RelationalEntityName.ToCamelCase() +
                                  "/dtos/" + relationalProperty.RelationalEntityName + "PartOutput';").NewLine();
+        }
+
+        foreach (var enumProperty in request.Properties.Where(x => x.IsEnumerateProperty))
+        {
+            stringBuilder.Append("import {" + enumProperty.Type + "} from '../../enums/" + enumProperty.Type + "';")
+                .NewLine();
         }
 
         stringBuilder
@@ -222,7 +275,7 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             stringBuilder.InsertTab()
                 .Append(property.Name.ToCamelCase() + ": ")
                 .Append(property.Type.ToTypeScriptDataType(property.Nullable, property.IsRelationalProperty,
-                    (int) property.RelationType))
+                    (int) property.RelationType, property.IsEnumerateProperty))
                 .NewLine();
         }
 
@@ -233,6 +286,12 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
     private StringBuilder GenerateUpdateInput(Entity request)
     {
         var stringBuilder = new StringBuilder();
+
+        foreach (var enumProperty in request.Properties.Where(x => x.IsEnumerateProperty))
+        {
+            stringBuilder.Append("import {" + enumProperty.Type + "} from '../../enums/" + enumProperty.Type + "';")
+                .NewLine();
+        }
 
         stringBuilder
             .Append($"export class Update{request.Name}Input ")
@@ -269,7 +328,7 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             stringBuilder.InsertTab()
                 .Append(property.Name.ToCamelCase() + ": ")
                 .Append(property.Type.ToTypeScriptDataType(property.Nullable, property.IsRelationalProperty,
-                    (int) property.RelationType))
+                    (int) property.RelationType, property.IsEnumerateProperty))
                 .NewLine();
         }
 

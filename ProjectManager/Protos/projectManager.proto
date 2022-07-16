@@ -14,7 +14,8 @@ service ProjectManager{
   rpc AddConfigurationToExistingProject(AddEntityRequest) returns (ProjectReply);
   rpc AddTypeScriptDtosToExistingProject(AddDtosRequest) returns (ProjectReply);
   rpc AddTypeScriptServiceToExistingProject(AddTypeScriptServiceRequest) returns (ProjectReply);
-
+  rpc AddTypeScriptEnumToExistingProject(AddEnumRequest) returns (ProjectReply);
+  rpc AddTypeScriptComponentsToExistingProject(ComponentResult) returns (ProjectReply);
   rpc FileDownLoad (FileInfo) returns (stream BytesContent);
 }
 
@@ -98,4 +99,18 @@ message BytesContent{
   bytes buffer = 2;
   int32 readedByte = 3;
   FileInfo info = 4;
+}
+
+message ComponentResult{
+  int64 projectId = 1;
+  string entityName = 2;
+  ComponentResultEto listComponent = 3;
+  ComponentResultEto createComponent = 4;
+  ComponentResultEto editComponent = 5;
+}
+
+message ComponentResultEto{
+  string componentHtmlStringify = 1;
+  string componentTsStringify = 2;
+  string componentCssStringify = 3;
 }

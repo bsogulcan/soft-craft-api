@@ -180,4 +180,24 @@ public class ProjectManagerServiceManager : IProjectManagerServiceManager
 
         return fileStream;
     }
+
+    public async Task<ProjectReply> AddTypeScriptEnumToExistingProjectAsync(AddEnumRequest addEnumRequest)
+    {
+        using var projectManagerChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
+        var projectManagerClient =
+            new ProjectManager.ProjectManager.ProjectManagerClient(projectManagerChannel);
+        var result = await projectManagerClient.AddTypeScriptEnumToExistingProjectAsync(addEnumRequest);
+        return result;
+    }
+
+    public async Task<ProjectReply> AddTypeScriptComponentsToExistingProjectAsync(ComponentResult componentResult)
+    {
+        using var projectManagerChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
+        var projectManagerClient =
+            new ProjectManager.ProjectManager.ProjectManagerClient(projectManagerChannel);
+        var result = await projectManagerClient.AddTypeScriptComponentsToExistingProjectAsync(componentResult);
+        return result;
+    }
 }

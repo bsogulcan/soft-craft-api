@@ -2,6 +2,7 @@
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using ProjectManager;
+using SoftCraft.Entities;
 using TypeScriptCodeGenerator;
 using Entity = Volo.Abp.Domain.Entities.Entity;
 
@@ -47,6 +48,46 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
         return entityResult;
     }
 
+    public async Task<StringifyResult> CreateEnumAsync(Enumerate enumerate)
+    {
+        using var typeScriptCodeGeneratorChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:TypeScriptCodeGeneratorUrl"]);
+        var client =
+            new TypeScriptCodeGenerator.TypeScriptCodeGenerator.TypeScriptCodeGeneratorClient(
+                typeScriptCodeGeneratorChannel);
+
+        var input = new EnumRequest
+        {
+            Name = enumerate.Name
+        };
+
+        foreach (var enumerateValue in enumerate.EnumerateValues)
+        {
+            input.Values.Add(new EnumValue
+            {
+                Name = enumerateValue.Name,
+                Value = enumerateValue.Value
+            });
+        }
+
+        var enumResult = await client.CreateEnumAsync(input);
+        return enumResult;
+    }
+
+    public async Task<TypeScriptCodeGenerator.ComponentResult> CreateComponentsAsync(Entities.Entity entity)
+    {
+        using var typeScriptCodeGeneratorChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:TypeScriptCodeGeneratorUrl"]);
+        var client =
+            new TypeScriptCodeGenerator.TypeScriptCodeGenerator.TypeScriptCodeGeneratorClient(
+                typeScriptCodeGeneratorChannel);
+
+        var input = EntityToGeneratorEntity(entity);
+
+        var entityResult = await client.CreateComponentsAsync(input);
+        return entityResult;
+    }
+
     private TypeScriptCodeGenerator.Entity EntityToGeneratorEntity(Entities.Entity entity)
     {
         var dotNetCodeGeneratorEntity = new TypeScriptCodeGenerator.Entity()
@@ -80,6 +121,7 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
             else if (entityProperty.IsEnumProperty)
             {
                 property.Type = entityProperty.Enumerate.Name;
+                property.IsEnumerateProperty = true;
             }
             else
             {

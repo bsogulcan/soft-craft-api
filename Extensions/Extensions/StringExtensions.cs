@@ -51,7 +51,7 @@ public static class StringExtensions
     }
 
     public static string ToTypeScriptDataType(this string referenceType, bool nullable = false,
-        bool isRelationalProperty = false, int relationType = 0)
+        bool isRelationalProperty = false, int relationType = 0, bool isEnumerateProperty = false)
     {
         var lowerCaseReferenceType = referenceType.Trim().ToLower();
 
@@ -68,13 +68,17 @@ public static class StringExtensions
         {
             if ((RelationType) relationType == RelationType.OneToOne)
             {
-                type = $"";
                 type = referenceType + "PartOutput";
             }
             else
             {
                 type = $"Array<{referenceType}PartOutput>";
             }
+        }
+
+        if (isEnumerateProperty)
+        {
+            type = referenceType;
         }
 
         if (nullable)

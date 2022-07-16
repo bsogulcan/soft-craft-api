@@ -163,6 +163,22 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                 var addTypeScriptServiceResult =
                     await _projectManagerServiceManager.AddTypeScriptServiceToExistingProjectAsync(
                         addTypeScrtipServiceInput);
+
+                var createComponentResult = await _typeScriptCodeGeneratorServiceManager.CreateComponentsAsync(entity);
+                var componentResult = new ProjectManager.ComponentResult()
+                {
+                    ProjectId = project.Id,
+                    EntityName = entity.Name,
+                    ListComponent = new ComponentResultEto()
+                    {
+                        ComponentCssStringify = createComponentResult.ListComponent.ComponentCssStringify,
+                        ComponentHtmlStringify = createComponentResult.ListComponent.ComponentHtmlStringify,
+                        ComponentTsStringify = createComponentResult.ListComponent.ComponentTsStringify
+                    }
+                };
+
+                var addComponentResult =
+                    await _projectManagerServiceManager.AddTypeScriptComponentsToExistingProjectAsync(componentResult);
             }
 
             foreach (var enumerate in project.Enumerates)
@@ -175,6 +191,17 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         EnumName = enumerate.Name,
                         ProjectName = project.UniqueName,
                         Stringified = createEnumResult.Stringified
+                    });
+
+                var createTypeScriptEnumResult =
+                    await _typeScriptCodeGeneratorServiceManager.CreateEnumAsync(enumerate);
+                await _projectManagerServiceManager.AddTypeScriptEnumToExistingProjectAsync(
+                    new AddEnumRequest()
+                    {
+                        Id = project.Id.ToString(),
+                        EnumName = enumerate.Name,
+                        ProjectName = project.UniqueName,
+                        Stringified = createTypeScriptEnumResult.Stringify
                     });
             }
 

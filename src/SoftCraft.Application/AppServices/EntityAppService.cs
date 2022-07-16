@@ -190,6 +190,10 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
         entityCodeResultDto.AppServiceResult.PermissionNamesResult = createAppServiceResult.PermissionNames;
         entityCodeResultDto.AppServiceResult.AuthorizationResult = createAppServiceResult.AuthorizationProviders;
 
+        //TODO: Get TS Enums
+
+        var createComponentResult = await _typeScriptCodeGeneratorServiceManager.CreateComponentsAsync(entity);
+
         return entityCodeResultDto;
     }
 

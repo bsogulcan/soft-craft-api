@@ -24,4 +24,6 @@ public interface IProjectManagerServiceManager : ITransientDependency
         AddTypeScriptServiceRequest addTypeScriptServiceRequest);
 
     Task<FileStream> GetProjectZipFile(Project project);
+    Task<ProjectReply> AddTypeScriptEnumToExistingProjectAsync(AddEnumRequest addEnumRequest);
+    Task<ProjectReply> AddTypeScriptComponentsToExistingProjectAsync(ComponentResult componentResult);
 }

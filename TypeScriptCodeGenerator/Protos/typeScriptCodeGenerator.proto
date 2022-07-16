@@ -7,6 +7,8 @@ package typeScriptCodeGenerator;
 service TypeScriptCodeGenerator {
   rpc CreateDtos (Entity) returns (DtoResult);
   rpc CreateService (Entity) returns (ServiceResult);
+  rpc CreateEnum (EnumRequest) returns (StringifyResult);
+  rpc CreateComponents(Entity) returns (ComponentResult);
 }
 
 message Entity {
@@ -24,6 +26,7 @@ message Property {
   optional PrimaryKeyType relationalEntityPrimaryKeyType = 5;
   optional string relationalEntityName = 6;
   optional RelationType relationType = 7;
+  bool isEnumerateProperty = 8;
 }
 
 message DtoResult{
@@ -56,3 +59,29 @@ enum RelationType{
   OneToMany = 1;
   ManyToMany = 2;
 };
+
+message EnumRequest{
+  string name = 1;
+  repeated EnumValue values = 2;
+}
+
+message EnumValue{
+  string name = 1;
+  int32 value = 2;
+}
+
+message StringifyResult{
+  string stringify = 1;
+}
+
+message ComponentResult{
+  ComponentResultEto listComponent = 1;
+  ComponentResultEto createComponent = 2;
+  ComponentResultEto editComponent = 3;
+}
+
+message ComponentResultEto{
+  string componentHtmlStringify = 1;
+  string componentTsStringify = 2;
+  string componentCssStringify = 3;
+}
