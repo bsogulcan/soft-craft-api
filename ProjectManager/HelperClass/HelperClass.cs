@@ -138,4 +138,58 @@ public static class HelperClass
 
         return stringBuilder;
     }
+
+    public static async Task CreateRouting(string basePath, string entityName)
+    {
+        var appRoutingModuleFilePath =
+            Path.Combine(basePath, "angular", "src", "app", "app-routing.module.ts");
+        var appRoutingModuleContent = await File.ReadAllTextAsync(appRoutingModuleFilePath);
+
+        var stringBuilder = new StringBuilder(appRoutingModuleContent);
+
+        var ngModuleIndex = appRoutingModuleContent.IndexOf("@NgModule({", StringComparison.Ordinal) - 1;
+
+        var import = "import {" + entityName + "Component} from './components/" + entityName + "/" +
+                     entityName.ToCamelCase() + ".component';" + Environment.NewLine;
+        stringBuilder.Insert(ngModuleIndex, import);
+
+        var childrenIndex = stringBuilder.ToString().IndexOf("children", StringComparison.Ordinal);
+        var childrenArrayEndIndex = stringBuilder.ToString()
+            .IndexOf(",\n                ]", childrenIndex, StringComparison.Ordinal) + 1;
+        var route =
+            Environment.NewLine + "                    {path: '" + entityName.ToCamelCase().Pluralize() +
+            "', component: " + entityName +
+            "Component, data: { permission: '" + entityName + "' }, canActivate: [AppRouteGuard]},";
+
+
+        stringBuilder.Insert(childrenArrayEndIndex, route);
+
+        await File.WriteAllTextAsync(appRoutingModuleFilePath, stringBuilder.ToString());
+    }
+
+    public static async Task AddComponentToModule(string basePath, string entityName)
+    {
+        var appModuleFilePath =
+            Path.Combine(basePath, "angular", "src", "app", "app.module.ts");
+        var appModuleContent = await File.ReadAllTextAsync(appModuleFilePath);
+
+        var stringBuilder = new StringBuilder(appModuleContent);
+
+        var ngModuleIndex = appModuleContent.IndexOf("@NgModule({", StringComparison.Ordinal) - 1;
+
+        var import = "import {" + entityName + "Component} from './components/" + entityName + "/" +
+                     entityName.ToCamelCase() + ".component';" + Environment.NewLine;
+        stringBuilder.Insert(ngModuleIndex, import);
+
+        var declarationIndex = stringBuilder.ToString().IndexOf("declarations", StringComparison.Ordinal);
+        var declarationArrayEndIndex = stringBuilder.ToString()
+            .IndexOf(",\n    ]", declarationIndex, StringComparison.Ordinal) + 1;
+        var component =
+            Environment.NewLine + $"        {entityName}Component,";
+
+
+        stringBuilder.Insert(declarationArrayEndIndex, component);
+
+        await File.WriteAllTextAsync(appModuleFilePath, stringBuilder.ToString());
+    }
 }

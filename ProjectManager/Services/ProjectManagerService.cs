@@ -418,6 +418,9 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
             Directory.CreateDirectory(listComponentFolderPath);
         }
 
+        await HelperClass.HelperClass.CreateRouting(projectFolderPath, request.EntityName);
+        await HelperClass.HelperClass.AddComponentToModule(projectFolderPath, request.EntityName);
+
         await File.WriteAllTextAsync(
             Path.Combine(listComponentFolderPath, request.EntityName.ToCamelCase() + ".component.ts"),
             request.ListComponent.ComponentTsStringify);
