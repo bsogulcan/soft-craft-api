@@ -1,7 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using AutoMapper;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using ProjectManager;
+using SoftCraft.AppServices.Navigations.Dtos;
 using SoftCraft.Entities;
 using TypeScriptCodeGenerator;
 using Entity = Volo.Abp.Domain.Entities.Entity;
@@ -86,6 +90,65 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
 
         var entityResult = await client.CreateComponentsAsync(input);
         return entityResult;
+    }
+
+    public async Task<StringifyResult> CreateNavigationItems(List<Navigation> navigations)
+    {
+        using var typeScriptCodeGeneratorChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:TypeScriptCodeGeneratorUrl"]);
+        var client =
+            new TypeScriptCodeGenerator.TypeScriptCodeGenerator.TypeScriptCodeGeneratorClient(
+                typeScriptCodeGeneratorChannel);
+
+        var navigationInputs = new CreateNavigationItemRequest();
+
+        foreach (var navigation in navigations.Where(x => !x.ParentNavigationId.HasValue).OrderBy(x => x.Index))
+        {
+            var input = new NavigationItemRequest()
+            {
+                Caption = navigation.Caption,
+                Icon = navigation.Icon,
+                Index = navigation.Index
+            };
+
+            if (navigation.Entity != null)
+            {
+                input.EntityName = navigation.Entity.Name;
+            }
+
+            foreach (var navigationOfNavigation in navigation.Navigations)
+            {
+                input.Navigations.Add(GetNavigationInputs(navigationOfNavigation));
+            }
+
+            navigationInputs.Navigations.Add(input);
+        }
+
+        var result = await client.CreateNavigationItemsAsync(navigationInputs);
+        return result;
+    }
+
+    private NavigationItemRequest GetNavigationInputs(Navigation navigation)
+    {
+        var input = new NavigationItemRequest()
+        {
+            Caption = navigation.Caption,
+            Icon = navigation.Icon,
+            Index = navigation.Index
+        };
+
+        if (navigation.Entity != null)
+        {
+            input.EntityName = navigation.Entity.Name;
+        }
+
+        
+        foreach (var navigationOfNavigation in navigation.Navigations)
+        {
+            input.Navigations.Add(GetNavigationInputs(navigationOfNavigation));
+        }
+
+        return input;
     }
 
     private TypeScriptCodeGenerator.Entity EntityToGeneratorEntity(Entities.Entity entity)

@@ -9,6 +9,7 @@ service TypeScriptCodeGenerator {
   rpc CreateService (Entity) returns (ServiceResult);
   rpc CreateEnum (EnumRequest) returns (StringifyResult);
   rpc CreateComponents(Entity) returns (ComponentResult);
+  rpc CreateNavigationItems(CreateNavigationItemRequest) returns (StringifyResult);
 }
 
 message Entity {
@@ -84,4 +85,16 @@ message ComponentResultEto{
   string componentHtmlStringify = 1;
   string componentTsStringify = 2;
   string componentCssStringify = 3;
+}
+
+message CreateNavigationItemRequest{
+  repeated NavigationItemRequest navigations = 1;
+}
+
+message NavigationItemRequest{
+  string caption = 1;
+  int32 index = 2;
+  string icon = 3;
+  optional string entityName = 4;
+  repeated NavigationItemRequest navigations = 5;
 }

@@ -16,6 +16,7 @@ service ProjectManager{
   rpc AddTypeScriptServiceToExistingProject(AddTypeScriptServiceRequest) returns (ProjectReply);
   rpc AddTypeScriptEnumToExistingProject(AddEnumRequest) returns (ProjectReply);
   rpc AddTypeScriptComponentsToExistingProject(ComponentResult) returns (ProjectReply);
+  rpc AddNavigationToExistingProject(AddStringToExistingProject) returns (ProjectReply);
   rpc FileDownLoad (FileInfo) returns (stream BytesContent);
 }
 
@@ -94,6 +95,7 @@ message FileInfo{
   string fileName = 2;
   string fileExtension = 3;
 }
+
 message BytesContent{
   int64 fileSize = 1;
   bytes buffer = 2;
@@ -113,4 +115,9 @@ message ComponentResultEto{
   string componentHtmlStringify = 1;
   string componentTsStringify = 2;
   string componentCssStringify = 3;
+}
+
+message AddStringToExistingProject{
+  int64 projectId = 1;
+  string stringify = 2;
 }

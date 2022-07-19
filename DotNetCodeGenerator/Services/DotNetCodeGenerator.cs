@@ -373,7 +373,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
 
         appServiceStringBuilder.InsertTab(2)
             .Append(
-                $"public {request.EntityName}AppService(I{request.EntityName}Repository {request.EntityName.ToLower()}Repository) : base({request.EntityName.ToLower()}Repository)")
+                $"public {request.EntityName}AppService(I{request.EntityName}Repository {request.EntityName.ToCamelCase()}Repository) : base({request.EntityName.ToCamelCase()}Repository)")
             .NewLine()
             .InsertTab(2)
             .Append('{')

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using ProjectManager;
 using SoftCraft.Entities;
 using TypeScriptCodeGenerator;
@@ -14,4 +15,5 @@ public interface ITypeScriptCodeGeneratorServiceManager : ITransientDependency
     Task<ServiceResult> CreateServiceAsync(Entities.Entity entity);
     Task<StringifyResult> CreateEnumAsync(Enumerate enumerate);
     Task<ComponentResult> CreateComponentsAsync(Entity entity);
+    Task<StringifyResult> CreateNavigationItems(List<Navigation> navigations);
 }

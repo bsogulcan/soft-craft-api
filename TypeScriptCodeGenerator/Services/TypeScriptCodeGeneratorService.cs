@@ -1,6 +1,7 @@
 using System.Text;
 using Extensions;
 using Grpc.Core;
+using Humanizer;
 using TypeScriptCodeGenerator.Helpers;
 
 namespace TypeScriptCodeGenerator.Services;
@@ -115,7 +116,106 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
         return result;
     }
 
+    public override async Task<StringifyResult> CreateNavigationItems(CreateNavigationItemRequest request,
+        ServerCallContext context)
+    {
+        var result = new StringifyResult();
+        // new MenuItem(
+        //     this.l('Users'),
+        //     '/app/users',
+        //     'fas fa-users',
+        //     'Pages.Users'
+        // ),
+
+        var stringBuilder = new StringBuilder();
+
+        foreach (var navigation in request.Navigations)
+        {
+            stringBuilder.Append("new MenuItem(")
+                .NewLine().InsertTab().Append($"this.l('{navigation.Caption}'),");
+
+            if (navigation.HasEntityName)
+            {
+                stringBuilder.NewLine().InsertTab()
+                    .Append($"'/app/{navigation.EntityName.ToCamelCase().Pluralize()}',");
+            }
+            else
+            {
+                stringBuilder.NewLine().InsertTab().Append("'',");
+            }
+
+            stringBuilder
+                .NewLine().InsertTab().Append($"'{navigation.Icon}',");
+
+            if (navigation.HasEntityName)
+            {
+                stringBuilder.NewLine().InsertTab().Append($"'{navigation.EntityName}.Navigation',");
+            }
+            else
+            {
+                stringBuilder.NewLine().InsertTab().Append("'',");
+            }
+
+            stringBuilder.NewLine().InsertTab().Append("[");
+
+            foreach (var createNavigationItemRequest in navigation.Navigations)
+            {
+                stringBuilder.Append(GetMenuItem(createNavigationItemRequest));
+            }
+
+            stringBuilder.NewLine().InsertTab().Append("],");
+            stringBuilder.NewLine().Append("),").NewLine();
+        }
+
+        result.Stringify = stringBuilder.ToString();
+
+        return result;
+    }
+
     #region HelperMethods
+
+    private string GetMenuItem(NavigationItemRequest input)
+    {
+        var stringBuilder = new StringBuilder();
+
+        stringBuilder.NewLine().Append("new MenuItem(")
+            .NewLine().InsertTab().Append($"this.l('{input.Caption}'),");
+
+        if (input.HasEntityName)
+        {
+            stringBuilder.NewLine().InsertTab()
+                .Append($"'/app/{input.EntityName.ToCamelCase().Pluralize()}',");
+        }
+        else
+        {
+            stringBuilder.NewLine().InsertTab().Append("'',");
+        }
+
+        stringBuilder.NewLine().InsertTab().Append($"'{input.Icon}',");
+
+        if (input.HasEntityName)
+        {
+            stringBuilder.NewLine().InsertTab().Append($"'{input.EntityName}.Navigation',");
+        }
+        else
+        {
+            stringBuilder.NewLine().InsertTab().Append("'',");
+        }
+
+        stringBuilder.NewLine().InsertTab().Append("[");
+
+        foreach (var createNavigationItemRequest in input.Navigations)
+        {
+            stringBuilder.Append(GetMenuItem(createNavigationItemRequest));
+        }
+
+        stringBuilder.NewLine().InsertTab().Append("],")
+            .NewLine().Append("),");
+
+
+        return stringBuilder.ToString();
+    }
+
 
     private StringBuilder GenerateCreateInput(Entity request)
     {

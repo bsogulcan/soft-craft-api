@@ -438,6 +438,43 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         };
     }
 
+    public override async Task<ProjectReply> AddNavigationToExistingProject(AddStringToExistingProject request,
+        ServerCallContext context)
+    {
+        var result = new ProjectReply();
+
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.ProjectId.ToString());
+        var sideBarMenuPath =
+            Path.Combine(projectFolderPath, "angular\\src\\app\\layout\\sidebar-menu.component.ts");
+
+        var sideBarMenuContent = await File.ReadAllTextAsync(sideBarMenuPath);
+
+        var getMenuItemsIndex =
+            sideBarMenuContent.IndexOf("getMenuItems(): MenuItem[] {", StringComparison.Ordinal) + 1;
+
+        var insertableIndex =
+            sideBarMenuContent.IndexOf(@"];", getMenuItemsIndex, StringComparison.Ordinal) - 1;
+
+        var stringBuilder = new StringBuilder(sideBarMenuContent);
+
+        var formattedStringify = new StringBuilder();
+        foreach (var stringifyLine in request.Stringify.Split(Environment.NewLine))
+        {
+            formattedStringify.InsertTab(3).Append(stringifyLine).NewLine();
+        }
+
+        stringBuilder.Insert(insertableIndex, Environment.NewLine + formattedStringify);
+
+        await File.WriteAllTextAsync(
+            sideBarMenuPath,
+            stringBuilder.ToString());
+
+        return new ProjectReply()
+        {
+            Id = request.ProjectId.ToString()
+        };
+    }
+
     #region Helper Methods
 
     private async Task WritePermissionNames(string projectFolderPath, AddAppServiceRequest request)

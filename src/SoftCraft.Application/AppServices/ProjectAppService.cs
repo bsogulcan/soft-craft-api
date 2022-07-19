@@ -29,13 +29,15 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
     private readonly IProjectManagerServiceManager _projectManagerServiceManager;
     private readonly IDotNetCodeGeneratorServiceManager _dotNetCodeGeneratorServiceManager;
     private readonly ITypeScriptCodeGeneratorServiceManager _typeScriptCodeGeneratorServiceManager;
+    private readonly INavigationRepository _navigationRepository;
 
     public ProjectAppService(IProjectRepository projectRepository,
         ICurrentUser currentUser,
         IConfiguration configuration,
         IProjectManagerServiceManager projectManagerServiceManager,
         IDotNetCodeGeneratorServiceManager dotNetCodeGeneratorServiceManager,
-        ITypeScriptCodeGeneratorServiceManager typeScriptCodeGeneratorServiceManager
+        ITypeScriptCodeGeneratorServiceManager typeScriptCodeGeneratorServiceManager,
+        INavigationRepository navigationRepository
     ) : base(projectRepository)
     {
         _currentUser = currentUser;
@@ -43,6 +45,7 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
         _projectManagerServiceManager = projectManagerServiceManager;
         _dotNetCodeGeneratorServiceManager = dotNetCodeGeneratorServiceManager;
         _typeScriptCodeGeneratorServiceManager = typeScriptCodeGeneratorServiceManager;
+        _navigationRepository = navigationRepository;
     }
 
     public override Task<ProjectPartOutput> UpdateAsync(long id, UpdateProjectDto input)
@@ -204,6 +207,15 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         Stringified = createTypeScriptEnumResult.Stringify
                     });
             }
+
+            var navigations = await _navigationRepository.GetListAsync(x => x.ProjectId == project.Id);
+            var tsNavigationResult = await _typeScriptCodeGeneratorServiceManager.CreateNavigationItems(navigations);
+            await _projectManagerServiceManager.AddNavigationToExistingProjectAsync(
+                new AddStringToExistingProject()
+                {
+                    ProjectId = project.Id,
+                    Stringify = tsNavigationResult.Stringify
+                });
 
             await _projectManagerServiceManager.GetProjectZipFile(project);
         }

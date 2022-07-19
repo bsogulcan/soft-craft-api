@@ -200,4 +200,14 @@ public class ProjectManagerServiceManager : IProjectManagerServiceManager
         var result = await projectManagerClient.AddTypeScriptComponentsToExistingProjectAsync(componentResult);
         return result;
     }
+
+    public async Task<ProjectReply> AddNavigationToExistingProjectAsync(AddStringToExistingProject input)
+    {
+        using var projectManagerChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
+        var projectManagerClient =
+            new ProjectManager.ProjectManager.ProjectManagerClient(projectManagerChannel);
+        var result = await projectManagerClient.AddNavigationToExistingProjectAsync(input);
+        return result;
+    }
 }
