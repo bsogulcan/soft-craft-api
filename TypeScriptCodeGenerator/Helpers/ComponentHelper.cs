@@ -181,7 +181,7 @@ public static class ComponentHelper
             stringBuilder.Append($@"            new GridColumn(
                 '{property.Name.ToCamelCase()}',
                 '{property.Name.ToTitle()}',
-                'string',
+                '{property.Type.ToTypeScriptDataGridColumnType()}',
                 '',
                 'right',
                 false,

@@ -420,6 +420,9 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
 
         await HelperClass.HelperClass.CreateRouting(projectFolderPath, request.EntityName);
         await HelperClass.HelperClass.AddComponentToModule(projectFolderPath, request.EntityName);
+        await HelperClass.HelperClass.AddCreateComponentToModule(projectFolderPath, request.EntityName);
+
+        #region ListComponent
 
         await File.WriteAllTextAsync(
             Path.Combine(listComponentFolderPath, request.EntityName.ToCamelCase() + ".component.ts"),
@@ -432,6 +435,34 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         await File.WriteAllTextAsync(
             Path.Combine(listComponentFolderPath, request.EntityName.ToCamelCase() + ".component.css"),
             request.ListComponent.ComponentCssStringify);
+
+        #endregion
+
+        #region CreateComponent
+
+        var createComponentFolderPath =
+            Path.Combine(listComponentFolderPath, $"create-{request.EntityName.ToCamelCase()}");
+
+        if (!Directory.Exists(createComponentFolderPath))
+        {
+            Directory.CreateDirectory(createComponentFolderPath);
+        }
+
+        await File.WriteAllTextAsync(
+            Path.Combine(createComponentFolderPath, "create-" + request.EntityName.ToCamelCase() + ".component.ts"),
+            request.CreateComponent.ComponentTsStringify);
+
+        await File.WriteAllTextAsync(
+            Path.Combine(createComponentFolderPath, "create-" + request.EntityName.ToCamelCase() + ".component.html"),
+            request.CreateComponent.ComponentHtmlStringify);
+
+        await File.WriteAllTextAsync(
+            Path.Combine(createComponentFolderPath, "create-" + request.EntityName.ToCamelCase() + ".component.css"),
+            request.CreateComponent.ComponentCssStringify);
+
+        #endregion
+
+
         return new ProjectReply()
         {
             Id = request.ProjectId.ToString()

@@ -193,7 +193,26 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
         //TODO: Get TS Enums
 
         var createComponentResult = await _typeScriptCodeGeneratorServiceManager.CreateComponentsAsync(entity);
+        entityCodeResultDto.TypeScriptComponentResult.ComponentTsStringify =
+            createComponentResult.ListComponent.ComponentTsStringify;
+        entityCodeResultDto.TypeScriptComponentResult.ComponentHtmlStringify =
+            createComponentResult.ListComponent.ComponentHtmlStringify;
+        entityCodeResultDto.TypeScriptComponentResult.ComponentCssStringify =
+            createComponentResult.ListComponent.ComponentCssStringify;
 
+        entityCodeResultDto.TypeScriptCreateComponentResult.ComponentTsStringify =
+            createComponentResult.CreateComponent.ComponentTsStringify;
+        entityCodeResultDto.TypeScriptCreateComponentResult.ComponentHtmlStringify =
+            createComponentResult.CreateComponent.ComponentHtmlStringify;
+        entityCodeResultDto.TypeScriptCreateComponentResult.ComponentCssStringify =
+            createComponentResult.CreateComponent.ComponentCssStringify;
+
+        // entityCodeResultDto.TypeScriptEditComponentResult.ComponentTsStringify =
+        //     createComponentResult.EditComponent.ComponentTsStringify;
+        // entityCodeResultDto.TypeScriptEditComponentResult.ComponentHtmlStringify =
+        //     createComponentResult.EditComponent.ComponentHtmlStringify;
+        // entityCodeResultDto.TypeScriptEditComponentResult.ComponentCssStringify =
+        //     createComponentResult.EditComponent.ComponentCssStringify;
         return entityCodeResultDto;
     }
 

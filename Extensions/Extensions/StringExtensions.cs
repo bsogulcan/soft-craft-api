@@ -88,4 +88,21 @@ public static class StringExtensions
 
         return type + ";";
     }
+
+    public static string ToTypeScriptDataGridColumnType(this string referenceType)
+    {
+        var lowerCaseReferenceType = referenceType.Trim().ToLower();
+
+        var type = lowerCaseReferenceType switch
+        {
+            "string" => "text",
+            "int" or "long" or "float" or "double" or "decimal" => "numeric",
+            "boolean" => "boolean",
+            "datetime" => "date",
+            _ => string.Empty
+        };
+
+
+        return type;
+    }
 }

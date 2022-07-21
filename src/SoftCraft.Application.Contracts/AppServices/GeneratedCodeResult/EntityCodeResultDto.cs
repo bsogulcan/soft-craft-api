@@ -10,6 +10,9 @@ public class EntityCodeResultDto
         RepositoryResult = new RepositoryResultDto();
         AppServiceResult = new AppServiceResultDto();
         TypeScriptDtoResult = new TypeScriptDtoResultDto();
+        TypeScriptComponentResult = new TypeScriptComponentResultDto();
+        TypeScriptCreateComponentResult = new TypeScriptComponentResultDto();
+        TypeScriptEditComponentResult = new TypeScriptComponentResultDto();
     }
 
     public long EntityId { get; set; }
@@ -21,4 +24,7 @@ public class EntityCodeResultDto
     public string ConfigurationResult { get; set; }
     public TypeScriptDtoResultDto TypeScriptDtoResult { get; set; }
     public string TypeScriptServiceResult { get; set; }
+    public TypeScriptComponentResultDto TypeScriptComponentResult { get; set; }
+    public TypeScriptComponentResultDto TypeScriptCreateComponentResult { get; set; }
+    public TypeScriptComponentResultDto TypeScriptEditComponentResult { get; set; }
 }
