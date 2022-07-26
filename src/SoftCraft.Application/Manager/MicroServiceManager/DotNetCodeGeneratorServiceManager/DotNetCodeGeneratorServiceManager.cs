@@ -203,10 +203,21 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
                 property.RelationalEntityPrimaryKeyType =
                     (PrimaryKeyType) entityProperty.RelationalEntity.PrimaryKeyType;
                 property.RelationalEntityName = entityProperty.RelationalEntity.Name;
-                property.RelationalPropertyName =
-                    entityProperty.RelationalEntity.Properties.FirstOrDefault(x =>
-                            x.RelationalEntityId == entity.Id)
-                        ?.Name;
+
+                var relationalEntityForeignProperty = entityProperty.RelationalEntity.Properties.FirstOrDefault(x =>
+                    x.RelationalEntityId == entity.Id);
+
+                if (relationalEntityForeignProperty != null)
+                {
+                    property.RelationalPropertyName =
+                        entityProperty.RelationalEntity.Properties.FirstOrDefault(x =>
+                            x.RelationalEntityId == entity.Id).Name;
+                }
+                else
+                {
+                    property.RelationalPropertyName = property.RelationalEntityName;
+                }
+
 
                 if (entityProperty.RelationType != null)
                 {
@@ -233,7 +244,4 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
 
         return dotNetCodeGeneratorEntity;
     }
-
-
-   
 }
