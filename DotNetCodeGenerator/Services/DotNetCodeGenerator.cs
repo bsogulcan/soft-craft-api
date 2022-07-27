@@ -2,6 +2,7 @@ using System.Text;
 using Extensions;
 using Grpc.Core;
 using Humanizer;
+using Volo.Abp.Tracing;
 
 namespace DotNetCodeGenerator.Services;
 
@@ -268,6 +269,10 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         appServiceInterfaceStringBuilder.Append("using Abp.Application.Services;")
             .NewLine()
             .Append($"using {request.ProjectName}.Domain.{request.EntityName}.Dtos;")
+            .NewLine()
+            .Append("using System.Threading.Tasks;")
+            .NewLine()
+            .Append("using Abp.Application.Services.Dto;")
             .NewLine(2);
 
         appServiceInterfaceStringBuilder.Append($"namespace {request.ProjectName}.Domain.{request.EntityName}")
@@ -278,11 +283,21 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
 
         appServiceInterfaceStringBuilder
             .Append(
-                $"public interface I{request.EntityName}AppService:IAsyncCrudAppService<{request.EntityName}FullOutput,int,Get{request.EntityName}Input,Create{request.EntityName}Input,Update{request.EntityName}Input,Get{request.EntityName}Input,Delete{request.EntityName}Input>")
+                $"public interface I{request.EntityName}AppService:IAsyncCrudAppService<{request.EntityName}FullOutput,{request.EntityType},Get{request.EntityName}Input,Create{request.EntityName}Input,Update{request.EntityName}Input,Get{request.EntityName}Input,Delete{request.EntityName}Input>")
             .NewLine()
             .InsertTab()
             .Append('{')
             .NewLine();
+
+
+        foreach (var relationalProperty in request.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
+        {
+            appServiceInterfaceStringBuilder.InsertTab(2)
+                .Append(
+                    $"Task<PagedResultDto<{request.EntityName}FullOutput>> Get{request.EntityName.Pluralize()}By{relationalProperty.Name}Id({relationalProperty.Type} {relationalProperty.Name.ToCamelCase()}Id);")
+                .NewLine();
+        }
 
 
         appServiceInterfaceStringBuilder
@@ -352,6 +367,12 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             .Append($"using {request.ProjectName}.Domain.Entities;")
             .NewLine()
             .Append($"using {request.ProjectName}.EntityFrameworkCore.Repositories;")
+            .NewLine()
+            .Append("using System.Collections.Generic;")
+            .NewLine()
+            .Append("using System.Threading.Tasks;")
+            .NewLine()
+            .Append($"using Abp.Application.Services.Dto;")
             .NewLine(2);
 
         appServiceStringBuilder.Append($"namespace {request.ProjectName}.Domain.{request.EntityName}")
@@ -365,7 +386,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             .InsertTab();
 
         appServiceStringBuilder.Append(
-                $"public class {request.EntityName}AppService : AsyncCrudAppService<Entities.{request.EntityName}, {request.EntityName}FullOutput, int, Get{request.EntityName}Input, Create{request.EntityName}Input, Update{request.EntityName}Input, Get{request.EntityName}Input, Delete{request.EntityName}Input>, I{request.EntityName}AppService")
+                $"public class {request.EntityName}AppService : AsyncCrudAppService<Entities.{request.EntityName}, {request.EntityName}FullOutput, {request.EntityType}, Get{request.EntityName}Input, Create{request.EntityName}Input, Update{request.EntityName}Input, Get{request.EntityName}Input, Delete{request.EntityName}Input>, I{request.EntityName}AppService")
             .NewLine()
             .InsertTab()
             .Append('{')
@@ -398,6 +419,28 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         appServiceStringBuilder.InsertTab(2)
             .Append('}')
             .NewLine();
+
+        foreach (var relationalProperty in request.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
+        {
+            appServiceStringBuilder.NewLine().InsertTab(2)
+                .Append($"[AbpAuthorize(PermissionNames.{request.EntityName}_GetList)]")
+                .NewLine().InsertTab(2)
+                .Append(
+                    $"public async Task<PagedResultDto<{request.EntityName}FullOutput>> Get{request.EntityName.Pluralize()}By{relationalProperty.Name}Id({relationalProperty.Type} {relationalProperty.Name.ToCamelCase()}Id)")
+                .NewLine().InsertTab(2).Append("{")
+                .NewLine().InsertTab(3)
+                .Append(
+                    $"var items = await Repository.GetAllListAsync(x => x.{relationalProperty.Name}Id == {relationalProperty.Name.ToCamelCase()}Id);")
+                .NewLine().InsertTab(3).Append($"return new PagedResultDto<{request.EntityName}FullOutput>")
+                .NewLine().InsertTab(3).Append("{")
+                .NewLine().InsertTab(4).Append("TotalCount = items.Count,")
+                .NewLine().InsertTab(4).Append($"Items = ObjectMapper.Map<List<{request.EntityName}FullOutput>>(items)")
+                .NewLine().InsertTab(3).Append("};")
+                .NewLine().InsertTab(2).Append("}")
+                .NewLine();
+        }
+
 
         appServiceStringBuilder
             .NewLine()

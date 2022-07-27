@@ -1,11 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using DotNetCodeGenerator;
+using Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using ProjectManager;
@@ -18,6 +20,7 @@ using SoftCraft.Repositories;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Users;
+using RelationType = TypeScriptCodeGenerator.RelationType;
 
 namespace SoftCraft.AppServices;
 
@@ -119,12 +122,29 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         DomainToDtosStringify = createDtosResult.DomainToDtosStringify
                     });
 
-                var createAppServiceResult = await _dotNetCodeGeneratorServiceManager.CreateAppServiceAsync(
-                    new AppServiceRequest()
+                
+                var createAppServiceInput = new AppServiceRequest()
+                {
+                    EntityName = entity.Name,
+                    ProjectName = entity.Project.UniqueName,
+                    EntityType = PropertyTypeExtensions.ConvertPrimaryKeyToDotNetDataType(entity.PrimaryKeyType),
+                    Properties = { }
+                };
+
+                foreach (var relationalProperty in entity.Properties.Where(x =>
+                             x.IsRelationalProperty && x.RelationType == Enums.RelationType.OneToOne))
+                {
+                    createAppServiceInput.Properties.Add(new DotNetCodeGenerator.Property()
                     {
-                        EntityName = entity.Name,
-                        ProjectName = project.UniqueName
+                        IsRelationalProperty = relationalProperty.IsRelationalProperty,
+                        RelationType = (DotNetCodeGenerator.RelationType) relationalProperty.RelationType,
+                        Name = relationalProperty.Name,
+                        Type = PropertyTypeExtensions.ConvertPrimaryKeyToDotNetDataType(relationalProperty.Entity
+                            .PrimaryKeyType),
                     });
+                }
+                
+                var createAppServiceResult = await _dotNetCodeGeneratorServiceManager.CreateAppServiceAsync(createAppServiceInput);
 
 
                 var addAppServiceResult = await _projectManagerServiceManager.AddAppServiceToExistingProjectAsync(

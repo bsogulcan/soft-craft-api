@@ -19,4 +19,6 @@ public class CreatePropertyInput
     public bool Unique { get; set; }
     public bool IsEnumProperty { get; set; }
     public long? EnumerateId { get; set; }
+    public bool DisplayOnList { get; set; }
+    public bool FilterOnList { get; set; }
 }

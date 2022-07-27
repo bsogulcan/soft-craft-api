@@ -17,6 +17,7 @@ message Entity {
   string name = 2;
   PrimaryKeyType primaryKeyType = 3;
   repeated Property properties = 4;
+  repeated Entity RelatedEntities = 5;
 }
 
 message Property {
@@ -28,6 +29,8 @@ message Property {
   optional string relationalEntityName = 6;
   optional RelationType relationType = 7;
   bool isEnumerateProperty = 8;
+  bool displayOnList = 9;
+  bool filterOnList = 10;
 }
 
 message DtoResult{

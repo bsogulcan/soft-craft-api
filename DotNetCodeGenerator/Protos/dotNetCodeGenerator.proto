@@ -95,6 +95,8 @@ message DtoResult{
 message AppServiceRequest{
   string projectName = 1;
   string entityName = 2;
+  string entityType = 3;
+  repeated Property properties = 4;
 }
 
 message AppServiceResult{

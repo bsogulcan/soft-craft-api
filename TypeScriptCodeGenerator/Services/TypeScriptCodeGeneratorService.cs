@@ -49,6 +49,10 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             .Append("import {Create" + request.Name + "Input} from './dtos/Create" + request.Name + "Input';")
             .NewLine()
             .Append("import {" + request.Name + "FullOutput} from './dtos/" + request.Name + "FullOutput';")
+            .NewLine()
+            .Append("import {ResponceTypeWrap} from '../ResponseType';")
+            .NewLine()
+            .Append("import {Observable} from 'rxjs';")
             .NewLine(2);
 
         stringBuilder
@@ -72,8 +76,29 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             .Append("@Inject(API_BASE_URL) baseUrl?: string")
             .NewLine().InsertTab().Append(") {")
             .NewLine().InsertTab(2).Append($"super('{request.Name}', http, baseUrl);")
-            .NewLine().InsertTab().Append("}")
-            .NewLine().Append("}");
+            .NewLine().InsertTab().Append("}").NewLine();
+
+
+        foreach (var relationalProperty in request.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
+        {
+            // getDepartmentsByFactoryId(id: number): Observable<ResponceTypeWrap<Array<DepartmentFullOutput>>> {
+            //     return this.http.get<ResponceTypeWrap<Array<DepartmentFullOutput>>>(this.baseUrl + '/api/services/app/' + this.endPoint + '/GetDepartmentsByFactoryId?factoryId=' + id);
+            // }
+
+            stringBuilder.NewLine().InsertTab()
+                .Append(
+                    $"get{request.Name.Pluralize()}By{relationalProperty.Name}Id(id: {relationalProperty.Type}): Observable<ResponceTypeWrap<Array<{request.Name}FullOutput>>> ")
+                .Append("{")
+                .NewLine().InsertTab(2)
+                .Append(
+                    $"return this.http.get<ResponceTypeWrap<Array<{request.Name}FullOutput>>>(this.baseUrl + '/api/services/app/' + this.endPoint + '/Get{request.Name.Pluralize()}By{relationalProperty.Name}Id?{relationalProperty.Name.ToCamelCase()}Id=' + id);")
+                .NewLine().InsertTab().Append("}")
+                .NewLine();
+        }
+
+
+        stringBuilder.NewLine().Append("}");
 
 
         result.Stringify = stringBuilder.ToString();

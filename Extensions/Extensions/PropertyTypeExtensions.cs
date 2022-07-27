@@ -32,4 +32,15 @@ public static class PropertyTypeExtensions
             _ => "UndefinedType"
         };
     }
+
+    public static string ConvertPrimaryKeyToDotNetDataType(PrimaryKeyType type)
+    {
+        return type switch
+        {
+            PrimaryKeyType.Int => "int",
+            PrimaryKeyType.Long => "long",
+            PrimaryKeyType.Guid => "Guid",
+            _ => "UndefinedType"
+        };
+    }
 }

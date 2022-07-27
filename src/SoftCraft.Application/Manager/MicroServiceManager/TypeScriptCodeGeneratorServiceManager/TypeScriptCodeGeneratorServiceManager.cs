@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Extensions;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using ProjectManager;
@@ -9,6 +10,7 @@ using SoftCraft.AppServices.Navigations.Dtos;
 using SoftCraft.Entities;
 using TypeScriptCodeGenerator;
 using Entity = Volo.Abp.Domain.Entities.Entity;
+using Property = TypeScriptCodeGenerator.Property;
 
 namespace SoftCraft.Manager.MicroServiceManager.TypeScriptCodeGeneratorServiceManager;
 
@@ -45,8 +47,23 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
 
         var input = new TypeScriptCodeGenerator.Entity()
         {
-            Name = entity.Name
+            Name = entity.Name,
+            PrimaryKeyType = (PrimaryKeyType) entity.PrimaryKeyType,
+            Properties = { }
         };
+
+        foreach (var property in entity.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType == Enums.RelationType.OneToOne))
+        {
+            input.Properties.Add(new Property()
+            {
+                Name = property.Name,
+                Type = PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType(
+                    (int) property.Entity.PrimaryKeyType),
+                IsRelationalProperty = property.IsRelationalProperty,
+                RelationType = (RelationType) property.RelationType
+            });
+        }
 
         var entityResult = await client.CreateServiceAsync(input);
         return entityResult;
@@ -82,14 +99,36 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
     {
         using var typeScriptCodeGeneratorChannel =
             GrpcChannel.ForAddress(_configuration["MicroServices:TypeScriptCodeGeneratorUrl"]);
-        var client =
-            new TypeScriptCodeGenerator.TypeScriptCodeGenerator.TypeScriptCodeGeneratorClient(
-                typeScriptCodeGeneratorChannel);
+        var client = new TypeScriptCodeGenerator.TypeScriptCodeGenerator.TypeScriptCodeGeneratorClient(
+            typeScriptCodeGeneratorChannel);
 
         var input = EntityToGeneratorEntity(entity);
 
+        Stack<Entities.Entity> entities = new Stack<Entities.Entity>();
+        GetRelationalEntities(entity, ref entities);
+
+        foreach (var relatedEntity in entities)
+        {
+            input.RelatedEntities.Add(EntityToGeneratorEntity(relatedEntity));
+        }
+
         var entityResult = await client.CreateComponentsAsync(input);
         return entityResult;
+    }
+
+    private void GetRelationalEntities(Entities.Entity entity, ref Stack<Entities.Entity> entities)
+    {
+        foreach (var property in entity.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType == Enums.RelationType.OneToOne))
+        {
+            if (entities.FirstOrDefault(x => x == property.RelationalEntity) != null)
+            {
+                continue;
+            }
+
+            entities.Push(property.RelationalEntity);
+            GetRelationalEntities(property.RelationalEntity, ref entities);
+        }
     }
 
     public async Task<StringifyResult> CreateNavigationItems(List<Navigation> navigations)
@@ -142,7 +181,7 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
             input.EntityName = navigation.Entity.Name;
         }
 
-        
+
         foreach (var navigationOfNavigation in navigation.Navigations)
         {
             input.Navigations.Add(GetNavigationInputs(navigationOfNavigation));
@@ -168,6 +207,8 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
                 //Type = GetNormalizedPropertyType(entityProperty.Type.Value),
                 Nullable = entityProperty.IsNullable,
                 IsRelationalProperty = entityProperty.IsRelationalProperty,
+                DisplayOnList = entityProperty.DisplayOnList,
+                FilterOnList = entityProperty.FilterOnList
             };
 
             if (entityProperty.IsRelationalProperty && entityProperty.RelationalEntityId.HasValue)

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using DotNetCodeGenerator;
+using Extensions;
 using Google.Protobuf.Collections;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
@@ -179,12 +181,34 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
         entityCodeResultDto.DtoResult.DtosToDomainMapResult = createDtosResult.DtosToDomainStringify;
         entityCodeResultDto.DtoResult.DomainToDtosMapResult = createDtosResult.DomainToDtosStringify;
 
-        var createAppServiceResult = await _dotNetCodeGeneratorServiceManager.CreateAppServiceAsync(
-            new AppServiceRequest()
+
+        var entityFromGenerator = _dotNetCodeGeneratorServiceManager.EntityToGeneratorEntity(entity);
+
+
+        var createAppServiceInput = new AppServiceRequest()
+        {
+            EntityName = entity.Name,
+            ProjectName = entity.Project.UniqueName,
+            EntityType = PropertyTypeExtensions.ConvertPrimaryKeyToDotNetDataType(entity.PrimaryKeyType),
+            Properties = { }
+        };
+
+        foreach (var relationalProperty in entity.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType == Enums.RelationType.OneToOne))
+        {
+            createAppServiceInput.Properties.Add(new DotNetCodeGenerator.Property()
             {
-                EntityName = entity.Name,
-                ProjectName = entity.Project.UniqueName
+                IsRelationalProperty = relationalProperty.IsRelationalProperty,
+                RelationType = (RelationType) relationalProperty.RelationType,
+                Name = relationalProperty.Name,
+                Type = PropertyTypeExtensions.ConvertPrimaryKeyToDotNetDataType(relationalProperty.Entity
+                    .PrimaryKeyType),
             });
+        }
+
+        var createAppServiceResult =
+            await _dotNetCodeGeneratorServiceManager.CreateAppServiceAsync(createAppServiceInput);
+
         entityCodeResultDto.AppServiceResult.IAppServiceResult = createAppServiceResult.AppServiceInterfaceStringify;
         entityCodeResultDto.AppServiceResult.AppServiceResult = createAppServiceResult.AppServiceStringify;
         entityCodeResultDto.AppServiceResult.PermissionNamesResult = createAppServiceResult.PermissionNames;

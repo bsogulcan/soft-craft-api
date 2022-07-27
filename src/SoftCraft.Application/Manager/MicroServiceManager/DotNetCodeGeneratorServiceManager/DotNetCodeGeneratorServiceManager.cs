@@ -161,7 +161,7 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
         return result;
     }
 
-    private DotNetCodeGenerator.Entity EntityToGeneratorEntity(Entity entity)
+    public DotNetCodeGenerator.Entity EntityToGeneratorEntity(Entity entity)
     {
         var dotNetCodeGeneratorEntity = new DotNetCodeGenerator.Entity()
         {
@@ -179,7 +179,7 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
             }
         };
 
-        foreach (var entityProperty in entity.Properties)
+        foreach (var entityProperty in entity.Properties?.OrderBy(x => x.IsRelationalProperty).ThenBy(x => x.Name))
         {
             var property = new DotNetCodeGenerator.Property()
             {

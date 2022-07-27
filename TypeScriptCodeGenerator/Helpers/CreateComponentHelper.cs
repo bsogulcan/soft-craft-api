@@ -13,24 +13,36 @@ public static class CreateComponentHelper
         stringBuilder.Append("import {Component, OnInit} from '@angular/core';")
             .NewLine().Append("import {DynamicDialogRef} from 'primeng-lts/dynamicdialog';")
             .NewLine().Append(
-                "import {" + entity.Name + "Service} from '../../../../../shared/services/" +
+                "import {" + entity.Name + "Service} from '../../../../shared/services/" +
                 entity.Name + "/" + entity.Name.ToCamelCase() + ".service';")
             .NewLine().Append(
                 "import {Create" + entity.Name + "Input} from '../../../../shared/services/" + entity.Name +
                 "/dtos/Create" + entity.Name + "Input';")
             .NewLine().Append("import {FormControl, FormGroup, Validators} from '@angular/forms';");
 
-        foreach (var relationalProperty in entity.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
+        // foreach (var relationalProperty in entity.Properties.Where(x =>
+        //              x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
+        // {
+        //     stringBuilder.NewLine().Append(
+        //             "import {" + relationalProperty.Name + "Service} from '../../../../shared/services/" +
+        //             relationalProperty.Name + "/" + relationalProperty.Name.ToCamelCase() + ".service';")
+        //         .NewLine().Append(
+        //             "import {" + relationalProperty.Name + "FullOutput} from '../../../../shared/services/" +
+        //             relationalProperty.Name +
+        //             "/dtos/" + relationalProperty.Name + "FullOutput';");
+        // }
+
+        foreach (var relatedEntity in entity.RelatedEntities.Reverse())
         {
             stringBuilder.NewLine().Append(
-                    "import {" + relationalProperty.Name + "Service} from '../../../../shared/services/" +
-                    relationalProperty.Name + "/" + relationalProperty.Name.ToCamelCase() + ".service';")
+                    "import {" + relatedEntity.Name + "Service} from '../../../../shared/services/" +
+                    relatedEntity.Name + "/" + relatedEntity.Name.ToCamelCase() + ".service';")
                 .NewLine().Append(
-                    "import {" + relationalProperty.Name + "FullOutput} from '../../../../shared/services/" +
-                    relationalProperty.Name +
-                    "/dtos/" + relationalProperty.Name + "FullOutput';");
+                    "import {" + relatedEntity.Name + "FullOutput} from '../../../../shared/services/" +
+                    relatedEntity.Name +
+                    "/dtos/" + relatedEntity.Name + "FullOutput';");
         }
+
 
         stringBuilder.NewLine(2);
 
@@ -46,12 +58,11 @@ public static class CreateComponentHelper
             .NewLine().InsertTab().Append($"isSaving: boolean;")
             .NewLine().InsertTab().Append("formGroup: FormGroup;");
 
-        foreach (var relationalProperty in entity.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
+        foreach (var relatedEntity in entity.RelatedEntities.Reverse())
         {
             stringBuilder.NewLine().InsertTab()
                 .Append(
-                    $"{relationalProperty.Name.ToCamelCase().Pluralize()}: Array<{relationalProperty.Name}FullOutput>;");
+                    $"{relatedEntity.Name.ToCamelCase().Pluralize()}: Array<{relatedEntity.Name}FullOutput> = new Array<{relatedEntity.Name}FullOutput>();");
         }
 
         stringBuilder.NewLine(2);
@@ -59,30 +70,44 @@ public static class CreateComponentHelper
         stringBuilder.InsertTab().Append("constructor(private ref: DynamicDialogRef,")
             .NewLine().InsertTab(4).Append($"private {entity.Name.ToCamelCase()}Service: {entity.Name}Service,");
 
-        foreach (var relationalProperty in entity.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
+        foreach (var relatedEntity in entity.RelatedEntities.Reverse())
         {
             stringBuilder.NewLine().InsertTab(4)
-                .Append($"private {relationalProperty.Name.ToCamelCase()}Service: {relationalProperty.Name}Service,");
+                .Append($"private {relatedEntity.Name.ToCamelCase()}Service: {relatedEntity.Name}Service,");
         }
 
         stringBuilder.NewLine().InsertTab().Append(") {")
             .NewLine();
 
-        foreach (var relationalProperty in entity.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
+
+        if (entity.RelatedEntities.Count > 0)
         {
-            stringBuilder.NewLine().InsertTab(2).Append("this." + relationalProperty.Name.ToCamelCase() +
+            stringBuilder.NewLine().InsertTab(2).Append("this." + entity.RelatedEntities[0].Name.ToCamelCase() +
                                                         "Service.getList().subscribe(response => {")
                 .NewLine().InsertTab(3).Append("if (response.success) {")
                 .NewLine().InsertTab(4)
-                .Append($"this.{relationalProperty.Name.ToCamelCase().Pluralize()}= response.result.items;")
+                .Append($"this.{entity.RelatedEntities[0].Name.ToCamelCase().Pluralize()}= response.result.items;")
                 .NewLine().InsertTab(3).Append("} else {")
                 .NewLine().InsertTab(4).Append("abp.message.error(response.error.message);")
                 .NewLine().InsertTab(3).Append("}")
                 .NewLine().InsertTab(2).Append("}, error => abp.message.error(error.error.error.message));")
                 .NewLine(2);
         }
+
+        // foreach (var relationalProperty in entity.Properties.Where(x =>
+        //              x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
+        // {
+        //     stringBuilder.NewLine().InsertTab(2).Append("this." + relationalProperty.Name.ToCamelCase() +
+        //                                                 "Service.getList().subscribe(response => {")
+        //         .NewLine().InsertTab(3).Append("if (response.success) {")
+        //         .NewLine().InsertTab(4)
+        //         .Append($"this.{relationalProperty.Name.ToCamelCase().Pluralize()}= response.result.items;")
+        //         .NewLine().InsertTab(3).Append("} else {")
+        //         .NewLine().InsertTab(4).Append("abp.message.error(response.error.message);")
+        //         .NewLine().InsertTab(3).Append("}")
+        //         .NewLine().InsertTab(2).Append("}, error => abp.message.error(error.error.error.message));")
+        //         .NewLine(2);
+        // }
 
         stringBuilder.InsertTab().Append("}")
             .NewLine();
@@ -109,7 +134,7 @@ public static class CreateComponentHelper
 
         stringBuilder.NewLine().InsertTab().Append("close(response: boolean) {")
             .NewLine().InsertTab(2).Append("if (this.ref) {")
-            .NewLine().InsertTab(3).Append("this.ref.close(respose);")
+            .NewLine().InsertTab(3).Append("this.ref.close(response);")
             .NewLine().InsertTab(2).Append("}")
             .NewLine().InsertTab().Append("}")
             .NewLine();
@@ -129,7 +154,30 @@ public static class CreateComponentHelper
             .NewLine().InsertTab(3).Append("});")
             .NewLine().InsertTab().Append("}")
             .NewLine(2);
+        Entity lastRelatedEntity = null;
+        foreach (var relatedEntity in entity.RelatedEntities)
+        {
+            if (lastRelatedEntity != null)
+            {
+                stringBuilder.NewLine().InsertTab()
+                    .Append($"on{lastRelatedEntity.Name}Changed({lastRelatedEntity.Name.ToCamelCase()}Id: number) ")
+                    .Append("{")
+                    .NewLine().InsertTab(2).Append("this." + relatedEntity.Name.ToCamelCase() +
+                                                   $"Service.get{relatedEntity.Name.Pluralize()}By{lastRelatedEntity.Name}Id({lastRelatedEntity.Name.ToCamelCase()}Id).subscribe(response => ")
+                    .Append("{")
+                    .NewLine().InsertTab(3).Append("if (response.success) {")
+                    .NewLine().InsertTab(4)
+                    .Append($"this.{relatedEntity.Name.ToCamelCase().Pluralize()} = response.result.items;")
+                    .NewLine().InsertTab(3).Append("} else {")
+                    .NewLine().InsertTab(4).Append("abp.message.error(response.error.message);")
+                    .NewLine().InsertTab(3).Append("}")
+                    .NewLine().InsertTab(2).Append("}, error => abp.message.error(error.error.error.message));")
+                    .NewLine().InsertTab().Append("}")
+                    .NewLine(2);
+            }
 
+            lastRelatedEntity = relatedEntity;
+        }
 
         stringBuilder.Append("}");
 
@@ -140,7 +188,60 @@ public static class CreateComponentHelper
     public static StringBuilder GetCreateComponentHtmlStringify(Entity entity)
     {
         var stringBuilder = new StringBuilder();
+        stringBuilder.Append("<div class=\"flex align-content-between\">")
+            .NewLine().InsertTab().Append("<div class=\"flex align-items-center\">")
+            .NewLine().InsertTab(2).Append("<div class=\"p-fluid mt-1\">")
+            .NewLine().InsertTab(3).Append("<form [formGroup]=\"formGroup\">");
+
+
+        foreach (var property in entity.Properties)
+        {
+            stringBuilder.NewLine().Append(GenerateElement(property, entity.Name));
+        }
+
+        stringBuilder.NewLine().InsertTab(3).Append("</form>")
+            .NewLine().InsertTab(2).Append("</div>")
+            .NewLine().InsertTab().Append("</div>")
+            .NewLine().InsertTab().Append("<div class=\"flex\" align=\"end\">")
+            .NewLine().InsertTab(2)
+            .Append(
+                "<button pButton pRipple label=\"{{ 'Cancel' | localize }}\" icon=\"pi pi-times\" class=\"p-button-text\" (click)=\"close(false)\" [disabled]=\"isSaving\"></button>")
+            .NewLine().InsertTab(2)
+            .Append(
+                "<button pButton pRipple label=\"{{ 'Save' | localize }}\" icon=\"pi pi-check\" class=\"p-button-text\" (click)=\"save()\" [disabled]=\"isSaving || this.formGroup.invalid\"></button>")
+            .NewLine().InsertTab().Append("</div>")
+            .NewLine().Append("</div>");
+
         return stringBuilder;
+    }
+
+    private static string GenerateElement(Property property, string entityName)
+    {
+        var stringBuilder = new StringBuilder();
+
+        switch (property.Type)
+        {
+            case "string":
+            {
+                stringBuilder.InsertTab(4).Append("<div class=\"p-field p-grid\">")
+                    .NewLine().InsertTab(5)
+                    .Append(
+                        "<label for=\"element" + property.Name +
+                        "\" class=\"p-col-12 p-mb-2 p-md-2 p-mb-md-0\">{{ \"" + property.Name +
+                        "\" | localize}}</label>")
+                    .NewLine().InsertTab(5).Append("<div class=\"p-col-12 p-md-10\">")
+                    .NewLine().InsertTab(6)
+                    .Append(
+                        "<input pInputText inputId=\"element" + property.Name +
+                        "\" type=\"text\" formControlName=\"element" + property.Name +
+                        "\" [(ngModel)]=\"createInput." + property.Name.ToCamelCase() + "\" />")
+                    .NewLine().InsertTab(5).Append("</div>")
+                    .NewLine().InsertTab(4).Append("</div>");
+            }
+                break;
+        }
+
+        return stringBuilder.ToString();
     }
 
     public static StringBuilder GetCreateComponentCssStringify()

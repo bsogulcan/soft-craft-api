@@ -57,9 +57,9 @@ public static class StringExtensions
 
         string type = lowerCaseReferenceType switch
         {
-            "string" => "string",
+            "string" or "guid" => "string",
             "int" or "long" or "float" or "double" or "decimal" => "number",
-            "boolean" => "bool",
+            "bool" => "boolean",
             "datetime" => "Date",
             _ => string.Empty
         };
@@ -101,7 +101,6 @@ public static class StringExtensions
             "datetime" => "date",
             _ => string.Empty
         };
-
 
         return type;
     }
