@@ -17,4 +17,8 @@
         <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.2.4" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Extensions\Extensions\Extensions.csproj" />
+    </ItemGroup>
+
 </Project>

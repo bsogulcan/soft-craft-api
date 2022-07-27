@@ -13,6 +13,7 @@
 
     <ItemGroup>
         <PackageReference Include="Grpc.AspNetCore" Version="2.40.0" />
+        <PackageReference Include="Humanizer" Version="2.14.1" />
         <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="6.0.0" />
     </ItemGroup>
 
@@ -23,6 +24,10 @@
       <Content Update="appsettings.Development.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Extensions\Extensions\Extensions.csproj" />
     </ItemGroup>
 
 </Project>

@@ -27,4 +27,6 @@ public class Property : FullAuditedEntity<long>
     public bool Unique { get; set; }
     public long EntityId { get; set; }
     public virtual Entity Entity { get; set; }
+    public bool DisplayOnList { get; set; }
+    public bool FilterOnList { get; set; }
 }

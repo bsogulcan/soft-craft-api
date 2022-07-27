@@ -4,6 +4,7 @@ using SoftCraft.AppServices.Navigations;
 using SoftCraft.AppServices.Navigations.Dtos;
 using SoftCraft.AppServices.Property.Dtos;
 using SoftCraft.Entities;
+using SoftCraft.Manager.MicroServiceManager.TypeScriptCodeGeneratorServiceManager;
 using SoftCraft.Repositories;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -14,8 +15,17 @@ namespace SoftCraft.AppServices;
 public class NavigationAppService : CrudAppService<Navigation, NavigationFullOutput, long, GetNavigationListInput,
     CreateNavigationInput, UpdateNavigationInput>, INavigationAppService
 {
-    public NavigationAppService(INavigationRepository repository) : base(repository)
+    private readonly ITypeScriptCodeGeneratorServiceManager _typeScriptCodeGeneratorServiceManager;
+
+    public NavigationAppService(INavigationRepository repository,
+        ITypeScriptCodeGeneratorServiceManager typeScriptCodeGeneratorServiceManager) : base(repository)
     {
+        _typeScriptCodeGeneratorServiceManager = typeScriptCodeGeneratorServiceManager;
+    }
+
+    public override Task<NavigationFullOutput> GetAsync(long id)
+    {
+        return base.GetAsync(id);
     }
 
     public override async Task<PagedResultDto<NavigationFullOutput>> GetListAsync(GetNavigationListInput input)

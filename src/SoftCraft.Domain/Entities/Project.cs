@@ -21,5 +21,6 @@ public class Project : FullAuditedEntity<long>
     public LogType LogType { get; set; }
 
     public virtual ICollection<Entity> Entities { get; set; }
+    public virtual ICollection<Enumerate> Enumerates { get; set; }
     public byte[] RowVersion { get; set; }
 }

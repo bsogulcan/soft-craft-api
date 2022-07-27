@@ -26,4 +26,6 @@ public class PropertyFullOutput : EntityDto<long>
     public bool IsEnumProperty { get; set; }
     public long? EnumerateId { get; set; }
     public EnumeratePartOutput Enumerate { get; set; }
+    public bool DisplayOnList { get; set; }
+    public bool FilterOnList { get; set; }
 }

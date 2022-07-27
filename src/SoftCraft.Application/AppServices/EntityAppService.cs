@@ -1,15 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using DotNetCodeGenerator;
+using Extensions;
 using Google.Protobuf.Collections;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using ProjectManager;
 using SoftCraft.AppServices.Entity;
 using SoftCraft.AppServices.Entity.Dtos;
+using SoftCraft.AppServices.GeneratedCodeResult;
+using SoftCraft.AppServices.GeneratedCodeResult.Dtos;
 using SoftCraft.AppServices.Project.Dtos;
 using SoftCraft.Entities;
 using SoftCraft.Enums;
+using SoftCraft.Manager.MicroServiceManager.DotNetCodeGeneratorServiceManager;
+using SoftCraft.Manager.MicroServiceManager.TypeScriptCodeGeneratorServiceManager;
 using SoftCraft.Repositories;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -26,13 +33,19 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
 {
     private readonly IProjectRepository _projectRepository;
     private readonly IConfiguration _configuration;
+    private readonly IDotNetCodeGeneratorServiceManager _dotNetCodeGeneratorServiceManager;
+    private readonly ITypeScriptCodeGeneratorServiceManager _typeScriptCodeGeneratorServiceManager;
 
     public EntityAppService(IRepository<Entities.Entity, long> repository,
         IProjectRepository projectRepository,
-        IConfiguration configuration) : base(repository)
+        IConfiguration configuration,
+        IDotNetCodeGeneratorServiceManager dotNetCodeGeneratorServiceManager,
+        ITypeScriptCodeGeneratorServiceManager typeScriptCodeGeneratorServiceManager) : base(repository)
     {
         _projectRepository = projectRepository;
         _configuration = configuration;
+        _dotNetCodeGeneratorServiceManager = dotNetCodeGeneratorServiceManager;
+        _typeScriptCodeGeneratorServiceManager = typeScriptCodeGeneratorServiceManager;
     }
 
     public override async Task<EntityPartOutput> CreateAsync(CreateEntityInput input)
@@ -121,6 +134,110 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
             Console.WriteLine(e);
             throw;
         }
+    }
+
+    public async Task<EntityCodeResultDto> GetCodeResult(long id)
+    {
+        var entity = await Repository.GetAsync(id);
+        var entityCodeResultDto = new EntityCodeResultDto
+        {
+            EntityId = entity.Id,
+            EntityName = entity.Name
+        };
+
+        var typeScripDtosResult = await _typeScriptCodeGeneratorServiceManager.CreateDtosAsync(entity);
+        entityCodeResultDto.TypeScriptDtoResult.FullOutput = typeScripDtosResult.FullOutputStringify;
+        entityCodeResultDto.TypeScriptDtoResult.PartOutput = typeScripDtosResult.PartOutputStringify;
+        entityCodeResultDto.TypeScriptDtoResult.CreateInput = typeScripDtosResult.CreateInputStringify;
+        entityCodeResultDto.TypeScriptDtoResult.UpdateInput = typeScripDtosResult.UpdateInputStringify;
+        entityCodeResultDto.TypeScriptDtoResult.GetInput = typeScripDtosResult.GetInputStringify;
+        entityCodeResultDto.TypeScriptDtoResult.DeleteInput = typeScripDtosResult.DeleteInputStringify;
+
+        var typeScriptServiceResult = await _typeScriptCodeGeneratorServiceManager.CreateServiceAsync(entity);
+        entityCodeResultDto.TypeScriptServiceResult = typeScriptServiceResult.Stringify;
+
+        var entityResult =
+            await _dotNetCodeGeneratorServiceManager.CreateEntityAsync(entity);
+        entityCodeResultDto.EntityResult = entityResult.Stringified;
+
+        var createEntityConfigurationResult =
+            await _dotNetCodeGeneratorServiceManager.CreateConfigurationAsync(entity);
+        entityCodeResultDto.ConfigurationResult = createEntityConfigurationResult.Stringified;
+
+        var repositoryInterfaceResult =
+            await _dotNetCodeGeneratorServiceManager.CreateRepositoryInterfaceAsync(entity);
+        entityCodeResultDto.RepositoryResult.IRepositoryResult = repositoryInterfaceResult.Stringified;
+
+        var repositoryResult = await _dotNetCodeGeneratorServiceManager.CreateRepositoryAsync(entity);
+        entityCodeResultDto.RepositoryResult.RepositoryResult = repositoryResult.Stringified;
+
+        var createDtosResult = await _dotNetCodeGeneratorServiceManager.CreateDtosAsync(entity);
+        entityCodeResultDto.DtoResult.CreateInput = createDtosResult.CreateInputStringify;
+        entityCodeResultDto.DtoResult.UpdateInput = createDtosResult.UpdateInputStringify;
+        entityCodeResultDto.DtoResult.GetInput = createDtosResult.GetInputStringify;
+        entityCodeResultDto.DtoResult.DeleteInput = createDtosResult.DeleteInputStringify;
+        entityCodeResultDto.DtoResult.FullOutput = createDtosResult.FullOutputStringify;
+        entityCodeResultDto.DtoResult.PartOutput = createDtosResult.PartOutputStringify;
+        entityCodeResultDto.DtoResult.DtosToDomainMapResult = createDtosResult.DtosToDomainStringify;
+        entityCodeResultDto.DtoResult.DomainToDtosMapResult = createDtosResult.DomainToDtosStringify;
+
+
+        var entityFromGenerator = _dotNetCodeGeneratorServiceManager.EntityToGeneratorEntity(entity);
+
+
+        var createAppServiceInput = new AppServiceRequest()
+        {
+            EntityName = entity.Name,
+            ProjectName = entity.Project.UniqueName,
+            EntityType = PropertyTypeExtensions.ConvertPrimaryKeyToDotNetDataType(entity.PrimaryKeyType),
+            Properties = { }
+        };
+
+        foreach (var relationalProperty in entity.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType == Enums.RelationType.OneToOne))
+        {
+            createAppServiceInput.Properties.Add(new DotNetCodeGenerator.Property()
+            {
+                IsRelationalProperty = relationalProperty.IsRelationalProperty,
+                RelationType = (RelationType) relationalProperty.RelationType,
+                Name = relationalProperty.Name,
+                Type = PropertyTypeExtensions.ConvertPrimaryKeyToDotNetDataType(relationalProperty.Entity
+                    .PrimaryKeyType),
+            });
+        }
+
+        var createAppServiceResult =
+            await _dotNetCodeGeneratorServiceManager.CreateAppServiceAsync(createAppServiceInput);
+
+        entityCodeResultDto.AppServiceResult.IAppServiceResult = createAppServiceResult.AppServiceInterfaceStringify;
+        entityCodeResultDto.AppServiceResult.AppServiceResult = createAppServiceResult.AppServiceStringify;
+        entityCodeResultDto.AppServiceResult.PermissionNamesResult = createAppServiceResult.PermissionNames;
+        entityCodeResultDto.AppServiceResult.AuthorizationResult = createAppServiceResult.AuthorizationProviders;
+
+        //TODO: Get TS Enums
+
+        var createComponentResult = await _typeScriptCodeGeneratorServiceManager.CreateComponentsAsync(entity);
+        entityCodeResultDto.TypeScriptComponentResult.ComponentTsStringify =
+            createComponentResult.ListComponent.ComponentTsStringify;
+        entityCodeResultDto.TypeScriptComponentResult.ComponentHtmlStringify =
+            createComponentResult.ListComponent.ComponentHtmlStringify;
+        entityCodeResultDto.TypeScriptComponentResult.ComponentCssStringify =
+            createComponentResult.ListComponent.ComponentCssStringify;
+
+        entityCodeResultDto.TypeScriptCreateComponentResult.ComponentTsStringify =
+            createComponentResult.CreateComponent.ComponentTsStringify;
+        entityCodeResultDto.TypeScriptCreateComponentResult.ComponentHtmlStringify =
+            createComponentResult.CreateComponent.ComponentHtmlStringify;
+        entityCodeResultDto.TypeScriptCreateComponentResult.ComponentCssStringify =
+            createComponentResult.CreateComponent.ComponentCssStringify;
+
+        // entityCodeResultDto.TypeScriptEditComponentResult.ComponentTsStringify =
+        //     createComponentResult.EditComponent.ComponentTsStringify;
+        // entityCodeResultDto.TypeScriptEditComponentResult.ComponentHtmlStringify =
+        //     createComponentResult.EditComponent.ComponentHtmlStringify;
+        // entityCodeResultDto.TypeScriptEditComponentResult.ComponentCssStringify =
+        //     createComponentResult.EditComponent.ComponentCssStringify;
+        return entityCodeResultDto;
     }
 
     public override async Task<PagedResultDto<EntityPartOutput>> GetListAsync(GetEntityListInput input)

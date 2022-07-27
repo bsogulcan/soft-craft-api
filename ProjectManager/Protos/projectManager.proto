@@ -4,11 +4,20 @@ option csharp_namespace = "ProjectManager";
 
 package projectManager;
 
-// The greeting service definition.
 service ProjectManager{
-  // Sends a greeting
   rpc CreateAbpBoilerplateProject(ProjectRequest) returns (ProjectReply);
   rpc AddEntityToExistingProject(AddEntityRequest) returns (ProjectReply);
+  rpc AddRepositoryToExistingProject(AddRepositoryRequest) returns (ProjectReply);
+  rpc AddEnumToExistingProject(AddEnumRequest) returns (ProjectReply);
+  rpc AddDtosToExistingProject(AddDtosRequest) returns (ProjectReply);
+  rpc AddAppServiceToExistingProject(AddAppServiceRequest) returns (ProjectReply);
+  rpc AddConfigurationToExistingProject(AddEntityRequest) returns (ProjectReply);
+  rpc AddTypeScriptDtosToExistingProject(AddDtosRequest) returns (ProjectReply);
+  rpc AddTypeScriptServiceToExistingProject(AddTypeScriptServiceRequest) returns (ProjectReply);
+  rpc AddTypeScriptEnumToExistingProject(AddEnumRequest) returns (ProjectReply);
+  rpc AddTypeScriptComponentsToExistingProject(ComponentResult) returns (ProjectReply);
+  rpc AddNavigationToExistingProject(AddStringToExistingProject) returns (ProjectReply);
+  rpc FileDownLoad (FileInfo) returns (stream BytesContent);
 }
 
 // The request message containing the user's name.
@@ -31,7 +40,84 @@ message AddEntityRequest{
   string stringified = 4;
 }
 
+message AddRepositoryRequest{
+  string id = 1;
+  string projectName = 2;
+  string entityName = 3;
+  string stringifiedRepositoryInterface = 4;
+  string stringifiedRepository = 5;
+}
+
+message AddEnumRequest{
+  string id = 1;
+  string projectName = 2;
+  string enumName = 3;
+  string stringified = 4;
+}
+
+message AddDtosRequest{
+  string id = 1;
+  string fullOutputStringify = 2;
+  string partOutputStringify = 3;
+  string createInputStringify = 4;
+  string updateInputStringify = 5;
+  string getInputStringify = 6;
+  string deleteInputStringify = 7;
+  string projectName = 8;
+  string entityName = 9;
+  string dtosToDomainStringify = 10;
+  string domainToDtosStringify = 11;
+}
+
+message AddAppServiceRequest{
+  string id = 1;
+  string projectName = 2;
+  string entityName = 3;
+  string appServiceInterfaceStringify = 4;
+  string appServiceStringify = 5;
+  string permissionNames = 6;
+  string authorizationProviders = 7;
+}
+
+message AddTypeScriptServiceRequest{
+  string id = 1;
+  string entityName = 2;
+  string serviceStringify = 3;
+}
+
 enum LogManagement{
   Log4Net = 0;
   ElasticSearch = 1;
+}
+
+message FileInfo{
+  int64 projectId = 1;
+  string fileName = 2;
+  string fileExtension = 3;
+}
+
+message BytesContent{
+  int64 fileSize = 1;
+  bytes buffer = 2;
+  int32 readedByte = 3;
+  FileInfo info = 4;
+}
+
+message ComponentResult{
+  int64 projectId = 1;
+  string entityName = 2;
+  ComponentResultEto listComponent = 3;
+  ComponentResultEto createComponent = 4;
+  ComponentResultEto editComponent = 5;
+}
+
+message ComponentResultEto{
+  string componentHtmlStringify = 1;
+  string componentTsStringify = 2;
+  string componentCssStringify = 3;
+}
+
+message AddStringToExistingProject{
+  int64 projectId = 1;
+  string stringify = 2;
 }

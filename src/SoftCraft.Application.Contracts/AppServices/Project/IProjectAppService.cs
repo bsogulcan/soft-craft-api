@@ -11,5 +11,4 @@ public interface IProjectAppService : ICrudAppService<
     CreateProjectDto,
     UpdateProjectDto>
 {
-    Task Generate(GenerateProjectInput input);
 }

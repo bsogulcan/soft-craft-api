@@ -370,11 +370,17 @@ namespace SoftCraft.Migrations
                     b.Property<string>("DisplayName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("DisplayOnList")
+                        .HasColumnType("bit");
+
                     b.Property<long>("EntityId")
                         .HasColumnType("bigint");
 
                     b.Property<long?>("EnumerateId")
                         .HasColumnType("bigint");
+
+                    b.Property<bool>("FilterOnList")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("Indexed")
                         .HasColumnType("bit");
@@ -2381,7 +2387,7 @@ namespace SoftCraft.Migrations
             modelBuilder.Entity("SoftCraft.Entities.Enumerate", b =>
                 {
                     b.HasOne("SoftCraft.Entities.Project", "Project")
-                        .WithMany()
+                        .WithMany("Enumerates")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -2738,6 +2744,8 @@ namespace SoftCraft.Migrations
             modelBuilder.Entity("SoftCraft.Entities.Project", b =>
                 {
                     b.Navigation("Entities");
+
+                    b.Navigation("Enumerates");
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLog", b =>
