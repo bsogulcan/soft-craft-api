@@ -20,29 +20,7 @@ public static class CreateComponentHelper
                 "/dtos/Create" + entity.Name + "Input';")
             .NewLine().Append("import {FormControl, FormGroup, Validators} from '@angular/forms';");
 
-        // foreach (var relationalProperty in entity.Properties.Where(x =>
-        //              x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
-        // {
-        //     stringBuilder.NewLine().Append(
-        //             "import {" + relationalProperty.Name + "Service} from '../../../../shared/services/" +
-        //             relationalProperty.Name + "/" + relationalProperty.Name.ToCamelCase() + ".service';")
-        //         .NewLine().Append(
-        //             "import {" + relationalProperty.Name + "FullOutput} from '../../../../shared/services/" +
-        //             relationalProperty.Name +
-        //             "/dtos/" + relationalProperty.Name + "FullOutput';");
-        // }
-
-        foreach (var relatedEntity in entity.RelatedEntities.Reverse())
-        {
-            stringBuilder.NewLine().Append(
-                    "import {" + relatedEntity.Name + "Service} from '../../../../shared/services/" +
-                    relatedEntity.Name + "/" + relatedEntity.Name.ToCamelCase() + ".service';")
-                .NewLine().Append(
-                    "import {" + relatedEntity.Name + "FullOutput} from '../../../../shared/services/" +
-                    relatedEntity.Name +
-                    "/dtos/" + relatedEntity.Name + "FullOutput';");
-        }
-
+        GetRecursiveServicesAndDtosImports(stringBuilder, entity);
 
         stringBuilder.NewLine(2);
 
@@ -58,56 +36,22 @@ public static class CreateComponentHelper
             .NewLine().InsertTab().Append($"isSaving: boolean;")
             .NewLine().InsertTab().Append("formGroup: FormGroup;");
 
-        foreach (var relatedEntity in entity.RelatedEntities.Reverse())
-        {
-            stringBuilder.NewLine().InsertTab()
-                .Append(
-                    $"{relatedEntity.Name.ToCamelCase().Pluralize()}: Array<{relatedEntity.Name}FullOutput> = new Array<{relatedEntity.Name}FullOutput>();");
-        }
+        //Ozan
+        GetRecursiveRelationalDtos(stringBuilder, entity);
 
         stringBuilder.NewLine(2);
 
         stringBuilder.InsertTab().Append("constructor(private ref: DynamicDialogRef,")
             .NewLine().InsertTab(4).Append($"private {entity.Name.ToCamelCase()}Service: {entity.Name}Service,");
 
-        foreach (var relatedEntity in entity.RelatedEntities.Reverse())
-        {
-            stringBuilder.NewLine().InsertTab(4)
-                .Append($"private {relatedEntity.Name.ToCamelCase()}Service: {relatedEntity.Name}Service,");
-        }
+        //Ozan
+        GetRecursiveRelationalInjections(stringBuilder, entity);
 
         stringBuilder.NewLine().InsertTab().Append(") {")
             .NewLine();
 
-
-        if (entity.RelatedEntities.Count > 0)
-        {
-            stringBuilder.NewLine().InsertTab(2).Append("this." + entity.RelatedEntities[0].Name.ToCamelCase() +
-                                                        "Service.getList().subscribe(response => {")
-                .NewLine().InsertTab(3).Append("if (response.success) {")
-                .NewLine().InsertTab(4)
-                .Append($"this.{entity.RelatedEntities[0].Name.ToCamelCase().Pluralize()}= response.result.items;")
-                .NewLine().InsertTab(3).Append("} else {")
-                .NewLine().InsertTab(4).Append("abp.message.error(response.error.message);")
-                .NewLine().InsertTab(3).Append("}")
-                .NewLine().InsertTab(2).Append("}, error => abp.message.error(error.error.error.message));")
-                .NewLine(2);
-        }
-
-        // foreach (var relationalProperty in entity.Properties.Where(x =>
-        //              x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
-        // {
-        //     stringBuilder.NewLine().InsertTab(2).Append("this." + relationalProperty.Name.ToCamelCase() +
-        //                                                 "Service.getList().subscribe(response => {")
-        //         .NewLine().InsertTab(3).Append("if (response.success) {")
-        //         .NewLine().InsertTab(4)
-        //         .Append($"this.{relationalProperty.Name.ToCamelCase().Pluralize()}= response.result.items;")
-        //         .NewLine().InsertTab(3).Append("} else {")
-        //         .NewLine().InsertTab(4).Append("abp.message.error(response.error.message);")
-        //         .NewLine().InsertTab(3).Append("}")
-        //         .NewLine().InsertTab(2).Append("}, error => abp.message.error(error.error.error.message));")
-        //         .NewLine(2);
-        // }
+        //Ozan
+        GetRecursiveRelationalGetAllCalls(stringBuilder, entity);
 
         stringBuilder.InsertTab().Append("}")
             .NewLine();
@@ -154,30 +98,31 @@ public static class CreateComponentHelper
             .NewLine().InsertTab(3).Append("});")
             .NewLine().InsertTab().Append("}")
             .NewLine(2);
-        Entity lastRelatedEntity = null;
-        foreach (var relatedEntity in entity.RelatedEntities)
-        {
-            if (lastRelatedEntity != null)
-            {
-                stringBuilder.NewLine().InsertTab()
-                    .Append($"on{lastRelatedEntity.Name}Changed({lastRelatedEntity.Name.ToCamelCase()}Id: number) ")
-                    .Append("{")
-                    .NewLine().InsertTab(2).Append("this." + relatedEntity.Name.ToCamelCase() +
-                                                   $"Service.get{relatedEntity.Name.Pluralize()}By{lastRelatedEntity.Name}Id({lastRelatedEntity.Name.ToCamelCase()}Id).subscribe(response => ")
-                    .Append("{")
-                    .NewLine().InsertTab(3).Append("if (response.success) {")
-                    .NewLine().InsertTab(4)
-                    .Append($"this.{relatedEntity.Name.ToCamelCase().Pluralize()} = response.result.items;")
-                    .NewLine().InsertTab(3).Append("} else {")
-                    .NewLine().InsertTab(4).Append("abp.message.error(response.error.message);")
-                    .NewLine().InsertTab(3).Append("}")
-                    .NewLine().InsertTab(2).Append("}, error => abp.message.error(error.error.error.message));")
-                    .NewLine().InsertTab().Append("}")
-                    .NewLine(2);
-            }
+        GetRecursiveRelationalGetMethods(stringBuilder, entity);
+        //Entity lastRelatedEntity = null;
+        //foreach (var relatedEntity in entity.RelatedEntities)
+        //{
+        //    if (lastRelatedEntity != null)
+        //    {
+        //        stringBuilder.NewLine().InsertTab()
+        //            .Append($"on{lastRelatedEntity.Name}Changed({lastRelatedEntity.Name.ToCamelCase()}Id: number) ")
+        //            .Append("{")
+        //            .NewLine().InsertTab(2).Append("this." + relatedEntity.Name.ToCamelCase() +
+        //                                           $"Service.get{relatedEntity.Name.Pluralize()}By{lastRelatedEntity.Name}Id({lastRelatedEntity.Name.ToCamelCase()}Id).subscribe(response => ")
+        //            .Append("{")
+        //            .NewLine().InsertTab(3).Append("if (response.success) {")
+        //            .NewLine().InsertTab(4)
+        //            .Append($"this.{relatedEntity.Name.ToCamelCase().Pluralize()} = response.result.items;")
+        //            .NewLine().InsertTab(3).Append("} else {")
+        //            .NewLine().InsertTab(4).Append("abp.message.error(response.error.message);")
+        //            .NewLine().InsertTab(3).Append("}")
+        //            .NewLine().InsertTab(2).Append("}, error => abp.message.error(error.error.error.message));")
+        //            .NewLine().InsertTab().Append("}")
+        //            .NewLine(2);
+        //    }
 
-            lastRelatedEntity = relatedEntity;
-        }
+        //    lastRelatedEntity = relatedEntity;
+        //}
 
         stringBuilder.Append("}");
 
@@ -249,4 +194,184 @@ public static class CreateComponentHelper
         var stringBuilder = new StringBuilder();
         return stringBuilder;
     }
+
+    #region Recursive Helpers
+    public static void GetRecursiveServicesAndDtosImports(StringBuilder stringBuilder, Entity entity, HashSet<Entity>? entities = null)
+    {
+        if (entities == null)
+            entities = new HashSet<Entity>();
+
+        foreach (var relatedEntity in entity.ParentEntities)
+        {
+            if (entities?.Contains(relatedEntity) == false)
+            {
+                stringBuilder.NewLine().Append(
+                        "import {" + relatedEntity.Name + "Service} from '../../../../shared/services/" +
+                        relatedEntity.Name + "/" + relatedEntity.Name.ToCamelCase() + ".service';")
+                    .NewLine().Append(
+                        "import {" + relatedEntity.Name + "FullOutput} from '../../../../shared/services/" +
+                        relatedEntity.Name +
+                        "/dtos/" + relatedEntity.Name + "FullOutput';");
+                entities?.Add(relatedEntity);
+                GetRecursiveServicesAndDtosImports(stringBuilder, relatedEntity, entities);
+            }
+        }
+    }
+    public static void GetRecursiveRelationalDtos(StringBuilder stringBuilder, Entity entity, HashSet<Entity>? entities = null)
+    {
+        if (entities == null)
+            entities = new HashSet<Entity>();
+
+        foreach (var relatedEntity in entity.ParentEntities)
+        {
+            if (entities?.Contains(relatedEntity) == false)
+            {
+                stringBuilder
+                    .NewLine()
+                    .InsertTab()
+                    .Append(
+                        $"{relatedEntity.Name.ToCamelCase().Pluralize()}: Array<{relatedEntity.Name}FullOutput> = new Array<{relatedEntity.Name}FullOutput>();");
+                entities?.Add(relatedEntity);
+                GetRecursiveRelationalDtos(stringBuilder, relatedEntity, entities);
+            }
+        }
+    }
+    public static void GetRecursiveRelationalInjections(StringBuilder stringBuilder, Entity entity, HashSet<Entity>? entities = null)
+    {
+        if (entities == null)
+            entities = new HashSet<Entity>();
+
+        foreach (var relatedEntity in entity.ParentEntities)
+        {
+            if (entities?.Contains(relatedEntity) == false)
+            {
+                stringBuilder
+                    .NewLine()
+                    .InsertTab(4)
+                    .Append($"private {relatedEntity.Name.ToCamelCase()}Service: {relatedEntity.Name}Service,");
+                entities?.Add(relatedEntity);
+                GetRecursiveRelationalInjections(stringBuilder, relatedEntity, entities);
+            }
+        }
+    }
+    public static void GetRecursiveRelationalGetAllCalls(StringBuilder stringBuilder, Entity entity, HashSet<Entity>? entities = null)
+    {
+        if (entities == null)
+            entities = new HashSet<Entity>();
+
+        foreach (var relatedEntity in entity.ParentEntities)
+        {
+            if (entities?.Contains(relatedEntity) == false)
+            {
+                if (relatedEntity.ParentEntities.Count == 0)
+                {
+                    stringBuilder
+                        .InsertTab(2)
+                        .Append("this.getAll" + relatedEntity.Name.Pluralize() + "();")
+                        .NewLine();
+                }
+                entities?.Add(relatedEntity);
+                GetRecursiveRelationalGetAllCalls(stringBuilder, relatedEntity, entities);
+            }
+        }
+    }
+    public static void GetRecursiveRelationalGetMethods(StringBuilder stringBuilder, Entity entity, HashSet<Entity>? entities = null)
+    {
+        if (entities == null)
+            entities = new HashSet<Entity>();
+
+        foreach (var relatedEntity in entity.ParentEntities)
+        {
+            if (entities?.Contains(relatedEntity) == false)
+            {
+                if (relatedEntity.ParentEntities.Count == 0)
+                {
+                    stringBuilder
+                        .NewLine()
+                        .InsertTab(1)
+                        .Append("getAll" + relatedEntity.Name.Pluralize() + "() {")
+                        .NewLine()
+                        .InsertTab(2)
+                        .Append($"this.{relatedEntity.Name.ToCamelCase()}Service.getList().subscribe(")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("(response) => {")
+                        .NewLine()
+                        .InsertTab(4)
+                        .Append("if (response.success) {")
+                        .NewLine()
+                        .InsertTab(5)
+                        .Append($"this.{relatedEntity.Name.ToCamelCase().Pluralize()} = response.result.items;")
+                        .NewLine().
+                        InsertTab(4)
+                        .Append("} else {")
+                        .NewLine()
+                        .InsertTab(5)
+                        .Append("abp.message.error(response.error.message);")
+                        .NewLine()
+                        .InsertTab(4)
+                        .Append("}")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("},")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("(error) => {")
+                        .NewLine()
+                        .InsertTab(5)
+                        .Append("abp.message.error(error.error.error.message);")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("}")
+                        .NewLine()
+                        .InsertTab(2)
+                        .Append(");")
+                        .NewLine()
+                        .InsertTab(1)
+                        .Append("}")
+                        .NewLine();
+                }
+                else
+                {
+                    foreach (var currenParent in relatedEntity.ParentEntities)
+                    {
+                        stringBuilder.NewLine().InsertTab()
+                            .Append($"on{currenParent.Name}Changed({currenParent.Name.ToCamelCase()}Id: number) ")
+                            .Append("{")
+                            .NewLine()
+                            .InsertTab(2)
+                            .Append("this." + relatedEntity.Name.ToCamelCase())
+                            .Append($"Service.get{relatedEntity.Name.Pluralize()}By{currenParent.Name}Id({currenParent.Name.ToCamelCase()}Id).subscribe(response => ")
+                            .Append("{")
+                            .NewLine()
+                            .InsertTab(3)
+                            .Append("if (response.success) {")
+                            .NewLine()
+                            .InsertTab(4)
+                            .Append($"this.{relatedEntity.Name.ToCamelCase().Pluralize()} = response.result.items;")
+                            .NewLine()
+                            .InsertTab(3)
+                            .Append("} else {")
+                            .NewLine()
+                            .InsertTab(4)
+                            .Append("abp.message.error(response.error.message);")
+                            .NewLine()
+                            .InsertTab(3)
+                            .Append("}")
+                            .NewLine()
+                            .InsertTab(2)
+                            .Append("}, error => abp.message.error(error.error.error.message));")
+                            .NewLine()
+                            .InsertTab()
+                            .Append("}")
+                            .NewLine(2);
+                    }
+                }
+                entities?.Add(relatedEntity);
+                GetRecursiveRelationalGetMethods(stringBuilder, relatedEntity, entities);
+            }
+        }
+    }
+    #endregion
+
 }
