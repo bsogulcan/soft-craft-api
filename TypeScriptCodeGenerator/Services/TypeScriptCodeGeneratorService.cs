@@ -79,8 +79,10 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             .NewLine().InsertTab().Append("}").NewLine();
 
 
-        foreach (var relationalProperty in request.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
+        var relationalEntities = request.Properties.Where(x =>
+             x.IsRelationalProperty && x.RelationType == RelationType.OneToOne);
+
+        foreach (var relationalProperty in relationalEntities)
         {
             // getDepartmentsByFactoryId(id: number): Observable<ResponceTypeWrap<Array<DepartmentFullOutput>>> {
             //     return this.http.get<ResponceTypeWrap<Array<DepartmentFullOutput>>>(this.baseUrl + '/api/services/app/' + this.endPoint + '/GetDepartmentsByFactoryId?factoryId=' + id);
@@ -97,9 +99,55 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
                 .NewLine();
         }
 
+        if (relationalEntities.Count() > 1)
+        {
+            stringBuilder.NewLine().InsertTab()
+            .Append($"getAll{request.Name.Pluralize()}Filtered(");
+
+            bool isFirst = true;
+            foreach (var relationalProperty in relationalEntities)
+            {
+                if (isFirst)
+                {
+                    stringBuilder
+                        .Append($"{relationalProperty.Name.ToCamelCase()}Id : {relationalProperty.Type}");
+                    isFirst = false;
+                }
+                else
+                {
+                    stringBuilder
+                        .Append($", {relationalProperty.Name.ToCamelCase()}Id : {relationalProperty.Type}");
+                }
+            }
+            stringBuilder
+                .Append(") {")
+                .NewLine()
+                .InsertTab(2)
+                .Append($"return this.http.get<ResponceTypeWrap<Array<{request.Name}FullOutput>>>(this.baseUrl + '/api/services/app/' + this.endPoint + '/GetAll{request.Name.Pluralize()}Filtered?");
+            isFirst = true;
+            foreach (var relationalProperty in relationalEntities)
+            {
+                if (isFirst)
+                {
+                    stringBuilder
+                        .Append($"{relationalProperty.Name.ToCamelCase()}Id=' + {relationalProperty.Name.ToCamelCase()}Id + '");
+                    isFirst = false;
+                }
+                else
+                {
+                    stringBuilder
+                        .Append($"&{relationalProperty.Name.ToCamelCase()}Id=' + {relationalProperty.Name.ToCamelCase()}Id + '");
+                }
+            }
+            stringBuilder
+                .Append("');")
+                .NewLine()
+                .InsertTab()
+                .Append("}")
+                .NewLine(); ;
+        }
 
         stringBuilder.NewLine().Append("}");
-
 
         result.Stringify = stringBuilder.ToString();
 

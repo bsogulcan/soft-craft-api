@@ -27,6 +27,8 @@ public static class ComponentHelper
             .Append("import {GridColumn} from '../../../shared/components/dataGrid/model/gridColumn';")
             .NewLine()
             .Append("import {DialogOptions} from '../../../shared/components/dataGrid/model/dialogOptions';")
+            .NewLine()
+            .Append("import {Create" + entity.Name + "Component} from './create-" + entity.Name.ToCamelCase() + "/create-" + entity.Name.ToCamelCase() + ".component';")
             .NewLine(2);
 
         //Component
@@ -96,8 +98,8 @@ public static class ComponentHelper
         this.dataGridOptions.dataSource = this.dataSource;
         this.dataGridOptions.columns = this.initializeDataGridColumns();
         this.dataGridOptions.exportCols = this.exportFields;
-        //this.dataGridOptions.createComponent = CreateCityComponent;
-        //this.dataGridOptions.editComponent = EditCityComponent;
+        this.dataGridOptions.createComponent = Create{{EntityName}}Component;
+        //this.dataGridOptions.editComponent = Edit{{EntityName}}Component;
         let dialogOptions: DialogOptions = new DialogOptions();
         this.dataGridOptions.dialogConfig = dialogOptions;
 

@@ -299,6 +299,29 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                 .NewLine();
         }
 
+        var releatedEntities = request.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne);
+
+        if (releatedEntities.Count() > 1)
+        {
+            appServiceInterfaceStringBuilder.InsertTab(2)
+                .Append($"Task<PagedResultDto<{request.EntityName}FullOutput>> GetAll{request.EntityName.Pluralize()}Filtered(");
+
+            bool isFirst = true;
+            foreach (var relationalProperty in releatedEntities)
+            {
+                if (isFirst)
+                {
+                    appServiceInterfaceStringBuilder.Append($"{relationalProperty.Type}? {relationalProperty.Name.ToCamelCase()}Id");
+                    isFirst = false;
+                }
+                else
+                {
+                    appServiceInterfaceStringBuilder.Append($", {relationalProperty.Type}? {relationalProperty.Name.ToCamelCase()}Id");
+                }
+            }
+            appServiceInterfaceStringBuilder.Append(");").NewLine();
+        }
 
         appServiceInterfaceStringBuilder
             .NewLine()
@@ -352,11 +375,20 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                 $"context.CreatePermission(PermissionNames.{request.EntityName}_Navigation, L(PermissionNames.{request.EntityName}_Navigation));");
 
         result.AuthorizationProviders = authorizationProviderStringBuilder.ToString();
-
         var appServiceStringBuilder = new StringBuilder();
         appServiceStringBuilder.Append("using Abp.Application.Services;")
             .NewLine()
+            .Append($"using Abp.Application.Services.Dto;")
+            .NewLine()
             .Append("using Abp.Authorization;")
+            .NewLine()
+            .Append("using System.Collections.Generic;")
+            .NewLine()
+            .Append("using System.Linq;")
+            .NewLine()
+            .Append("using System.Linq.Dynamic.Core;")
+            .NewLine()
+            .Append("using System.Threading.Tasks;")
             .NewLine()
             .Append($"using {request.ProjectName}.Authorization;")
             .NewLine()
@@ -367,12 +399,6 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             .Append($"using {request.ProjectName}.Domain.Entities;")
             .NewLine()
             .Append($"using {request.ProjectName}.EntityFrameworkCore.Repositories;")
-            .NewLine()
-            .Append("using System.Collections.Generic;")
-            .NewLine()
-            .Append("using System.Threading.Tasks;")
-            .NewLine()
-            .Append($"using Abp.Application.Services.Dto;")
             .NewLine(2);
 
         appServiceStringBuilder.Append($"namespace {request.ProjectName}.Domain.{request.EntityName}")
@@ -434,13 +460,63 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                     $"var items = await Repository.GetAllListAsync(x => x.{relationalProperty.Name}Id == {relationalProperty.Name.ToCamelCase()}Id);")
                 .NewLine().InsertTab(3).Append($"return new PagedResultDto<{request.EntityName}FullOutput>")
                 .NewLine().InsertTab(3).Append("{")
-                .NewLine().InsertTab(4).Append("TotalCount = items.Count,")
+                .NewLine().InsertTab(4).Append("TotalCount = items.Count(),")
                 .NewLine().InsertTab(4).Append($"Items = ObjectMapper.Map<List<{request.EntityName}FullOutput>>(items)")
                 .NewLine().InsertTab(3).Append("};")
                 .NewLine().InsertTab(2).Append("}")
                 .NewLine();
         }
 
+        if (releatedEntities.Count() > 1)
+        {
+            appServiceStringBuilder.NewLine().InsertTab(2)
+                .Append($"[AbpAuthorize(PermissionNames.{request.EntityName}_GetList)]")
+                .NewLine().InsertTab(2)
+                .Append($"public async Task<PagedResultDto<{request.EntityName}FullOutput>> GetAll{request.EntityName.Pluralize()}Filtered(");
+
+
+            bool isFirst = true;
+            foreach (var relationalProperty in releatedEntities)
+            {
+                if (isFirst)
+                {
+                    appServiceStringBuilder.Append($"{relationalProperty.Type}? {relationalProperty.Name.ToCamelCase()}Id");
+                    isFirst = false;
+                }
+                else
+                {
+                    appServiceStringBuilder.Append($", {relationalProperty.Type}? {relationalProperty.Name.ToCamelCase()}Id");
+                }
+            }
+
+            appServiceStringBuilder.Append(")")
+                .NewLine()
+                .InsertTab(2)
+                .Append("{")
+                .NewLine()
+                .InsertTab(3)
+                .Append("var items = Repository.GetAll();");
+
+            foreach (var relationalProperty in releatedEntities)
+            {
+                appServiceStringBuilder
+                    .NewLine(2)
+                    .InsertTab(3)
+                    .Append($"if ({relationalProperty.Name.ToCamelCase()}Id.HasValue)")
+                    .NewLine()
+                    .InsertTab(4)
+                    .Append($"items = items.Where(x => x.{relationalProperty.Name}Id == {relationalProperty.Name.ToCamelCase()}Id.Value);");
+            }
+
+            appServiceStringBuilder
+                .NewLine(2).InsertTab(3).Append($"return new PagedResultDto<{request.EntityName}FullOutput>")
+                .NewLine().InsertTab(3).Append("{")
+                .NewLine().InsertTab(4).Append("TotalCount = items.Count(),")
+                .NewLine().InsertTab(4).Append($"Items = ObjectMapper.Map<List<{request.EntityName}FullOutput>>(items)")
+                .NewLine().InsertTab(3).Append("};")
+                .NewLine().InsertTab(2).Append("}")
+                .NewLine();
+        }
 
         appServiceStringBuilder
             .NewLine()
