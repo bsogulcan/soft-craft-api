@@ -104,33 +104,9 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
 
         var input = EntityToGeneratorEntity(entity);
 
-        Stack<Entities.Entity> entities = new Stack<Entities.Entity>();
-        GetRelationalEntities(entity, ref entities);
-
-        foreach (var relatedEntity in entities)
-        {
-            input.RelatedEntities.Add(EntityToGeneratorEntity(relatedEntity));
-        }
-
         var entityResult = await client.CreateComponentsAsync(input);
         return entityResult;
     }
-
-    private void GetRelationalEntities(Entities.Entity entity, ref Stack<Entities.Entity> entities)
-    {
-        foreach (var property in entity.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType == Enums.RelationType.OneToOne))
-        {
-            if (entities.FirstOrDefault(x => x == property.RelationalEntity) != null)
-            {
-                continue;
-            }
-
-            entities.Push(property.RelationalEntity);
-            GetRelationalEntities(property.RelationalEntity, ref entities);
-        }
-    }
-
     public async Task<StringifyResult> CreateNavigationItems(List<Navigation> navigations)
     {
         using var typeScriptCodeGeneratorChannel =
@@ -198,6 +174,11 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
             PrimaryKeyType = (PrimaryKeyType) entity.PrimaryKeyType,
             ProjectName = entity.Project.UniqueName,
         };
+
+        foreach (var relationalEntity in entity.Properties.Where(x => x.IsRelationalProperty && x.RelationType == Enums.RelationType.OneToOne))
+        {
+            dotNetCodeGeneratorEntity.ParentEntities.Add(EntityToGeneratorEntity(relationalEntity.RelationalEntity));
+        }
 
         foreach (var entityProperty in entity.Properties)
         {

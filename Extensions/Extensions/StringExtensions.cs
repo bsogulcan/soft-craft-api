@@ -21,14 +21,14 @@ public static class StringExtensions
         return input.ToUpper();
     }
 
-    public static string ToCamelCase(this string input)
-    {
-        var x = input.Replace("_", "");
-        if (x.Length == 0) return input;
-        x = Regex.Replace(x, "([A-Z])([A-Z]+)($|[A-Z])",
-            m => m.Groups[1].Value + m.Groups[2].Value.ToLower() + m.Groups[3].Value);
-        return char.ToLower(x[0]) + x.Substring(1);
-    }
+    //public static string ToCamelCase(this string input)
+    //{
+    //    var x = input.Replace("_", "");
+    //    if (x.Length == 0) return input;
+    //    x = Regex.Replace(x, "([A-Z])([A-Z]+)($|[A-Z])",
+    //        m => m.Groups[1].Value + m.Groups[2].Value.ToLower() + m.Groups[3].Value);
+    //    return char.ToLower(x[0]) + x.Substring(1);
+    //}
 
     public static string ToPascalCase(this string input)
     {

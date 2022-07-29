@@ -17,7 +17,7 @@ message Entity {
   string name = 2;
   PrimaryKeyType primaryKeyType = 3;
   repeated Property properties = 4;
-  repeated Entity RelatedEntities = 5;
+  repeated Entity ParentEntities = 5;
 }
 
 message Property {
