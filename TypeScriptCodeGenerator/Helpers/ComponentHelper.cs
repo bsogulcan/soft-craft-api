@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Extensions;
+using Humanizer;
 
 namespace TypeScriptCodeGenerator.Helpers;
 

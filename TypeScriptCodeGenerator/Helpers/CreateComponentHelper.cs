@@ -157,14 +157,14 @@ public static class CreateComponentHelper
                         .Append(
                             "<input pInputText inputId=\"element" + property.Name +
                             "\" type=\"text\" formControlName=\"element" + property.Name + "\" [(ngModel)]=\"createInput." +
-                            property.Name.Camelize() + "\" />");
+                            property.Name.ToCamelCase() + "\" />");
                 }
                 break;
             case "int" or "long" or "float" or "double" or "decimal":
                 {
                     stringBuilder.NewLine().InsertTab(6)
                         .Append("<p-inputNumber inputId=\"element" + property.Name + "\" [(ngModel)]=\"createInput." +
-                                property.Name.Camelize() + "\" formControlName=\"element" + property.Name +
+                                property.Name.ToCamelCase() + "\" formControlName=\"element" + property.Name +
                                 "\" [showButtons]=\"true\" ></p-inputNumber>");
                 }
                 break;
@@ -172,7 +172,7 @@ public static class CreateComponentHelper
                 {
                     stringBuilder.NewLine().InsertTab(6)
                         .Append("<p-inputSwitch binary=\"true\" inputId=\"element" + property.Name +
-                                "\"  [(ngModel)]=\"createInput." + property.Name.Camelize() +
+                                "\"  [(ngModel)]=\"createInput." + property.Name.ToCamelCase() +
                                 "\" formControlName=\"element" + property.Name + "\"></p-inputSwitch>");
                 }
                 break;
@@ -181,7 +181,7 @@ public static class CreateComponentHelper
                     stringBuilder.NewLine().InsertTab(6)
                         .Append(
                             "<p-calendar appendTo=\"body\" [(ngModel)]=\"createInput." +
-                            property.Name.Camelize() + "\" [showTime]=\"true\" inputId=\"element" +
+                            property.Name.ToCamelCase() + "\" [showTime]=\"true\" inputId=\"element" +
                             property.Name +
                             "\" formControlName=\"element" + property.Name + "\"></p-calendar>");
                 }
@@ -441,9 +441,9 @@ public static class CreateComponentHelper
                 }
                 else
                 {
-                    stringBuilder.NewLine().InsertTab(6).Append($"<p-dropdown appendTo=\"body\" [options]=\"{relatedEntity.Name.Pluralize().ToCamelCase()}\"  [(ngModel)]=\"selected{relatedEntity.Name}Id\" placeholder=\"{{{{ 'Select{relatedEntity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" formControlName=\"element{relatedEntity.Name}\" optionLabel=\"{relatedEntity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase()}\" inputId=\"element{relatedEntity.Name}\" [showClear]=\"true\" (onChange)=\"on{relatedEntity.Name}Changed($event.value.id)\">");
+                    stringBuilder.NewLine().InsertTab(6).Append($"<p-dropdown appendTo=\"body\" [options]=\"{relatedEntity.Name.Pluralize().ToCamelCase()}\"  [(ngModel)]=\"selected{relatedEntity.Name}Id\" placeholder=\"{{{{ 'Select{relatedEntity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" optionLabel=\"{relatedEntity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase()}\" inputId=\"element{relatedEntity.Name}\" [showClear]=\"true\" (onChange)=\"on{relatedEntity.Name}Changed($event.value.id)\">");
                 }
-                stringBuilder.NewLine().InsertTab(7).Append("<ng-template let-items pTemplate=\"item\">");
+                stringBuilder.NewLine().InsertTab(7).Append("<ng-template let-item pTemplate=\"item\">");
                 stringBuilder.NewLine().InsertTab(8).Append("<div>");
                 stringBuilder.NewLine().InsertTab(9).Append($"<div>{string.Join(' ', relatedEntity.Properties.Where(x => x.DisplayOnList).Select(x => string.Format("{{{{item.{0}}}}}", x.Name.ToCamelCase())))}</div>");
                 stringBuilder.NewLine().InsertTab(8).Append("</div>");
