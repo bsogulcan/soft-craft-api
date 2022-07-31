@@ -96,11 +96,38 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         await File.WriteAllTextAsync(Path.Combine(applicationFolderPath, request.Name + ".Application.csproj"),
             applicationCsProjContentStringBuild.ToString());
 
-
+        await RenameAngularProjectName(projectFile, request);
         return new ProjectReply()
         {
             Id = request.Id
         };
+    }
+
+    private async Task RenameAngularProjectName(string projectFile, ProjectRequest projectName)
+    {
+        var angularProjectFolder = Path.Combine(projectFile, "angular");
+
+        var accountHeaderFilePath =
+            Path.Combine(angularProjectFolder, "src", "account", "layout", "account-header.component.html");
+        var accountHeaderFileContent = await File.ReadAllTextAsync(accountHeaderFilePath);
+        await File.WriteAllTextAsync(accountHeaderFilePath,
+            accountHeaderFileContent.Replace("BaseAbpBoilerplateProject", projectName.DisplayName));
+
+        var footerFilePath =
+            Path.Combine(angularProjectFolder, "src", "app", "layout", "footer.component.html");
+        var footerFileContent = await File.ReadAllTextAsync(footerFilePath);
+        await File.WriteAllTextAsync(footerFilePath,
+            footerFileContent.Replace("BaseAbpBoilerplateProject", projectName.DisplayName));
+
+        var sidebarFilePath = Path.Combine(angularProjectFolder, "src", "app", "layout", "sidebar-logo.component.html");
+        var sidebarFileContent = await File.ReadAllTextAsync(sidebarFilePath);
+        await File.WriteAllTextAsync(sidebarFilePath,
+            sidebarFileContent.Replace("BaseAbpBoilerplateProject", projectName.DisplayName));
+
+        var indexFilePath = Path.Combine(angularProjectFolder, "src", "index.html");
+        var indexFileContent = await File.ReadAllTextAsync(indexFilePath);
+        await File.WriteAllTextAsync(indexFilePath,
+            indexFileContent.Replace("BaseAbpBoilerplateProject", projectName.DisplayName));
     }
 
     public override async Task<ProjectReply> AddEntityToExistingProject(AddEntityRequest request,

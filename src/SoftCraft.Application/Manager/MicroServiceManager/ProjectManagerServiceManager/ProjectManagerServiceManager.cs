@@ -21,7 +21,7 @@ public class ProjectManagerServiceManager : IProjectManagerServiceManager
     }
 
     public async Task<ProjectReply> CreateAbpBoilerplateProjectAsync(long projectId, string uniqueName,
-        LogType logType, bool multiTenant)
+        LogType logType, bool multiTenant, string projectName)
     {
         using var projectManagerChannel =
             GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
@@ -33,7 +33,8 @@ public class ProjectManagerServiceManager : IProjectManagerServiceManager
             Id = projectId.ToString(),
             Name = uniqueName,
             LogManagement = (LogManagement) logType,
-            MultiTenant = multiTenant
+            MultiTenant = multiTenant,
+            DisplayName = projectName
         });
 
         return result;
