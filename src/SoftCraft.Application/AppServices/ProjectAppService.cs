@@ -63,7 +63,7 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
             var project = await Repository.GetAsync(input.Id);
 
             var result = await _projectManagerServiceManager.CreateAbpBoilerplateProjectAsync(project.Id,
-                project.UniqueName, project.LogType, project.MultiTenant);
+                project.UniqueName, project.LogType, project.MultiTenant, project.Name);
 
             foreach (var entity in project.Entities)
             {
@@ -122,7 +122,7 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         DomainToDtosStringify = createDtosResult.DomainToDtosStringify
                     });
 
-                
+
                 var createAppServiceInput = new AppServiceRequest()
                 {
                     EntityName = entity.Name,
@@ -143,8 +143,9 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                             .PrimaryKeyType),
                     });
                 }
-                
-                var createAppServiceResult = await _dotNetCodeGeneratorServiceManager.CreateAppServiceAsync(createAppServiceInput);
+
+                var createAppServiceResult =
+                    await _dotNetCodeGeneratorServiceManager.CreateAppServiceAsync(createAppServiceInput);
 
 
                 var addAppServiceResult = await _projectManagerServiceManager.AddAppServiceToExistingProjectAsync(
