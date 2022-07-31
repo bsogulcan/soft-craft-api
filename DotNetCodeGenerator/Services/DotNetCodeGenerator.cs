@@ -121,6 +121,22 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             }
         }
 
+        switch (request.TenantType)
+        {
+            case TenantType.May:
+            {
+                //public int? TenantId { get; set; }
+                stringBuilder.InsertTab(2).Append("public int? TenantId { get; set; }").NewLine();
+            }
+                break;
+            case TenantType.Must:
+            {
+                //public int TenantId { get; set; }
+                stringBuilder.InsertTab(2).Append("public int TenantId { get; set; }").NewLine();
+            }
+                break;
+        }
+
         stringBuilder.InsertTab()
             .Append("}")
             .NewLine()
@@ -300,26 +316,30 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         }
 
         var releatedEntities = request.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne);
+            x.IsRelationalProperty && x.RelationType == RelationType.OneToOne);
 
         if (releatedEntities.Count() > 1)
         {
             appServiceInterfaceStringBuilder.InsertTab(2)
-                .Append($"Task<PagedResultDto<{request.EntityName}FullOutput>> GetAll{request.EntityName.Pluralize()}Filtered(");
+                .Append(
+                    $"Task<PagedResultDto<{request.EntityName}FullOutput>> GetAll{request.EntityName.Pluralize()}Filtered(");
 
             bool isFirst = true;
             foreach (var relationalProperty in releatedEntities)
             {
                 if (isFirst)
                 {
-                    appServiceInterfaceStringBuilder.Append($"{relationalProperty.Type}? {relationalProperty.Name.ToCamelCase()}Id");
+                    appServiceInterfaceStringBuilder.Append(
+                        $"{relationalProperty.Type}? {relationalProperty.Name.ToCamelCase()}Id");
                     isFirst = false;
                 }
                 else
                 {
-                    appServiceInterfaceStringBuilder.Append($", {relationalProperty.Type}? {relationalProperty.Name.ToCamelCase()}Id");
+                    appServiceInterfaceStringBuilder.Append(
+                        $", {relationalProperty.Type}? {relationalProperty.Name.ToCamelCase()}Id");
                 }
             }
+
             appServiceInterfaceStringBuilder.Append(");").NewLine();
         }
 
@@ -472,7 +492,8 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             appServiceStringBuilder.NewLine().InsertTab(2)
                 .Append($"[AbpAuthorize(PermissionNames.{request.EntityName}_GetList)]")
                 .NewLine().InsertTab(2)
-                .Append($"public async Task<PagedResultDto<{request.EntityName}FullOutput>> GetAll{request.EntityName.Pluralize()}Filtered(");
+                .Append(
+                    $"public async Task<PagedResultDto<{request.EntityName}FullOutput>> GetAll{request.EntityName.Pluralize()}Filtered(");
 
 
             bool isFirst = true;
@@ -480,12 +501,14 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             {
                 if (isFirst)
                 {
-                    appServiceStringBuilder.Append($"{relationalProperty.Type}? {relationalProperty.Name.ToCamelCase()}Id");
+                    appServiceStringBuilder.Append(
+                        $"{relationalProperty.Type}? {relationalProperty.Name.ToCamelCase()}Id");
                     isFirst = false;
                 }
                 else
                 {
-                    appServiceStringBuilder.Append($", {relationalProperty.Type}? {relationalProperty.Name.ToCamelCase()}Id");
+                    appServiceStringBuilder.Append(
+                        $", {relationalProperty.Type}? {relationalProperty.Name.ToCamelCase()}Id");
                 }
             }
 
@@ -505,7 +528,8 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                     .Append($"if ({relationalProperty.Name.ToCamelCase()}Id.HasValue)")
                     .NewLine()
                     .InsertTab(4)
-                    .Append($"items = items.Where(x => x.{relationalProperty.Name}Id == {relationalProperty.Name.ToCamelCase()}Id.Value);");
+                    .Append(
+                        $"items = items.Where(x => x.{relationalProperty.Name}Id == {relationalProperty.Name.ToCamelCase()}Id.Value);");
             }
 
             appServiceStringBuilder
