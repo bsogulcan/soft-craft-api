@@ -158,17 +158,27 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
     {
         var stringifyResult = new StringifyResult();
         var stringBuilder = new StringBuilder();
+        stringBuilder.Append("import {BaseEnum} from './BaseEnum'").NewLine();
 
         stringBuilder.Append($"export enum {request.Name} " + "{");
-        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.NewLine();
         foreach (var value in request.Values)
         {
             stringBuilder.InsertTab();
             stringBuilder.Append(value.Name + " = " + value.Value + ",");
-            stringBuilder.Append(Environment.NewLine);
+            stringBuilder.NewLine();
         }
 
-        stringBuilder.Append("}");
+        stringBuilder.Append("}").NewLine(2);
+
+        stringBuilder.Append($"export const {request.Name}List : Array<BaseEnum> = [").NewLine();
+        foreach (var value in request.Values)
+        {
+            stringBuilder.InsertTab();
+            stringBuilder.Append($"{{ id: {value.Value }, displayName: \"{value.Name}\" }},");
+            stringBuilder.NewLine();
+        }
+        stringBuilder.Append("];");
 
         stringifyResult.Stringify = stringBuilder.ToString();
         return stringifyResult;

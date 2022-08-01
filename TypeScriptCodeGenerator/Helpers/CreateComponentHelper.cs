@@ -20,6 +20,11 @@ public static class CreateComponentHelper
                 "/dtos/Create" + entity.Name + "Input';")
             .NewLine().Append("import {FormControl, FormGroup, Validators} from '@angular/forms';");
 
+        foreach (var item in entity.Properties.Where(x => x.IsEnumerateProperty))
+        {
+            stringBuilder.NewLine().Append($"import {{{item.Type}, {item.Type}List}} from '../../../../shared/services/enums/{item.Type}';");
+        }
+
         GetRecursiveServicesAndDtosImports(stringBuilder, entity);
 
         stringBuilder.NewLine(2);
@@ -36,6 +41,10 @@ public static class CreateComponentHelper
             .NewLine().InsertTab().Append($"isSaving: boolean;")
             .NewLine().InsertTab().Append("formGroup: FormGroup;");
 
+        foreach (var item in entity.Properties.Where(x => x.IsEnumerateProperty))
+        {
+            stringBuilder.NewLine().InsertTab().Append($"{item.Type.ToCamelCase()}List = {item.Type}List;");
+        }
         //Ozan
         GetRecursiveRelationalDtos(stringBuilder, entity);
 
@@ -184,6 +193,14 @@ public static class CreateComponentHelper
                             property.Name.ToCamelCase() + "\" [showTime]=\"true\" inputId=\"element" +
                             property.Name +
                             "\" formControlName=\"element" + property.Name + "\"></p-calendar>");
+                }
+                break;
+            default:
+                {
+                    if (property.IsEnumerateProperty)
+                    {
+                        stringBuilder.NewLine().InsertTab(6).Append($"<p-dropdown appendTo=\"body\" [options]=\"{property.Type.ToCamelCase()}List\"  [(ngModel)]=\"createInput.{property.Name.ToCamelCase()}\" placeholder=\"{{{{ 'Select{property.Type}' | localize}}}}\"  formControlName=\"element{property.Name}\" optionLabel=\"displayName\" optionValue=\"id\" inputId=\"element{property.Name}\" [showClear]=\"true\"></p-dropdown>");
+                    }
                 }
                 break;
         }
