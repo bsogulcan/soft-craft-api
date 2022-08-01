@@ -108,7 +108,11 @@ public static class CreateComponentHelper
             .NewLine().InsertTab().Append("}")
             .NewLine(2);
         GetRecursiveRelationalGetMethods(stringBuilder, entity);
-
+        foreach (var currentParent in entity.ParentEntities)
+        {
+            GetRecursiveChildDropdownReset(stringBuilder, currentParent, currentParent.Name, true);
+        }
+        
         stringBuilder.Append("}");
 
 
@@ -471,7 +475,53 @@ public static class CreateComponentHelper
             }
         }
     }
+    public static void GetRecursiveChildDropdownReset(StringBuilder stringBuilder, Entity entity, String EntityName, bool isFirst = false, Dictionary<string,HashSet<string>>? Existence = null)
+    {
+        if (Existence == null)
+            Existence = new Dictionary<string, HashSet<string>>();
 
+        foreach (var currentParent in entity.ParentEntities)
+        {
+            GetRecursiveChildDropdownReset(stringBuilder, currentParent, EntityName, true, Existence);
+            foreach (var currentGrandParent in currentParent.ParentEntities)
+            {
+                GetRecursiveChildDropdownReset(stringBuilder, currentGrandParent, currentParent.Name, false, Existence);
+            }
+        }
+        var searchText = $"on{entity.Name}Changed({entity.Name.ToCamelCase()}Id: number) ";
+        searchText = searchText + "{";
+        var currentText = stringBuilder.ToString().IndexOf(searchText);
+        if (currentText != -1)
+        {
+            if (Existence.ContainsKey(entity.Name))
+            {
+                if (!Existence[entity.Name].Contains(EntityName))
+                {
+                    StringBuilder temp = new StringBuilder();
+                    if (isFirst)
+                        temp.NewLine().InsertTab(2).Append($"this.createInput.{EntityName.ToCamelCase()}Id = undefined;");
+                    else
+                        temp.NewLine().InsertTab(2).Append($"this.selected{EntityName}Id = undefined;");
+                    temp.NewLine().InsertTab(2).Append($"this.{EntityName.ToCamelCase().Pluralize()}.splice(0);");
+                    stringBuilder.Insert(currentText + searchText.Length, temp.ToString());
+                    Existence[entity.Name].Add(EntityName);
+                }
+            }
+            else
+            {
+                Existence.Add(entity.Name, new HashSet<string>());
+                StringBuilder temp = new StringBuilder();
+                if (isFirst)
+                    temp.NewLine().InsertTab(2).Append($"this.createInput.{EntityName.ToCamelCase()}Id = undefined;");
+                else
+                    temp.NewLine().InsertTab(2).Append($"this.selected{EntityName}Id = undefined;");
+                temp.NewLine().InsertTab(2).Append($"this.{EntityName.ToCamelCase().Pluralize()}.splice(0);");
+                stringBuilder.Insert(currentText + searchText.Length, temp.ToString());
+                Existence[entity.Name].Add(EntityName);
+            }
+        }
+
+    }
     #endregion
 
 }
