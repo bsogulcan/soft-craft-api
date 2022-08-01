@@ -231,12 +231,12 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
         entityCodeResultDto.TypeScriptCreateComponentResult.ComponentCssStringify =
             createComponentResult.CreateComponent.ComponentCssStringify;
 
-        // entityCodeResultDto.TypeScriptEditComponentResult.ComponentTsStringify =
-        //     createComponentResult.EditComponent.ComponentTsStringify;
-        // entityCodeResultDto.TypeScriptEditComponentResult.ComponentHtmlStringify =
-        //     createComponentResult.EditComponent.ComponentHtmlStringify;
-        // entityCodeResultDto.TypeScriptEditComponentResult.ComponentCssStringify =
-        //     createComponentResult.EditComponent.ComponentCssStringify;
+        entityCodeResultDto.TypeScriptEditComponentResult.ComponentTsStringify =
+            createComponentResult.EditComponent.ComponentTsStringify;
+        entityCodeResultDto.TypeScriptEditComponentResult.ComponentHtmlStringify =
+            createComponentResult.EditComponent.ComponentHtmlStringify;
+        entityCodeResultDto.TypeScriptEditComponentResult.ComponentCssStringify =
+            createComponentResult.EditComponent.ComponentCssStringify;
         return entityCodeResultDto;
     }
 

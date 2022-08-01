@@ -199,7 +199,13 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
                 ComponentTsStringify = CreateComponentHelper.GetCreateComponentTsStringify(request).ToString(),
                 ComponentHtmlStringify = CreateComponentHelper.GetCreateComponentHtmlStringify(request).ToString(),
                 ComponentCssStringify = CreateComponentHelper.GetCreateComponentCssStringify().ToString(),
-            }
+            },
+            EditComponent = new ComponentResultEto()
+            {
+                ComponentTsStringify = EditComponentHelper.GetCreateComponentTsStringify(request).ToString(),
+                ComponentHtmlStringify = EditComponentHelper.GetCreateComponentHtmlStringify(request).ToString(),
+                ComponentCssStringify = EditComponentHelper.GetCreateComponentCssStringify().ToString(),
+            },
         };
 
         return result;

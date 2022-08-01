@@ -5,7 +5,7 @@ using Humanizer;
 
 namespace TypeScriptCodeGenerator.Helpers;
 
-public static class CreateComponentHelper
+public static class EditComponentHelper
 {
     public static StringBuilder GetCreateComponentTsStringify(Entity entity)
     {
@@ -16,8 +16,8 @@ public static class CreateComponentHelper
                 "import {" + entity.Name + "Service} from '../../../../shared/services/" +
                 entity.Name + "/" + entity.Name.ToCamelCase() + ".service';")
             .NewLine().Append(
-                "import {Create" + entity.Name + "Input} from '../../../../shared/services/" + entity.Name +
-                "/dtos/Create" + entity.Name + "Input';")
+                "import {Update" + entity.Name + "Input} from '../../../../shared/services/" + entity.Name +
+                "/dtos/Update" + entity.Name + "Input';")
             .NewLine().Append("import {FormControl, FormGroup, Validators} from '@angular/forms';");
 
         foreach (var item in entity.Properties.Where(x => x.IsEnumerateProperty))
@@ -30,14 +30,15 @@ public static class CreateComponentHelper
         stringBuilder.NewLine(2);
 
         stringBuilder.Append("@Component({")
-            .NewLine().InsertTab().Append($"selector: 'app-create-{entity.Name.ToCamelCase()}',")
-            .NewLine().InsertTab().Append($"templateUrl: './create-{entity.Name.ToCamelCase()}.component.html',")
-            .NewLine().InsertTab().Append($"styleUrls: ['./create-{entity.Name.ToCamelCase()}.component.css']")
+            .NewLine().InsertTab().Append($"selector: 'app-edit-{entity.Name.ToCamelCase()}',")
+            .NewLine().InsertTab().Append($"templateUrl: './edit-{entity.Name.ToCamelCase()}.component.html',")
+            .NewLine().InsertTab().Append($"styleUrls: ['./edit-{entity.Name.ToCamelCase()}.component.css']")
             .NewLine().Append("})")
             .NewLine();
 
-        stringBuilder.Append($"export class Create{entity.Name}Component implements OnInit ").Append("{")
-            .NewLine().InsertTab().Append($"createInput = new Create{entity.Name}Input();")
+        stringBuilder.Append($"export class Edit{entity.Name}Component implements OnInit ").Append("{")
+            .NewLine().InsertTab().Append($"updateInput = new Update{entity.Name}Input();")
+            .NewLine().InsertTab().Append($"currentData : {entity.Name}FullOutput();")
             .NewLine().InsertTab().Append($"isSaving: boolean;")
             .NewLine().InsertTab().Append("formGroup: FormGroup;");
 
@@ -51,6 +52,7 @@ public static class CreateComponentHelper
         stringBuilder.NewLine(2);
 
         stringBuilder.InsertTab().Append("constructor(private ref: DynamicDialogRef,")
+            .NewLine().InsertTab(4).Append($"public config: DynamicDialogConfig,")
             .NewLine().InsertTab(4).Append($"private {entity.Name.ToCamelCase()}Service: {entity.Name}Service,");
 
         //Ozan
@@ -61,6 +63,10 @@ public static class CreateComponentHelper
 
         //Ozan
         GetRecursiveRelationalGetAllCalls(stringBuilder, entity);
+        stringBuilder.InsertTab(2).Append("this.currentData = config.data?.item?.result;").NewLine();
+        stringBuilder.InsertTab(2).Append("this.updateInput = JSON.parse(JSON.stringify(this.currentData));").NewLine();
+
+        GetRecursiveRelationalInitialValues(stringBuilder, entity);
 
         stringBuilder.InsertTab().Append("}")
             .NewLine();
@@ -112,7 +118,7 @@ public static class CreateComponentHelper
         {
             GetRecursiveChildDropdownReset(stringBuilder, currentParent, currentParent.Name, true);
         }
-        
+
         stringBuilder.Append("}");
 
 
@@ -258,7 +264,7 @@ public static class CreateComponentHelper
                     .Append($"{relatedEntity.Name.ToCamelCase().Pluralize()} : Array<{relatedEntity.Name}FullOutput> = new Array<{relatedEntity.Name}FullOutput>();")
                     .NewLine()
                     .InsertTab()
-                    .Append($"selected{relatedEntity.Name}Id : { PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.PrimaryKeyType) };");
+                    .Append($"selected{relatedEntity.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.PrimaryKeyType)};");
                 entities?.Add(relatedEntity);
                 GetRecursiveRelationalDtos(stringBuilder, relatedEntity, entities);
             }
@@ -443,7 +449,7 @@ public static class CreateComponentHelper
             entities = new HashSet<Entity>();
             isFirst = true;
         }
-            
+
 
         foreach (var relatedEntity in entity.ParentEntities)
         {
@@ -458,7 +464,7 @@ public static class CreateComponentHelper
 
                 if (isFirst)
                 {
-                    stringBuilder.NewLine().InsertTab(6).Append($"<p-dropdown appendTo=\"body\" [options]=\"{ relatedEntity.Name.Pluralize().ToCamelCase() }\"  [(ngModel)]=\"createInput.{relatedEntity.Name.ToCamelCase()}Id\" placeholder=\"{{{{ 'Select{relatedEntity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" formControlName=\"element{relatedEntity.Name}\" optionLabel=\"{relatedEntity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase() }\" optionValue=\"id\" inputId=\"element{relatedEntity.Name}\" [showClear]=\"true\">");
+                    stringBuilder.NewLine().InsertTab(6).Append($"<p-dropdown appendTo=\"body\" [options]=\"{relatedEntity.Name.Pluralize().ToCamelCase()}\"  [(ngModel)]=\"createInput.{relatedEntity.Name.ToCamelCase()}Id\" placeholder=\"{{{{ 'Select{relatedEntity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" formControlName=\"element{relatedEntity.Name}\" optionLabel=\"{relatedEntity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase()}\" optionValue=\"id\" inputId=\"element{relatedEntity.Name}\" [showClear]=\"true\">");
                 }
                 else
                 {
@@ -475,7 +481,7 @@ public static class CreateComponentHelper
             }
         }
     }
-    public static void GetRecursiveChildDropdownReset(StringBuilder stringBuilder, Entity entity, String EntityName, bool isFirst = false, Dictionary<string,HashSet<string>>? Existence = null)
+    public static void GetRecursiveChildDropdownReset(StringBuilder stringBuilder, Entity entity, String EntityName, bool isFirst = false, Dictionary<string, HashSet<string>>? Existence = null)
     {
         if (Existence == null)
             Existence = new Dictionary<string, HashSet<string>>();
@@ -522,6 +528,35 @@ public static class CreateComponentHelper
         }
 
     }
+    public static void GetRecursiveRelationalInitialValues(StringBuilder stringBuilder, Entity entity, HashSet<Entity>? entities = null)
+    {
+        bool isFirst = false;
+        if (entities == null)
+        {
+            entities = new HashSet<Entity>();
+            isFirst = true;
+        }
+
+
+        foreach (var relatedEntity in entity.ParentEntities)
+        {
+            if (entities?.Contains(relatedEntity) == false)
+            {
+                entities?.Add(relatedEntity);
+                GetRecursiveRelationalInitialValues(stringBuilder, relatedEntity, entities);
+
+                if (isFirst)
+                {
+
+                }
+                else
+                {
+
+                }
+            }
+        }
+    }
+
     #endregion
 
 }

@@ -490,6 +490,29 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
 
         #endregion
 
+        #region EditComponent
+
+        var editComponentFolderPath =
+            Path.Combine(listComponentFolderPath, $"edit-{request.EntityName.ToCamelCase()}");
+
+        if (!Directory.Exists(editComponentFolderPath))
+        {
+            Directory.CreateDirectory(editComponentFolderPath);
+        }
+
+        await File.WriteAllTextAsync(
+            Path.Combine(editComponentFolderPath, "edit-" + request.EntityName.ToCamelCase() + ".component.ts"),
+            request.EditComponent.ComponentTsStringify);
+
+        await File.WriteAllTextAsync(
+            Path.Combine(editComponentFolderPath, "edit-" + request.EntityName.ToCamelCase() + ".component.html"),
+            request.EditComponent.ComponentHtmlStringify);
+
+        await File.WriteAllTextAsync(
+            Path.Combine(editComponentFolderPath, "edit-" + request.EntityName.ToCamelCase() + ".component.css"),
+            request.EditComponent.ComponentCssStringify);
+
+        #endregion
 
         return new ProjectReply()
         {
