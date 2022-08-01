@@ -786,6 +786,10 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                     stringBuilder.Append(
                         $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")}" +
                         property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
+
+                    stringBuilder.InsertTab(2).Append(
+                        $"public {property.RelationalEntityName + "PartOutput" + (property.Nullable ? "? " : " ")} " +
+                        property.Name + " { get; set; }" + Environment.NewLine);
                 }
                 else // OneToMany
                 {
