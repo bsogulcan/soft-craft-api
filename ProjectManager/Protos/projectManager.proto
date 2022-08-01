@@ -26,6 +26,7 @@ message ProjectRequest{
   string name = 2;
   bool multiTenant = 3;
   LogManagement logManagement = 4;
+  string displayName = 5;
 }
 
 // The response message containing the greetings.

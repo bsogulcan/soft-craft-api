@@ -10,7 +10,7 @@ namespace SoftCraft.Manager.MicroServiceManager.ProjectManagerServiceManager;
 public interface IProjectManagerServiceManager : ITransientDependency
 {
     Task<ProjectReply> CreateAbpBoilerplateProjectAsync(long projectId, string uniqueName,
-        LogType logType, bool multiTenant);
+        LogType logType, bool multiTenant, string projectName);
 
     Task<ProjectReply> AddEntityToExistingProjectAsync(AddEntityRequest addEntityRequest);
     Task<ProjectReply> AddConfigurationToExistingProjectAsync(AddEntityRequest addEntityRequest);
