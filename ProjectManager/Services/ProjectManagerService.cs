@@ -449,6 +449,8 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         await HelperClass.HelperClass.CreateRouting(projectFolderPath, request.EntityName);
         await HelperClass.HelperClass.AddComponentToModule(projectFolderPath, request.EntityName);
         await HelperClass.HelperClass.AddCreateComponentToModule(projectFolderPath, request.EntityName);
+        await HelperClass.HelperClass.AddEditComponentToModule(projectFolderPath, request.EntityName);
+
 
         #region ListComponent
 

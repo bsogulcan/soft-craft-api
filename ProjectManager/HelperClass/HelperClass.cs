@@ -219,4 +219,30 @@ public static class HelperClass
 
         await File.WriteAllTextAsync(appModuleFilePath, stringBuilder.ToString());
     }
+    public static async Task AddEditComponentToModule(string basePath, string entityName)
+    {
+        var appModuleFilePath =
+            Path.Combine(basePath, "angular", "src", "app", "app.module.ts");
+        var appModuleContent = await File.ReadAllTextAsync(appModuleFilePath);
+
+        var stringBuilder = new StringBuilder(appModuleContent);
+
+        var ngModuleIndex = appModuleContent.IndexOf("@NgModule({", StringComparison.Ordinal) - 1;
+
+        var import = "import {Edit" + entityName + "Component} from './components/" + entityName + "/" + "edit-" +
+                     entityName.ToCamelCase() + "/" +
+                     "edit-" + entityName.ToCamelCase() + ".component';" + Environment.NewLine;
+        stringBuilder.Insert(ngModuleIndex, import);
+
+        var declarationIndex = stringBuilder.ToString().IndexOf("declarations", StringComparison.Ordinal);
+        var declarationArrayEndIndex = stringBuilder.ToString()
+            .IndexOf(",\n    ]", declarationIndex, StringComparison.Ordinal) + 1;
+        var component =
+            Environment.NewLine + $"        Edit{entityName}Component,";
+
+
+        stringBuilder.Insert(declarationArrayEndIndex, component);
+
+        await File.WriteAllTextAsync(appModuleFilePath, stringBuilder.ToString());
+    }
 }

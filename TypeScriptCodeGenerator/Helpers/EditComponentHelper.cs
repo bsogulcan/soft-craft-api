@@ -7,17 +7,20 @@ namespace TypeScriptCodeGenerator.Helpers;
 
 public static class EditComponentHelper
 {
-    public static StringBuilder GetCreateComponentTsStringify(Entity entity)
+    public static StringBuilder GetEditComponentTsStringify(Entity entity)
     {
         var stringBuilder = new StringBuilder();
         stringBuilder.Append("import {Component, OnInit} from '@angular/core';")
-            .NewLine().Append("import {DynamicDialogRef} from 'primeng-lts/dynamicdialog';")
+            .NewLine().Append("import {DynamicDialogRef, DynamicDialogConfig} from 'primeng-lts/dynamicdialog';")
             .NewLine().Append(
                 "import {" + entity.Name + "Service} from '../../../../shared/services/" +
                 entity.Name + "/" + entity.Name.ToCamelCase() + ".service';")
             .NewLine().Append(
                 "import {Update" + entity.Name + "Input} from '../../../../shared/services/" + entity.Name +
                 "/dtos/Update" + entity.Name + "Input';")
+            .NewLine().Append(
+                "import {" + entity.Name + "FullOutput} from '../../../../shared/services/" + entity.Name +
+                "/dtos/" + entity.Name + "FullOutput';")
             .NewLine().Append("import {FormControl, FormGroup, Validators} from '@angular/forms';");
 
         foreach (var item in entity.Properties.Where(x => x.IsEnumerateProperty))
@@ -38,7 +41,7 @@ public static class EditComponentHelper
 
         stringBuilder.Append($"export class Edit{entity.Name}Component implements OnInit ").Append("{")
             .NewLine().InsertTab().Append($"updateInput = new Update{entity.Name}Input();")
-            .NewLine().InsertTab().Append($"currentData : {entity.Name}FullOutput();")
+            .NewLine().InsertTab().Append($"currentData : {entity.Name}FullOutput;")
             .NewLine().InsertTab().Append($"isSaving: boolean;")
             .NewLine().InsertTab().Append("formGroup: FormGroup;");
 
@@ -65,8 +68,10 @@ public static class EditComponentHelper
         GetRecursiveRelationalGetAllCalls(stringBuilder, entity);
         stringBuilder.InsertTab(2).Append("this.currentData = config.data?.item?.result;").NewLine();
         stringBuilder.InsertTab(2).Append("this.updateInput = JSON.parse(JSON.stringify(this.currentData));").NewLine();
-
-        GetRecursiveRelationalInitialValues(stringBuilder, entity);
+        foreach (var currentParent in entity.ParentEntities)
+        {
+            GetRecursiveRelationalInitialValues(stringBuilder, currentParent);
+        }
 
         stringBuilder.InsertTab().Append("}")
             .NewLine();
@@ -101,7 +106,7 @@ public static class EditComponentHelper
         stringBuilder.NewLine().InsertTab().Append("save() {")
             .NewLine().InsertTab(2).Append("this.isSaving = true;")
             .NewLine().InsertTab(2).Append("this." + entity.Name.ToCamelCase() +
-                                           "Service.create(this.createInput).subscribe(response => {")
+                                           "Service.update(this.updateInput).subscribe(response => {")
             .NewLine().InsertTab(4).Append("this.isSaving = false;")
             .NewLine().InsertTab(4).Append("if (response) {")
             .NewLine().InsertTab(5).Append("this.ref.close(response.result);")
@@ -125,7 +130,7 @@ public static class EditComponentHelper
         return stringBuilder;
     }
 
-    public static StringBuilder GetCreateComponentHtmlStringify(Entity entity)
+    public static StringBuilder GetEditComponentHtmlStringify(Entity entity)
     {
         var stringBuilder = new StringBuilder();
         stringBuilder.Append("<div class=\"flex align-content-between\">")
@@ -150,7 +155,7 @@ public static class EditComponentHelper
                 "<button pButton pRipple label=\"{{ 'Cancel' | localize }}\" icon=\"pi pi-times\" class=\"p-button-text\" (click)=\"close(false)\" [disabled]=\"isSaving\"></button>")
             .NewLine().InsertTab(2)
             .Append(
-                "<button pButton pRipple label=\"{{ 'Save' | localize }}\" icon=\"pi pi-check\" class=\"p-button-text\" (click)=\"save()\" [disabled]=\"isSaving || this.formGroup.invalid\"></button>")
+                "<button pButton pRipple label=\"{{ 'Save' | localize }}\" icon=\"pi pi-check\" class=\"p-button-text\" (click)=\"save()\" [disabled]=\"isSaving || this.formGroup.invalid || this.formGroup.pristine || this.formGroup.untouched\"></button>")
             .NewLine().InsertTab().Append("</div>")
             .NewLine().Append("</div>");
 
@@ -175,14 +180,14 @@ public static class EditComponentHelper
                     stringBuilder.NewLine().InsertTab(6)
                         .Append(
                             "<input pInputText inputId=\"element" + property.Name +
-                            "\" type=\"text\" formControlName=\"element" + property.Name + "\" [(ngModel)]=\"createInput." +
+                            "\" type=\"text\" formControlName=\"element" + property.Name + "\" [(ngModel)]=\"updateInput." +
                             property.Name.ToCamelCase() + "\" />");
                 }
                 break;
             case "int" or "long" or "float" or "double" or "decimal":
                 {
                     stringBuilder.NewLine().InsertTab(6)
-                        .Append("<p-inputNumber inputId=\"element" + property.Name + "\" [(ngModel)]=\"createInput." +
+                        .Append("<p-inputNumber inputId=\"element" + property.Name + "\" [(ngModel)]=\"updateInput." +
                                 property.Name.ToCamelCase() + "\" formControlName=\"element" + property.Name +
                                 "\" [showButtons]=\"true\" ></p-inputNumber>");
                 }
@@ -191,7 +196,7 @@ public static class EditComponentHelper
                 {
                     stringBuilder.NewLine().InsertTab(6)
                         .Append("<p-inputSwitch binary=\"true\" inputId=\"element" + property.Name +
-                                "\"  [(ngModel)]=\"createInput." + property.Name.ToCamelCase() +
+                                "\"  [(ngModel)]=\"updateInput." + property.Name.ToCamelCase() +
                                 "\" formControlName=\"element" + property.Name + "\"></p-inputSwitch>");
                 }
                 break;
@@ -199,7 +204,7 @@ public static class EditComponentHelper
                 {
                     stringBuilder.NewLine().InsertTab(6)
                         .Append(
-                            "<p-calendar appendTo=\"body\" [(ngModel)]=\"createInput." +
+                            "<p-calendar appendTo=\"body\" [(ngModel)]=\"updateInput." +
                             property.Name.ToCamelCase() + "\" [showTime]=\"true\" inputId=\"element" +
                             property.Name +
                             "\" formControlName=\"element" + property.Name + "\"></p-calendar>");
@@ -209,7 +214,7 @@ public static class EditComponentHelper
                 {
                     if (property.IsEnumerateProperty)
                     {
-                        stringBuilder.NewLine().InsertTab(6).Append($"<p-dropdown appendTo=\"body\" [options]=\"{property.Type.ToCamelCase()}List\"  [(ngModel)]=\"createInput.{property.Name.ToCamelCase()}\" placeholder=\"{{{{ 'Select{property.Type}' | localize}}}}\"  formControlName=\"element{property.Name}\" optionLabel=\"displayName\" optionValue=\"id\" inputId=\"element{property.Name}\" [showClear]=\"true\"></p-dropdown>");
+                        stringBuilder.NewLine().InsertTab(6).Append($"<p-dropdown appendTo=\"body\" [options]=\"{property.Type.ToCamelCase()}List\"  [(ngModel)]=\"updateInput.{property.Name.ToCamelCase()}\" placeholder=\"{{{{ 'Select{property.Type}' | localize}}}}\"  formControlName=\"element{property.Name}\" optionLabel=\"displayName\" optionValue=\"id\" inputId=\"element{property.Name}\" [showClear]=\"true\"></p-dropdown>");
                     }
                 }
                 break;
@@ -221,7 +226,7 @@ public static class EditComponentHelper
         return stringBuilder.ToString();
     }
 
-    public static StringBuilder GetCreateComponentCssStringify()
+    public static StringBuilder GetEditComponentCssStringify()
     {
         var stringBuilder = new StringBuilder();
         return stringBuilder;
@@ -464,7 +469,7 @@ public static class EditComponentHelper
 
                 if (isFirst)
                 {
-                    stringBuilder.NewLine().InsertTab(6).Append($"<p-dropdown appendTo=\"body\" [options]=\"{relatedEntity.Name.Pluralize().ToCamelCase()}\"  [(ngModel)]=\"createInput.{relatedEntity.Name.ToCamelCase()}Id\" placeholder=\"{{{{ 'Select{relatedEntity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" formControlName=\"element{relatedEntity.Name}\" optionLabel=\"{relatedEntity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase()}\" optionValue=\"id\" inputId=\"element{relatedEntity.Name}\" [showClear]=\"true\">");
+                    stringBuilder.NewLine().InsertTab(6).Append($"<p-dropdown appendTo=\"body\" [options]=\"{relatedEntity.Name.Pluralize().ToCamelCase()}\"  [(ngModel)]=\"updateInput.{relatedEntity.Name.ToCamelCase()}Id\" placeholder=\"{{{{ 'Select{relatedEntity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" formControlName=\"element{relatedEntity.Name}\" optionLabel=\"{relatedEntity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase()}\" optionValue=\"id\" inputId=\"element{relatedEntity.Name}\" [showClear]=\"true\">");
                 }
                 else
                 {
@@ -483,52 +488,52 @@ public static class EditComponentHelper
     }
     public static void GetRecursiveChildDropdownReset(StringBuilder stringBuilder, Entity entity, String EntityName, bool isFirst = false, Dictionary<string, HashSet<string>>? Existence = null)
     {
-        if (Existence == null)
-            Existence = new Dictionary<string, HashSet<string>>();
+        //if (Existence == null)
+        //    Existence = new Dictionary<string, HashSet<string>>();
 
-        foreach (var currentParent in entity.ParentEntities)
-        {
-            GetRecursiveChildDropdownReset(stringBuilder, currentParent, EntityName, true, Existence);
-            foreach (var currentGrandParent in currentParent.ParentEntities)
-            {
-                GetRecursiveChildDropdownReset(stringBuilder, currentGrandParent, currentParent.Name, false, Existence);
-            }
-        }
-        var searchText = $"on{entity.Name}Changed({entity.Name.ToCamelCase()}Id: number) ";
-        searchText = searchText + "{";
-        var currentText = stringBuilder.ToString().IndexOf(searchText);
-        if (currentText != -1)
-        {
-            if (Existence.ContainsKey(entity.Name))
-            {
-                if (!Existence[entity.Name].Contains(EntityName))
-                {
-                    StringBuilder temp = new StringBuilder();
-                    if (isFirst)
-                        temp.NewLine().InsertTab(2).Append($"this.createInput.{EntityName.ToCamelCase()}Id = undefined;");
-                    else
-                        temp.NewLine().InsertTab(2).Append($"this.selected{EntityName}Id = undefined;");
-                    temp.NewLine().InsertTab(2).Append($"this.{EntityName.ToCamelCase().Pluralize()}.splice(0);");
-                    stringBuilder.Insert(currentText + searchText.Length, temp.ToString());
-                    Existence[entity.Name].Add(EntityName);
-                }
-            }
-            else
-            {
-                Existence.Add(entity.Name, new HashSet<string>());
-                StringBuilder temp = new StringBuilder();
-                if (isFirst)
-                    temp.NewLine().InsertTab(2).Append($"this.createInput.{EntityName.ToCamelCase()}Id = undefined;");
-                else
-                    temp.NewLine().InsertTab(2).Append($"this.selected{EntityName}Id = undefined;");
-                temp.NewLine().InsertTab(2).Append($"this.{EntityName.ToCamelCase().Pluralize()}.splice(0);");
-                stringBuilder.Insert(currentText + searchText.Length, temp.ToString());
-                Existence[entity.Name].Add(EntityName);
-            }
-        }
+        //foreach (var currentParent in entity.ParentEntities)
+        //{
+        //    GetRecursiveChildDropdownReset(stringBuilder, currentParent, EntityName, true, Existence);
+        //    foreach (var currentGrandParent in currentParent.ParentEntities)
+        //    {
+        //        GetRecursiveChildDropdownReset(stringBuilder, currentGrandParent, currentParent.Name, false, Existence);
+        //    }
+        //}
+        //var searchText = $"on{entity.Name}Changed({entity.Name.ToCamelCase()}Id: number) ";
+        //searchText = searchText + "{";
+        //var currentText = stringBuilder.ToString().IndexOf(searchText);
+        //if (currentText != -1)
+        //{
+        //    if (Existence.ContainsKey(entity.Name))
+        //    {
+        //        if (!Existence[entity.Name].Contains(EntityName))
+        //        {
+        //            StringBuilder temp = new StringBuilder();
+        //            if (isFirst)
+        //                temp.NewLine().InsertTab(2).Append($"this.updateInput.{EntityName.ToCamelCase()}Id = undefined;");
+        //            else
+        //                temp.NewLine().InsertTab(2).Append($"this.selected{EntityName}Id = undefined;");
+        //            temp.NewLine().InsertTab(2).Append($"this.{EntityName.ToCamelCase().Pluralize()}.splice(0);");
+        //            stringBuilder.Insert(currentText + searchText.Length, temp.ToString());
+        //            Existence[entity.Name].Add(EntityName);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        Existence.Add(entity.Name, new HashSet<string>());
+        //        StringBuilder temp = new StringBuilder();
+        //        if (isFirst)
+        //            temp.NewLine().InsertTab(2).Append($"this.updateInput.{EntityName.ToCamelCase()}Id = undefined;");
+        //        else
+        //            temp.NewLine().InsertTab(2).Append($"this.selected{EntityName}Id = undefined;");
+        //        temp.NewLine().InsertTab(2).Append($"this.{EntityName.ToCamelCase().Pluralize()}.splice(0);");
+        //        stringBuilder.Insert(currentText + searchText.Length, temp.ToString());
+        //        Existence[entity.Name].Add(EntityName);
+        //    }
+        //}
 
     }
-    public static void GetRecursiveRelationalInitialValues(StringBuilder stringBuilder, Entity entity, HashSet<Entity>? entities = null)
+    public static void GetRecursiveRelationalInitialValues(StringBuilder stringBuilder, Entity entity, HashSet<Entity>? entities = null,string parents = "")
     {
         bool isFirst = false;
         if (entities == null)
@@ -537,26 +542,38 @@ public static class EditComponentHelper
             isFirst = true;
         }
 
-
-        foreach (var relatedEntity in entity.ParentEntities)
+        if (entity.ParentEntities.Count == 0)
         {
-            if (entities?.Contains(relatedEntity) == false)
+            if (!isFirst)
             {
-                entities?.Add(relatedEntity);
-                GetRecursiveRelationalInitialValues(stringBuilder, relatedEntity, entities);
-
+                stringBuilder.InsertTab(2).Append($"this.selected{entity.Name}Id = this.currentData{parents}.{entity.Name.ToCamelCase()}.id;").NewLine();
+                stringBuilder.InsertTab(2).Append($"this.on{entity.Name}Changed(this.selected{entity.Name}Id);").NewLine();
+            }
+            else
+            {
+                stringBuilder.InsertTab(2).Append($"this.updateInput.{entity.Name.ToCamelCase()}Id = this.currentData.{entity.Name.ToCamelCase()}Id;").NewLine();
+            }
+        }
+        else
+        {
+            string rootParents = String.Format("{0}.{1}", parents, entity.Name.ToCamelCase());
+            foreach (var relatedEntity in entity.ParentEntities)
+            {
+                string newParent = string.Format("{0}.{1}", rootParents, relatedEntity.Name.ToCamelCase());
+                GetRecursiveRelationalInitialValues(stringBuilder, relatedEntity, entities, rootParents);
                 if (isFirst)
                 {
-
+                    stringBuilder.InsertTab(2).Append($"this.updateInput.{entity.Name.ToCamelCase()}Id = this.currentData.{entity.Name.ToCamelCase()}Id;").NewLine();
                 }
                 else
                 {
-
+                    stringBuilder.InsertTab(2).Append($"this.selected{entity.Name}Id = this.currentData{parents}.{entity.Name.ToCamelCase()}.id;").NewLine();
+                    stringBuilder.InsertTab(2).Append($"this.on{entity.Name}Changed(this.selected{entity.Name}Id);").NewLine();
                 }
             }
         }
-    }
 
+    }
     #endregion
 
 }
