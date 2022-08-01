@@ -18,6 +18,7 @@ message Entity {
   PrimaryKeyType primaryKeyType = 3;
   repeated Property properties = 4;
   repeated Entity ParentEntities = 5;
+  string projectDisplayName = 6;
 }
 
 message Property {
