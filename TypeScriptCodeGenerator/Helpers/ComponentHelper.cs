@@ -29,7 +29,10 @@ public static class ComponentHelper
             .NewLine()
             .Append("import {DialogOptions} from '../../../shared/components/dataGrid/model/dialogOptions';")
             .NewLine()
-            .Append("import {Create" + entity.Name + "Component} from './create-" + entity.Name.ToCamelCase() + "/create-" + entity.Name.ToCamelCase() + ".component';")
+            .Append("import {Create" + entity.Name + "Component} from './create-" + entity.Name.ToCamelCase() +
+                    "/create-" + entity.Name.ToCamelCase() + ".component';")
+            .NewLine()
+            .Append("import {Title} from '@angular/platform-browser';")
             .NewLine(2);
 
         //Component
@@ -61,10 +64,13 @@ public static class ComponentHelper
 
 
         stringBuilder.InsertTab().Append("constructor(injector: Injector,")
+            .NewLine().InsertTab(4).Append("private titleService: Title, ")
             .NewLine().InsertTab(4).Append($"public {entity.Name.ToCamelCase()}Service: {entity.Name}Service) ")
             .Append("{")
             .NewLine()
             .InsertTab(2).Append("super(injector);")
+            .NewLine()
+            .InsertTab(2).Append($"titleService.setTitle('{entity.ProjectDisplayName} | ' + this.l('{entity.Name}'));")
             .NewLine()
             .InsertTab().Append("}")
             .NewLine();
