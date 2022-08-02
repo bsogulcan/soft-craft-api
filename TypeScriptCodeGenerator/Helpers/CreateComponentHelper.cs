@@ -162,7 +162,7 @@ public static class CreateComponentHelper
         stringBuilder.NewLine().InsertTab(3).Append("</form>")
             .NewLine().InsertTab(2).Append("</div>")
             .NewLine().InsertTab().Append("</div>")
-            .NewLine().InsertTab().Append("<div class=\"flex p-dialog-footer footer\" align=\"end\">")
+            .NewLine().InsertTab().Append("<div class=\"flex justify-content-end flex-wrap footer\">")
             .NewLine().InsertTab(2)
             .Append(
                 "<button pButton pRipple label=\"{{ 'Cancel' | localize }}\" icon=\"pi pi-times\" class=\"p-button-text\" (click)=\"close(false)\" [disabled]=\"isSaving\"></button>")
