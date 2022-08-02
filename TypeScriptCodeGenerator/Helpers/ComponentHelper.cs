@@ -172,11 +172,11 @@ public static class ComponentHelper
         stringBuilder.NewLine(2).InsertTab().Append("initializeDataGridColumns(): GridColumn[] {")
             .NewLine().InsertTab(2).Append("this.dataGridColumns = [").NewLine();
 
-        var relatedEntities = GetRelatedEntities(entity);
+        var relatedEntities = EntityHelper.GetRelatedEntities(entity);
 
         foreach (var relatedEntity in relatedEntities)
         {
-            relatedEntity.Childs = GetChildEntity(relatedEntity.Entity, relatedEntities);
+            relatedEntity.Childs = EntityHelper.GetChildEntity(relatedEntity.Entity, relatedEntities);
             relatedEntity.Childs.Reverse();
         }
 
@@ -261,49 +261,5 @@ public static class ComponentHelper
     {
         var stringBuilder = new StringBuilder();
         return stringBuilder;
-    }
-
-    private static List<EntityWrapper> GetRelatedEntities(Entity entity)
-    {
-        var response = new List<EntityWrapper>();
-
-        foreach (var parentEntity in entity.ParentEntities)
-        {
-            var entityWrapper = new EntityWrapper()
-            {
-                Entity = parentEntity,
-            };
-
-            response.Add(entityWrapper);
-            var parentEntityRelatedEntities = GetRelatedEntities(parentEntity);
-
-            foreach (var relatedEntity in parentEntityRelatedEntities)
-            {
-                if (!response.Exists(x => x.Entity.Name == relatedEntity.Entity.Name))
-                {
-                    response.Add(relatedEntity);
-                }
-            }
-        }
-
-        return response;
-    }
-
-    private static List<string> GetChildEntity(Entity entity, List<EntityWrapper> relatedEntities)
-    {
-        var childs = new List<string>();
-
-        foreach (var relatedEntity in relatedEntities)
-        {
-            if (relatedEntity.Entity.ParentEntities.Any(x => x.Name == entity.Name))
-            {
-                var x = GetChildEntity(relatedEntity.Entity, relatedEntities);
-
-                childs.Add(relatedEntity.Entity.Name);
-                childs.AddRange(x);
-            }
-        }
-
-        return childs;
     }
 }
