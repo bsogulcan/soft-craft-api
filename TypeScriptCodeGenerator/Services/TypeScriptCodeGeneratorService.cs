@@ -158,7 +158,7 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
     {
         var stringifyResult = new StringifyResult();
         var stringBuilder = new StringBuilder();
-        stringBuilder.Append("import {BaseEnum} from './BaseEnum'").NewLine();
+        stringBuilder.Append("import {BaseEnum} from './BaseEnum';").NewLine();
 
         stringBuilder.Append($"export enum {request.Name} " + "{");
         stringBuilder.NewLine();
@@ -199,7 +199,13 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
                 ComponentTsStringify = CreateComponentHelper.GetCreateComponentTsStringify(request).ToString(),
                 ComponentHtmlStringify = CreateComponentHelper.GetCreateComponentHtmlStringify(request).ToString(),
                 ComponentCssStringify = CreateComponentHelper.GetCreateComponentCssStringify().ToString(),
-            }
+            },
+            EditComponent = new ComponentResultEto()
+            {
+                ComponentTsStringify = EditComponentHelper.GetEditComponentTsStringify(request).ToString(),
+                ComponentHtmlStringify = EditComponentHelper.GetEditComponentHtmlStringify(request).ToString(),
+                ComponentCssStringify = EditComponentHelper.GetEditComponentCssStringify().ToString(),
+            },
         };
 
         return result;
