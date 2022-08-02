@@ -205,6 +205,12 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                         ComponentHtmlStringify = createComponentResult.CreateComponent.ComponentHtmlStringify,
                         ComponentTsStringify = createComponentResult.CreateComponent.ComponentTsStringify
                     },
+                    EditComponent = new ComponentResultEto()
+                    {
+                        ComponentCssStringify = createComponentResult.EditComponent.ComponentCssStringify,
+                        ComponentHtmlStringify = createComponentResult.EditComponent.ComponentHtmlStringify,
+                        ComponentTsStringify = createComponentResult.EditComponent.ComponentTsStringify
+                    },
                 };
 
                 var addComponentResult =
