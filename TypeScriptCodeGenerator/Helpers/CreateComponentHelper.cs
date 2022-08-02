@@ -372,6 +372,7 @@ public static class CreateComponentHelper
                 if (entity.Properties.Any(x => x.Name == child))
                 {
                     stringBuilder.Append($"this.createInput.{child.ToCamelCase()}Id = undefined;");
+                    stringBuilder.NewLine().InsertTab(2).Append($"this.{child.ToCamelCase().Pluralize()}.splice(0);");
                 }
                 else
                 {

@@ -35,6 +35,9 @@ public static class ComponentHelper
                     "/create-" + entity.Name.ToCamelCase() + ".component';")
             .NewLine()
             .Append("import {Title} from '@angular/platform-browser';")
+            .NewLine()
+            .Append("import { Edit" + entity.Name + "Component } from './edit-" + entity.Name.ToCamelCase() +
+                    "/edit-" + entity.Name.ToCamelCase() + ".component';")
             .NewLine(2);
 
         //Component
@@ -108,7 +111,7 @@ public static class ComponentHelper
         this.dataGridOptions.columns = this.initializeDataGridColumns();
         this.dataGridOptions.exportCols = this.exportFields;
         this.dataGridOptions.createComponent = Create{{EntityName}}Component;
-        //this.dataGridOptions.editComponent = Edit{{EntityName}}Component;
+        this.dataGridOptions.editComponent = Edit{{EntityName}}Component;
         let dialogOptions: DialogOptions = new DialogOptions();
         this.dataGridOptions.dialogConfig = dialogOptions;
 
