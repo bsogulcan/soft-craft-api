@@ -169,7 +169,7 @@ public static class EditComponentHelper
         stringBuilder.NewLine().InsertTab(3).Append("</form>")
             .NewLine().InsertTab(2).Append("</div>")
             .NewLine().InsertTab().Append("</div>")
-            .NewLine().InsertTab().Append("<div class=\"flex\" align=\"end\">")
+            .NewLine().InsertTab().Append("<div class=\"flex p-dialog-footer footer\" align=\"end\">")
             .NewLine().InsertTab(2)
             .Append(
                 "<button pButton pRipple label=\"{{ 'Cancel' | localize }}\" icon=\"pi pi-times\" class=\"p-button-text\" (click)=\"close(false)\" [disabled]=\"isSaving\"></button>")

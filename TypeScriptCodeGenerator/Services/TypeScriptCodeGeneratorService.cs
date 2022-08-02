@@ -242,14 +242,7 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             stringBuilder
                 .NewLine().InsertTab().Append($"'{navigation.Icon}',");
 
-            if (navigation.HasEntityName)
-            {
-                stringBuilder.NewLine().InsertTab().Append($"'{navigation.EntityName}.Navigation',");
-            }
-            else
-            {
-                stringBuilder.NewLine().InsertTab().Append("'',");
-            }
+            stringBuilder.NewLine().InsertTab().Append($"[{string.Join(", ", GetChildPermissionNames(navigation))}],");
 
             stringBuilder.NewLine().InsertTab().Append("[");
 
@@ -288,14 +281,7 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
 
         stringBuilder.NewLine().InsertTab().Append($"'{input.Icon}',");
 
-        if (input.HasEntityName)
-        {
-            stringBuilder.NewLine().InsertTab().Append($"'{input.EntityName}.Navigation',");
-        }
-        else
-        {
-            stringBuilder.NewLine().InsertTab().Append("'',");
-        }
+        stringBuilder.NewLine().InsertTab().Append($"[{string.Join(", ", GetChildPermissionNames(input))}],");
 
         stringBuilder.NewLine().InsertTab().Append("[");
 
@@ -311,6 +297,25 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
         return stringBuilder.ToString();
     }
 
+    private List<String> GetChildPermissionNames(NavigationItemRequest input)
+    {
+        List<String> result = new List<String>();
+        if (input.Navigations.Count > 0)
+        {
+            foreach (var curentNavigation in input.Navigations)
+            {
+                result.AddRange(GetChildPermissionNames(curentNavigation));
+            }
+        }
+        else
+        {
+            if (input.HasEntityName)
+            {
+                result.Add($"'{input.EntityName}.Navigation'");
+            }
+        }
+        return result;
+    }
 
     private StringBuilder GenerateCreateInput(Entity request)
     {
