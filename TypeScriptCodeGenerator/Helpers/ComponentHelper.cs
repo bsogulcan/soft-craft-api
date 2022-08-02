@@ -1,6 +1,8 @@
 ﻿using System.Text;
 using Extensions;
 using Humanizer;
+using Microsoft.Extensions.DependencyInjection;
+using TypeScriptCodeGenerator.Modals;
 
 namespace TypeScriptCodeGenerator.Helpers;
 
@@ -29,7 +31,13 @@ public static class ComponentHelper
             .NewLine()
             .Append("import {DialogOptions} from '../../../shared/components/dataGrid/model/dialogOptions';")
             .NewLine()
-            .Append("import {Create" + entity.Name + "Component} from './create-" + entity.Name.ToCamelCase() + "/create-" + entity.Name.ToCamelCase() + ".component';")
+            .Append("import {Create" + entity.Name + "Component} from './create-" + entity.Name.ToCamelCase() +
+                    "/create-" + entity.Name.ToCamelCase() + ".component';")
+            .NewLine()
+            .Append("import {Title} from '@angular/platform-browser';")
+            .NewLine()
+            .Append("import { Edit" + entity.Name + "Component } from './edit-" + entity.Name.ToCamelCase() +
+                    "/edit-" + entity.Name.ToCamelCase() + ".component';")
             .NewLine(2);
 
         //Component
@@ -61,10 +69,13 @@ public static class ComponentHelper
 
 
         stringBuilder.InsertTab().Append("constructor(injector: Injector,")
+            .NewLine().InsertTab(4).Append("private titleService: Title, ")
             .NewLine().InsertTab(4).Append($"public {entity.Name.ToCamelCase()}Service: {entity.Name}Service) ")
             .Append("{")
             .NewLine()
             .InsertTab(2).Append("super(injector);")
+            .NewLine()
+            .InsertTab(2).Append($"titleService.setTitle('{entity.ProjectDisplayName} | ' + this.l('{entity.Name}'));")
             .NewLine()
             .InsertTab().Append("}")
             .NewLine();
@@ -100,7 +111,7 @@ public static class ComponentHelper
         this.dataGridOptions.columns = this.initializeDataGridColumns();
         this.dataGridOptions.exportCols = this.exportFields;
         this.dataGridOptions.createComponent = Create{{EntityName}}Component;
-        //this.dataGridOptions.editComponent = Edit{{EntityName}}Component;
+        this.dataGridOptions.editComponent = Edit{{EntityName}}Component;
         let dialogOptions: DialogOptions = new DialogOptions();
         this.dataGridOptions.dialogConfig = dialogOptions;
 
@@ -164,6 +175,16 @@ public static class ComponentHelper
         stringBuilder.NewLine(2).InsertTab().Append("initializeDataGridColumns(): GridColumn[] {")
             .NewLine().InsertTab(2).Append("this.dataGridColumns = [").NewLine();
 
+        var relatedEntities = EntityHelper.GetRelatedEntities(entity);
+
+        foreach (var relatedEntity in relatedEntities)
+        {
+            relatedEntity.Childs = EntityHelper.GetChildEntity(relatedEntity.Entity, relatedEntities);
+            relatedEntity.Childs.Reverse();
+        }
+
+        relatedEntities.Reverse();
+
         stringBuilder.Append(@"            new GridColumn(
                 'id',
                 'Id',
@@ -178,6 +199,28 @@ public static class ComponentHelper
                 false,
                 []
             ),").NewLine();
+
+        foreach (var relatedEntity in relatedEntities)
+        {
+            foreach (var property in relatedEntity.Entity.Properties.Where(x => x.DisplayOnList))
+            {
+                stringBuilder.Append($@"            new GridColumn(
+                '{string.Join(".", relatedEntity.Childs.Select(x => x.ToCamelCase())) + (relatedEntity.Childs.Count > 0 ? "." : "") + relatedEntity.Entity.Name.ToCamelCase() + "." + property.Name.ToCamelCase()}',
+                '{(relatedEntity.Entity.Name + " " + property.Name).ToTitle()}',
+                '{property.Type.ToTypeScriptDataGridColumnType()}',
+                '',
+                'right',
+                false,
+                '',
+                '',
+                false,
+                true,
+                true,
+                []
+            ),
+");
+            }
+        }
 
         foreach (var property in entity.Properties.Where(x => !x.IsRelationalProperty))
         {

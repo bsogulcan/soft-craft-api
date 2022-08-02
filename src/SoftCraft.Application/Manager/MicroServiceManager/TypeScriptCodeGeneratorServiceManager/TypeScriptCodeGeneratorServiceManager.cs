@@ -107,6 +107,7 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
         var entityResult = await client.CreateComponentsAsync(input);
         return entityResult;
     }
+
     public async Task<StringifyResult> CreateNavigationItems(List<Navigation> navigations)
     {
         using var typeScriptCodeGeneratorChannel =
@@ -173,9 +174,11 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
             Name = entity.Name,
             PrimaryKeyType = (PrimaryKeyType) entity.PrimaryKeyType,
             ProjectName = entity.Project.UniqueName,
+            ProjectDisplayName = entity.Project.Name
         };
 
-        foreach (var relationalEntity in entity.Properties.Where(x => x.IsRelationalProperty && x.RelationType == Enums.RelationType.OneToOne))
+        foreach (var relationalEntity in entity.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType == Enums.RelationType.OneToOne))
         {
             dotNetCodeGeneratorEntity.ParentEntities.Add(EntityToGeneratorEntity(relationalEntity.RelationalEntity));
         }
