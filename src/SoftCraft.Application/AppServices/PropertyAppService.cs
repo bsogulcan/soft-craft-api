@@ -29,6 +29,7 @@ public class PropertyAppService : CrudAppService<Entities.Property, PropertyFull
             if ((RelationalEntity.Name == "User") || (RelationalEntity.Name == "Role"))
             {
                 var EntityId = input.EntityId;
+                var Entity = await _entityRepository.GetAsync(input.EntityId);
                 var RelationalEntityId = RelationalEntity.Id;
                 var Name = input.Name;
                 var DisplayName = input.DisplayName;
@@ -36,8 +37,8 @@ public class PropertyAppService : CrudAppService<Entities.Property, PropertyFull
                 input.RelationalEntityId = EntityId;
                 input.EntityId = RelationalEntityId;
 
-                input.Name = string.Format("{0}{1}By{2}", result.Entity.Name, Name.Pluralize(), RelationalEntity.Name);
-                input.DisplayName = string.Format("{0}{1}By{2}", result.Entity.Name, DisplayName.Pluralize(), RelationalEntity.Name);
+                input.Name = string.Format("{0}{1}By{2}", Entity.Name, Name.Pluralize(), RelationalEntity.Name);
+                input.DisplayName = string.Format("{0}{1}By{2}", Entity.Name, DisplayName.Pluralize(), RelationalEntity.Name);
 
                 input.RelationType = Enums.RelationType.OneToMany;
 
