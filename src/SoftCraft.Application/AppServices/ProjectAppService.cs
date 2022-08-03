@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -278,17 +279,60 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
     public override async Task<ProjectPartOutput> CreateAsync(CreateProjectDto input)
     {
         var projectDto = await base.CreateAsync(input);
+
+        List<Entities.Property> properties = new List<Entities.Property>();
+
+        properties.Add(new Entities.Property
+        {
+            Name = "UserName",
+            DisplayName = "UserName",
+            DisplayOnList = true,
+            FilterOnList = true,
+            Type = PropertyType.String,
+            MaxLength = 256
+        });
+        properties.Add(new Entities.Property
+        {
+            Name = "Name",
+            DisplayName = "Name",
+            DisplayOnList = true,
+            FilterOnList = true,
+            Type = PropertyType.String,
+            MaxLength = 64
+        });
+        properties.Add(new Entities.Property
+        {
+            Name = "Surname",
+            DisplayName = "Surname",
+            DisplayOnList = true,
+            FilterOnList = true,
+            Type = PropertyType.String,
+            MaxLength = 64
+        });
+
         var defaultUserEntity = new Entities.Entity()
         {
             IsDefaultAbpEntity = true,
             Name = "User",
             DisplayName = "User",
             ProjectId = projectDto.Id,
-            PrimaryKeyType = PrimaryKeyType.Long
+            PrimaryKeyType = PrimaryKeyType.Long,
+            Properties = properties
         };
 
         await _entityRepository.InsertAsync(defaultUserEntity);
 
+        properties = new List<Entities.Property>();
+
+        properties.Add(new Entities.Property
+        {
+            Name = "Name",
+            DisplayName = "Name",
+            DisplayOnList = true,
+            FilterOnList = true,
+            Type = PropertyType.String,
+            MaxLength = 64
+        });
 
         var defaultRoleEntity = new Entities.Entity()
         {
@@ -296,7 +340,8 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
             Name = "Role",
             DisplayName = "Role",
             ProjectId = projectDto.Id,
-            PrimaryKeyType = PrimaryKeyType.Int
+            PrimaryKeyType = PrimaryKeyType.Int,
+            Properties = properties
         };
 
         await _entityRepository.InsertAsync(defaultRoleEntity);

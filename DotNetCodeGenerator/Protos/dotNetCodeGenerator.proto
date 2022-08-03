@@ -23,6 +23,7 @@ message Entity {
   TenantType tenantType = 6;
   repeated Property properties = 7;
   string projectName = 8;
+  bool isDefaultAbpEntity = 9;
 }
 
 message EntityForRepository {

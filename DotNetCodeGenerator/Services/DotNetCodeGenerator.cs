@@ -104,7 +104,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                     // public virtual Line Line { get; set; }
                     stringBuilder.Append(
                         $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")}" +
-                        property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
+                        property.Name + "Id { get; set; }" + Environment.NewLine);
 
                     stringBuilder.InsertTab(2);
 
