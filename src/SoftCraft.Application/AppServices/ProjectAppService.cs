@@ -19,7 +19,9 @@ using SoftCraft.Manager.MicroServiceManager.TypeScriptCodeGeneratorServiceManage
 using SoftCraft.Repositories;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
+using Volo.Abp.Identity.Settings;
 using Volo.Abp.Users;
+using PrimaryKeyType = SoftCraft.Enums.PrimaryKeyType;
 using RelationType = TypeScriptCodeGenerator.RelationType;
 
 namespace SoftCraft.AppServices;
@@ -33,6 +35,7 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
     private readonly IDotNetCodeGeneratorServiceManager _dotNetCodeGeneratorServiceManager;
     private readonly ITypeScriptCodeGeneratorServiceManager _typeScriptCodeGeneratorServiceManager;
     private readonly INavigationRepository _navigationRepository;
+    private readonly IEntityRepository _entityRepository;
 
     public ProjectAppService(IProjectRepository projectRepository,
         ICurrentUser currentUser,
@@ -40,7 +43,8 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
         IProjectManagerServiceManager projectManagerServiceManager,
         IDotNetCodeGeneratorServiceManager dotNetCodeGeneratorServiceManager,
         ITypeScriptCodeGeneratorServiceManager typeScriptCodeGeneratorServiceManager,
-        INavigationRepository navigationRepository
+        INavigationRepository navigationRepository,
+        IEntityRepository entityRepository
     ) : base(projectRepository)
     {
         _currentUser = currentUser;
@@ -49,6 +53,7 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
         _dotNetCodeGeneratorServiceManager = dotNetCodeGeneratorServiceManager;
         _typeScriptCodeGeneratorServiceManager = typeScriptCodeGeneratorServiceManager;
         _navigationRepository = navigationRepository;
+        _entityRepository = entityRepository;
     }
 
     public override Task<ProjectPartOutput> UpdateAsync(long id, UpdateProjectDto input)
@@ -272,7 +277,32 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
 
     public override async Task<ProjectPartOutput> CreateAsync(CreateProjectDto input)
     {
-        return await base.CreateAsync(input);
+        var projectDto = await base.CreateAsync(input);
+        var defaultUserEntity = new Entities.Entity()
+        {
+            IsDefaultAbpEntity = true,
+            Name = "User",
+            DisplayName = "User",
+            ProjectId = projectDto.Id,
+            PrimaryKeyType = PrimaryKeyType.Long
+        };
+
+        await _entityRepository.InsertAsync(defaultUserEntity);
+
+
+        var defaultRoleEntity = new Entities.Entity()
+        {
+            IsDefaultAbpEntity = true,
+            Name = "Role",
+            DisplayName = "Role",
+            ProjectId = projectDto.Id,
+            PrimaryKeyType = PrimaryKeyType.Int
+        };
+
+        await _entityRepository.InsertAsync(defaultRoleEntity);
+
+        return projectDto;
+
         // using var dotNetCodeGeneratorChannel =
         //     GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
         // var client =

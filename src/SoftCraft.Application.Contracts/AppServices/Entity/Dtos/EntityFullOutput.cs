@@ -14,6 +14,7 @@ public class EntityFullOutput : EntityDto<long>
     public string Name { get; set; }
     public string DisplayName { get; set; }
     public bool IsFullAudited { get; set; }
+    public bool IsDefaultAbpEntity { get; set; }
     public TenantType TenantType { get; set; }
     public List<PropertyFullOutput> Properties { get; set; }
 }
