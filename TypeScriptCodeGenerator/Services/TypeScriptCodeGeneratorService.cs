@@ -373,9 +373,14 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
         //import {LinePartOutput} from '../../line/dtos/LinePartOutput';
         foreach (var relationalProperty in request.Properties.Where(x => x.IsRelationalProperty))
         {
-            stringBuilder.Append("import {" + relationalProperty.RelationalEntityName +
-                                 "PartOutput} from '../../" + relationalProperty.RelationalEntityName.ToCamelCase() +
-                                 "/dtos/" + relationalProperty.RelationalEntityName + "PartOutput';").NewLine();
+            if (relationalProperty.RelationalEntityName == "User")
+                stringBuilder.Append("import { UserDto } from '@shared/service-proxies/service-proxies';").NewLine();
+            else if (relationalProperty.RelationalEntityName == "Role")
+                stringBuilder.Append("import { RoleDto } from '@shared/service-proxies/service-proxies';").NewLine();
+            else
+                stringBuilder.Append("import {" + relationalProperty.RelationalEntityName +
+                     "PartOutput} from '../../" + relationalProperty.RelationalEntityName.ToCamelCase() +
+                     "/dtos/" + relationalProperty.RelationalEntityName + "PartOutput';").NewLine();
         }
 
         foreach (var enumProperty in request.Properties.Where(x => x.IsEnumerateProperty))
