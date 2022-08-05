@@ -609,9 +609,9 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                 .InsertTab(3)
                 .Append($"builder.HasMany(x => x.{property.Name.Pluralize()})")
                 .NewLine().InsertTab(4)
-                .Append($".WithOne(y => y.{request.Name})")
+                .Append($".WithOne(y => y.{property.RelationalPropertyName})")
                 .NewLine().InsertTab(4)
-                .Append($".HasForeignKey(y => y.{request.Name}Id)")
+                .Append($".HasForeignKey(y => y.{property.RelationalPropertyName}Id)")
                 .NewLine().InsertTab(4)
                 .Append($".OnDelete(DeleteBehavior.ClientSetNull);");
         }
@@ -625,7 +625,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                 .NewLine().InsertTab(4)
                 .Append($".WithOne(y => y.{property.RelationalPropertyName})")
                 .NewLine().InsertTab(4)
-                .Append($".HasForeignKey<{property.RelationalEntityName}>(y => y.{request.Name}Id);")
+                .Append($".HasForeignKey<{property.RelationalEntityName}>(y => y.{property.Name}Id);")
                 .NewLine();
         }
 

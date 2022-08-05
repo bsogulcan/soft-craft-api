@@ -16,9 +16,12 @@ public class PropertyAppService : CrudAppService<Entities.Property, PropertyFull
     CreatePropertyInput, UpdatePropertyInput>, IPropertyAppService
 {
     private readonly IEntityRepository _entityRepository;
+    private readonly IPropertyRepository _propertyRepository;
+
     public PropertyAppService(IPropertyRepository repository,IEntityRepository entityRepository) : base(repository)
     {
         this._entityRepository = entityRepository;
+        this._propertyRepository = repository;
     }
 
     public override async Task<PropertyFullOutput> CreateAsync(CreatePropertyInput input)
@@ -160,7 +163,13 @@ public class PropertyAppService : CrudAppService<Entities.Property, PropertyFull
             return await base.CreateAsync(input);
         }
     }
-
+    public override async Task DeleteAsync(long id)
+    {
+        var currentEntity = await _propertyRepository.GetAsync(id, true);
+        if (currentEntity.IsRelationalProperty && currentEntity.LinkedPropertyId.HasValue)
+            await base.DeleteAsync(currentEntity.LinkedPropertyId.Value);
+        await base.DeleteAsync(id);
+    }
     public override async Task<PagedResultDto<PropertyFullOutput>> GetListAsync(GetPropertyListInput input)
     {
         var properties = await Repository.GetListAsync(x => x.EntityId == input.EntityId);
