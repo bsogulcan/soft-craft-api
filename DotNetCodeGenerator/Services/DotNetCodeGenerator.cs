@@ -603,7 +603,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         }
 
         foreach (var property in request.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType != RelationType.OneToOne && !x.ManyToMany))
+                     x.IsRelationalProperty && x.RelationType != RelationType.OneToOne && x.RelationType != RelationType.OneToZero && !x.ManyToMany))
         {
             stringBuilder.NewLine(2)
                 .InsertTab(3)
@@ -786,10 +786,12 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                     stringBuilder.Append(
                         $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")}" +
                         property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
-
-                    stringBuilder.InsertTab(2).Append(
-                        $"public {property.RelationalEntityName + "PartOutput" + (property.Nullable ? "? " : " ")} " +
-                        property.Name + " { get; set; }" + Environment.NewLine);
+                    if (property.RelationalEntityName == "User")
+                        stringBuilder.InsertTab(2).Append($"public UserDto{(property.Nullable ? "? " : " ")} " + property.Name + " { get; set; }" + Environment.NewLine);
+                    else if (property.RelationalEntityName == "Role")
+                        stringBuilder.InsertTab(2).Append($"public RoleDto{(property.Nullable ? "? " : " ")} " + property.Name + " { get; set; }" + Environment.NewLine);
+                    else
+                        stringBuilder.InsertTab(2).Append($"public {property.RelationalEntityName + "PartOutput" + (property.Nullable ? "? " : " ")} " +property.Name + " { get; set; }" + Environment.NewLine);
                 }
                 else // OneToMany
                 {
@@ -840,7 +842,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             }
             else
             {
-                if (property.RelationType == RelationType.OneToOne)
+                if (property.RelationType == RelationType.OneToOne || property.RelationType == RelationType.OneToZero)
                 {
                     // public int LineId { get; set; }
                     // public virtual Line Line { get; set; }
@@ -851,9 +853,12 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                     stringBuilder.Append('\t');
                     stringBuilder.Append('\t');
 
-                    stringBuilder.Append(
-                        $"public {property.RelationalEntityName + "PartOutput" + (property.Nullable ? "? " : " ")} " +
-                        property.Name + " { get; set; }" + Environment.NewLine);
+                    if (property.RelationalEntityName == "User")
+                        stringBuilder.Append($"public UserDto{(property.Nullable ? "? " : " ")} " + property.Name + " { get; set; }" + Environment.NewLine);
+                    else if (property.RelationalEntityName == "Role")
+                        stringBuilder.Append($"public RoleDto{(property.Nullable ? "? " : " ")} " + property.Name + " { get; set; }" + Environment.NewLine);
+                    else
+                        stringBuilder.Append($"public {property.RelationalEntityName + "PartOutput" + (property.Nullable ? "? " : " ")} " + property.Name + " { get; set; }" + Environment.NewLine);
                 }
                 else // OneToMany
                 {

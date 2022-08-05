@@ -109,8 +109,12 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
             input.Usings.Add("System.Collections.Generic;");
             foreach (var property in entity.Properties.Where(x => x.IsRelationalProperty))
             {
-                input.Usings.Add(
-                    $"{entity.Project.UniqueName}.Domain.{property.RelationalEntity.Name}.Dtos;");
+                if (property.RelationalEntity.IsDefaultAbpEntity && property.RelationalEntity.Name == "User")
+                    input.Usings.Add($"{entity.Project.UniqueName}.Users.Dto;");
+                else if (property.RelationalEntity.IsDefaultAbpEntity && property.RelationalEntity.Name == "Role")
+                    input.Usings.Add($"{entity.Project.UniqueName}.Roles.Dto;");
+                else
+                    input.Usings.Add($"{entity.Project.UniqueName}.Domain.{property.RelationalEntity.Name}.Dtos;");
             }
         }
 
@@ -197,7 +201,7 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
                                x.IsRelationalProperty && x.RelationalEntityId == entity.Id
                                                       && x.RelationType == Enums.RelationType.OneToOne),
             };
-            if (entityProperty.RelationalEntity.IsDefaultAbpEntity)
+            if (entityProperty.IsRelationalProperty && entityProperty.RelationalEntity.IsDefaultAbpEntity)
             {
                 if (entityProperty.RelationalEntity.Name == "User")
                 {
@@ -220,20 +224,12 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
                     (PrimaryKeyType) entityProperty.RelationalEntity.PrimaryKeyType;
                 property.RelationalEntityName = entityProperty.RelationalEntity.Name;
 
-                var relationalEntityForeignProperty = entityProperty.RelationalEntity.Properties.FirstOrDefault(x =>
-                    x.RelationalEntityId == entity.Id);
+                var relationalEntityForeignProperty = entityProperty.LinkedProperty;
 
                 if (relationalEntityForeignProperty != null)
                 {
-                    property.RelationalPropertyName =
-                        entityProperty.RelationalEntity.Properties.FirstOrDefault(x =>
-                            x.RelationalEntityId == entity.Id).Name;
+                    property.RelationalPropertyName = relationalEntityForeignProperty.Name;
                 }
-                else
-                {
-                    property.RelationalPropertyName = property.RelationalEntityName;
-                }
-
 
                 if (entityProperty.RelationType != null)
                 {

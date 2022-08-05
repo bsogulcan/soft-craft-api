@@ -21,4 +21,8 @@ public class CreatePropertyInput
     public long? EnumerateId { get; set; }
     public bool DisplayOnList { get; set; }
     public bool FilterOnList { get; set; }
+    public string IntermediateTableName { get; set; }
+    public string RelationalDisplayName { get; set; }
+    public string RelationalName { get; set; }
+    public string RelationalToolTip { get; set; }
 }

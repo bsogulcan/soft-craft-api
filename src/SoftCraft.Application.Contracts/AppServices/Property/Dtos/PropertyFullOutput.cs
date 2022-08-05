@@ -28,4 +28,6 @@ public class PropertyFullOutput : EntityDto<long>
     public EnumeratePartOutput Enumerate { get; set; }
     public bool DisplayOnList { get; set; }
     public bool FilterOnList { get; set; }
+    public long? LinkedPropertyId { get; set; }
+    public PropertyPartOutput LinkedProperty { get; set; }
 }

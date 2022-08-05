@@ -71,7 +71,7 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
             var result = await _projectManagerServiceManager.CreateAbpBoilerplateProjectAsync(project.Id,
                 project.UniqueName, project.LogType, project.MultiTenant, project.Name);
 
-            foreach (var entity in project.Entities)
+            foreach (var entity in project.Entities.Where(x => x.IsDefaultAbpEntity == false))
             {
                 var entityResult =
                     await _dotNetCodeGeneratorServiceManager.CreateEntityAsync(entity);

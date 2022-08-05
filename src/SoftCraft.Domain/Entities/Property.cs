@@ -29,4 +29,6 @@ public class Property : FullAuditedEntity<long>
     public virtual Entity Entity { get; set; }
     public bool DisplayOnList { get; set; }
     public bool FilterOnList { get; set; }
+    public long? LinkedPropertyId { get; set; }
+    public virtual Property LinkedProperty { get; set; }
 }

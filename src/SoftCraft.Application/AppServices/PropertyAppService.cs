@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Humanizer;
+using Newtonsoft.Json;
 using SoftCraft.AppServices.Entity.Dtos;
 using SoftCraft.AppServices.Property;
 using SoftCraft.AppServices.Property.Dtos;
@@ -22,33 +23,142 @@ public class PropertyAppService : CrudAppService<Entities.Property, PropertyFull
 
     public override async Task<PropertyFullOutput> CreateAsync(CreatePropertyInput input)
     {
-        var result = await base.CreateAsync(input);
-        if (input.IsRelationalProperty && input.RelationType == Enums.RelationType.OneToOne)
+        if (input.IsRelationalProperty && input.RelationType == Enums.RelationType.ManyToMany)
         {
-            var RelationalEntity = await _entityRepository.GetAsync(input.RelationalEntityId.Value);
-            if ((RelationalEntity.Name == "User") || (RelationalEntity.Name == "Role"))
+            var currentEntity = await this._entityRepository.GetAsync(input.EntityId);
+            var releationalEntity = await this._entityRepository.GetAsync(input.RelationalEntityId.Value);
+
+            Entities.Entity intermediateTable = new Entities.Entity
             {
-                var EntityId = input.EntityId;
-                var Entity = await _entityRepository.GetAsync(input.EntityId);
-                var RelationalEntityId = RelationalEntity.Id;
-                var Name = input.Name;
-                var DisplayName = input.DisplayName;
+                DisplayName = input.IntermediateTableName,
+                Name = input.IntermediateTableName,
+                PrimaryKeyType = currentEntity.PrimaryKeyType,
+                IsFullAudited = true,
+                ProjectId = currentEntity.ProjectId,
+                TenantType = currentEntity.TenantType,
+            };
 
-                input.RelationalEntityId = EntityId;
-                input.EntityId = RelationalEntityId;
+            intermediateTable = await _entityRepository.InsertAsync(intermediateTable, true);
 
-                input.Name = string.Format("{0}{1}By{2}", Entity.Name, Name.Pluralize(), RelationalEntity.Name);
-                input.DisplayName = string.Format("{0}{1}By{2}", Entity.Name, DisplayName.Pluralize(), RelationalEntity.Name);
+            input.RelationalEntityId = intermediateTable.Id;
+            input.RelationType = Enums.RelationType.OneToMany;
 
-                input.RelationType = Enums.RelationType.OneToMany;
+            var currentEntityResult = await base.CreateAsync(input);
 
-                input.IsNullable = false;
-                input.Required = false;
+            input.Name = input.RelationalName;
+            input.DisplayName = input.RelationalDisplayName;
+            input.ToolTip = input.RelationalToolTip;
+            input.EntityId = releationalEntity.Id;
+            var releationalEntityResult = await base.CreateAsync(input);
 
-                await base.CreateAsync(input);
-            }
+            input.Name = currentEntity.Name;
+            input.DisplayName = currentEntity.Name;
+            input.ToolTip = currentEntity.Name;
+
+            input.RelationalEntityId = currentEntity.Id;
+            input.RelationType = Enums.RelationType.OneToOne;
+
+            input.EntityId = intermediateTable.Id;
+
+            var intermediateCurrentEntityResult = await base.CreateAsync(input);
+
+            input.Name = releationalEntity.Name;
+            input.DisplayName = releationalEntity.Name;
+            input.ToolTip = releationalEntity.Name;
+
+            input.RelationalEntityId = releationalEntity.Id;
+            input.RelationType = Enums.RelationType.OneToOne;
+
+            input.EntityId = intermediateTable.Id;
+
+            var intermediateRelationalEntityResult = await base.CreateAsync(input);
+
+            UpdatePropertyInput updatePropertyInput = JsonConvert.DeserializeObject<UpdatePropertyInput>(JsonConvert.SerializeObject(currentEntityResult));
+            updatePropertyInput.LinkedPropertyId = intermediateCurrentEntityResult.Id;
+
+            await base.UpdateAsync(updatePropertyInput.Id, updatePropertyInput);
+
+            updatePropertyInput = JsonConvert.DeserializeObject<UpdatePropertyInput>(JsonConvert.SerializeObject(intermediateCurrentEntityResult));
+            updatePropertyInput.LinkedPropertyId = currentEntityResult.Id;
+
+            await base.UpdateAsync(updatePropertyInput.Id, updatePropertyInput);
+
+            updatePropertyInput = JsonConvert.DeserializeObject<UpdatePropertyInput>(JsonConvert.SerializeObject(releationalEntityResult));
+            updatePropertyInput.LinkedPropertyId = intermediateRelationalEntityResult.Id;
+
+            await base.UpdateAsync(updatePropertyInput.Id, updatePropertyInput);
+
+            updatePropertyInput = JsonConvert.DeserializeObject<UpdatePropertyInput>(JsonConvert.SerializeObject(intermediateRelationalEntityResult));
+            updatePropertyInput.LinkedPropertyId = releationalEntityResult.Id;
+
+            await base.UpdateAsync(updatePropertyInput.Id, updatePropertyInput);
+
+
+            return intermediateCurrentEntityResult;
+        } 
+        else if (input.IsRelationalProperty && input.RelationType == Enums.RelationType.OneToMany)
+        {
+            var currentEntity = await this._entityRepository.GetAsync(input.EntityId);
+            var releationalEntity = await this._entityRepository.GetAsync(input.RelationalEntityId.Value);
+
+            input.RelationType = Enums.RelationType.OneToOne;
+            var currentEntityResult = await base.CreateAsync(input);
+
+            input.Name = input.RelationalName;
+            input.DisplayName = input.RelationalDisplayName;
+            input.ToolTip = input.RelationalToolTip;
+
+            input.EntityId = releationalEntity.Id;
+            input.RelationalEntityId = currentEntity.Id;
+
+            input.RelationType = Enums.RelationType.OneToMany;
+
+            var releationalEntityResult = await base.CreateAsync(input);
+
+            UpdatePropertyInput updatePropertyInput = JsonConvert.DeserializeObject<UpdatePropertyInput>(JsonConvert.SerializeObject(currentEntityResult));
+            updatePropertyInput.LinkedPropertyId = releationalEntityResult.Id;
+
+            await base.UpdateAsync(updatePropertyInput.Id, updatePropertyInput);
+
+            updatePropertyInput = JsonConvert.DeserializeObject<UpdatePropertyInput>(JsonConvert.SerializeObject(releationalEntityResult));
+            updatePropertyInput.LinkedPropertyId = currentEntityResult.Id;
+
+            await base.UpdateAsync(updatePropertyInput.Id, updatePropertyInput);
+
+            return currentEntityResult;
         }
-        return result;
+        else if (input.IsRelationalProperty && input.RelationType == Enums.RelationType.OneToOne)
+        {
+            var currentEntity = await this._entityRepository.GetAsync(input.EntityId);
+            var releationalEntity = await this._entityRepository.GetAsync(input.RelationalEntityId.Value);
+
+            var currentEntityResult = await base.CreateAsync(input);
+
+            input.Name = input.RelationalName;
+            input.DisplayName = input.RelationalDisplayName;
+            input.ToolTip = input.RelationalToolTip;
+
+            input.EntityId = releationalEntity.Id;
+            input.RelationalEntityId = currentEntity.Id;
+
+            var releationalEntityResult = await base.CreateAsync(input);
+
+            UpdatePropertyInput updatePropertyInput = JsonConvert.DeserializeObject<UpdatePropertyInput>(JsonConvert.SerializeObject(currentEntityResult));
+            updatePropertyInput.LinkedPropertyId = releationalEntityResult.Id;
+
+            await base.UpdateAsync(updatePropertyInput.Id, updatePropertyInput);
+
+            updatePropertyInput = JsonConvert.DeserializeObject<UpdatePropertyInput>(JsonConvert.SerializeObject(releationalEntityResult));
+            updatePropertyInput.LinkedPropertyId = currentEntityResult.Id;
+
+            await base.UpdateAsync(updatePropertyInput.Id, updatePropertyInput);
+
+            return currentEntityResult;
+        }
+        else
+        {
+            return await base.CreateAsync(input);
+        }
     }
 
     public override async Task<PagedResultDto<PropertyFullOutput>> GetListAsync(GetPropertyListInput input)

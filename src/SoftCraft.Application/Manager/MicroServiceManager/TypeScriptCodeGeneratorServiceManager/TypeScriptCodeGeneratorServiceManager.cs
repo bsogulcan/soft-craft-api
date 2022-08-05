@@ -167,7 +167,7 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
         return input;
     }
 
-    private TypeScriptCodeGenerator.Entity EntityToGeneratorEntity(Entities.Entity entity)
+    private TypeScriptCodeGenerator.Entity EntityToGeneratorEntity(Entities.Entity entity, Entities.Entity CurrentChild = null)
     {
         var dotNetCodeGeneratorEntity = new TypeScriptCodeGenerator.Entity()
         {
@@ -178,9 +178,10 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
         };
 
         foreach (var relationalEntity in entity.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType == Enums.RelationType.OneToOne))
+                     x.IsRelationalProperty && (x.RelationType == Enums.RelationType.OneToOne || x.RelationType == Enums.RelationType.OneToZero)))
         {
-            dotNetCodeGeneratorEntity.ParentEntities.Add(EntityToGeneratorEntity(relationalEntity.RelationalEntity));
+            if (relationalEntity.RelationalEntity != CurrentChild)
+                dotNetCodeGeneratorEntity.ParentEntities.Add(EntityToGeneratorEntity(relationalEntity.RelationalEntity, entity));
         }
 
         foreach (var entityProperty in entity.Properties)
