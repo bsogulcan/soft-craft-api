@@ -253,13 +253,24 @@ public static class CreateComponentHelper
     {
         foreach (var relatedEntity in relatedEntities)
         {
-            stringBuilder.NewLine().Append(
-                    "import {" + relatedEntity.Entity.Name + "Service} from '../../../../shared/services/" +
-                    relatedEntity.Entity.Name + "/" + relatedEntity.Entity.Name.ToCamelCase() + ".service';")
-                .NewLine().Append(
-                    "import {" + relatedEntity.Entity.Name + "FullOutput} from '../../../../shared/services/" +
-                    relatedEntity.Entity.Name +
-                    "/dtos/" + relatedEntity.Entity.Name + "FullOutput';");
+            if (relatedEntity.Entity.Name == "User")
+            {
+                stringBuilder.NewLine().Append("import {UserServiceProxy, UserDto} from '@shared/service-proxies/service-proxies';");
+            }
+            else if (relatedEntity.Entity.Name == "Role")
+            {
+                stringBuilder.NewLine().Append("import {RoleServiceProxy, RoleDto} from '@shared/service-proxies/service-proxies';");
+            }
+            else
+            {
+                stringBuilder.NewLine().Append(
+                        "import {" + relatedEntity.Entity.Name + "Service} from '../../../../shared/services/" +
+                        relatedEntity.Entity.Name + "/" + relatedEntity.Entity.Name.ToCamelCase() + ".service';")
+                    .NewLine().Append(
+                        "import {" + relatedEntity.Entity.Name + "FullOutput} from '../../../../shared/services/" +
+                        relatedEntity.Entity.Name +
+                        "/dtos/" + relatedEntity.Entity.Name + "FullOutput';");
+            }
         }
     }
 
@@ -267,15 +278,42 @@ public static class CreateComponentHelper
     {
         foreach (var relatedEntity in relatedEntities)
         {
-            stringBuilder
-                .NewLine()
-                .InsertTab()
-                .Append(
-                    $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<{relatedEntity.Entity.Name}FullOutput> = new Array<{relatedEntity.Entity.Name}FullOutput>();")
-                .NewLine()
-                .InsertTab()
-                .Append(
-                    $"selected{relatedEntity.Entity.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int) relatedEntity.Entity.PrimaryKeyType)};");
+            if (relatedEntity.Entity.Name == "User")
+            {
+                stringBuilder
+                    .NewLine()
+                    .InsertTab()
+                    .Append(
+                        $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<UserDto> = new Array<UserDto>();")
+                    .NewLine()
+                    .InsertTab()
+                    .Append(
+                        $"selected{relatedEntity.Entity.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.Entity.PrimaryKeyType)};");
+            }
+            else if (relatedEntity.Entity.Name == "Role")
+            {
+                stringBuilder
+                    .NewLine()
+                    .InsertTab()
+                    .Append(
+                        $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<RoleDto> = new Array<RoleDto>();")
+                    .NewLine()
+                    .InsertTab()
+                    .Append(
+                        $"selected{relatedEntity.Entity.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.Entity.PrimaryKeyType)};");
+            }
+            else
+            {
+                stringBuilder
+                    .NewLine()
+                    .InsertTab()
+                    .Append(
+                        $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<{relatedEntity.Entity.Name}FullOutput> = new Array<{relatedEntity.Entity.Name}FullOutput>();")
+                    .NewLine()
+                    .InsertTab()
+                    .Append(
+                        $"selected{relatedEntity.Entity.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.Entity.PrimaryKeyType)};");
+            }
         }
     }
 
@@ -284,11 +322,31 @@ public static class CreateComponentHelper
     {
         foreach (var relatedEntity in relatedEntities)
         {
-            stringBuilder
-                .NewLine()
-                .InsertTab(4)
-                .Append(
-                    $"private {relatedEntity.Entity.Name.ToCamelCase()}Service: {relatedEntity.Entity.Name}Service,");
+            if (relatedEntity.Entity.Name == "User")
+            {
+                stringBuilder
+                    .NewLine()
+                    .InsertTab(4)
+                    .Append(
+                        $"private {relatedEntity.Entity.Name.ToCamelCase()}Service: UserServiceProxy,");
+            }
+            else if (relatedEntity.Entity.Name == "Role")
+            {
+                stringBuilder
+                    .NewLine()
+                    .InsertTab(4)
+                    .Append(
+                        $"private {relatedEntity.Entity.Name.ToCamelCase()}Service: RoleServiceProxy,");
+            }
+            else
+            {
+                stringBuilder
+                    .NewLine()
+                    .InsertTab(4)
+                    .Append(
+                        $"private {relatedEntity.Entity.Name.ToCamelCase()}Service: {relatedEntity.Entity.Name}Service,");
+            }
+
         }
     }
 

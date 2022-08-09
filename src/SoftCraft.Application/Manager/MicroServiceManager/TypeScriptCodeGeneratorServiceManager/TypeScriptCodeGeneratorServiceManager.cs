@@ -53,7 +53,7 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
         };
 
         foreach (var property in entity.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType == Enums.RelationType.OneToOne))
+                     x.IsRelationalProperty && (x.RelationType == Enums.RelationType.OneToOne || x.RelationType == Enums.RelationType.OneToZero)))
         {
             input.Properties.Add(new Property()
             {
@@ -193,7 +193,7 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
                 Nullable = entityProperty.IsNullable,
                 IsRelationalProperty = entityProperty.IsRelationalProperty,
                 DisplayOnList = entityProperty.DisplayOnList,
-                FilterOnList = entityProperty.FilterOnList
+                FilterOnList = entityProperty.FilterOnList,
             };
 
             if (entityProperty.IsRelationalProperty && entityProperty.RelationalEntityId.HasValue)
@@ -202,6 +202,7 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
                     (PrimaryKeyType) entityProperty.RelationalEntity.PrimaryKeyType;
                 property.RelationalEntityName = entityProperty.RelationalEntity.Name;
                 property.Type = property.RelationalEntityName;
+                property.RelationalPropertyName = entityProperty.Name;
                 if (entityProperty.RelationType != null)
                 {
                     property.RelationType = (RelationType) entityProperty.RelationType;

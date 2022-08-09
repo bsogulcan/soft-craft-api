@@ -72,7 +72,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             .NewLine();
 
         foreach (var relationalProperty in request.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType != RelationType.OneToOne))
+                     x.IsRelationalProperty && x.RelationType != RelationType.OneToOne && x.RelationType != RelationType.OneToZero))
         {
             stringBuilder.InsertTab(3)
                 .Append(
@@ -98,7 +98,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             else
             {
                 //TODO: Write Relational properties
-                if (property.RelationType == RelationType.OneToOne)
+                if ((property.RelationType == RelationType.OneToOne) || (property.RelationType == RelationType.OneToZero))
                 {
                     // public int LineId { get; set; }
                     // public virtual Line Line { get; set; }
@@ -115,7 +115,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                 else // OneToMany
                 {
                     stringBuilder.Append(
-                        $"public virtual ICollection<{property.RelationalEntityName}>" +
+                        $"public virtual ICollection<{property.RelationalEntityName}> " +
                         property.Name.Pluralize() + " { get; set; }" + Environment.NewLine);
                 }
             }
@@ -307,7 +307,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
 
 
         foreach (var relationalProperty in request.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
+                     x.IsRelationalProperty && (x.RelationType == RelationType.OneToOne || x.RelationType == RelationType.OneToZero)))
         {
             appServiceInterfaceStringBuilder.InsertTab(2)
                 .Append(
@@ -316,7 +316,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         }
 
         var releatedEntities = request.Properties.Where(x =>
-            x.IsRelationalProperty && x.RelationType == RelationType.OneToOne);
+            x.IsRelationalProperty && (x.RelationType == RelationType.OneToOne || x.RelationType == RelationType.OneToZero));
 
         if (releatedEntities.Count() > 1)
         {
@@ -467,7 +467,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             .NewLine();
 
         foreach (var relationalProperty in request.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
+                     x.IsRelationalProperty && (x.RelationType == RelationType.OneToOne || x.RelationType == RelationType.OneToZero)))
         {
             appServiceStringBuilder.NewLine().InsertTab(2)
                 .Append($"[AbpAuthorize(PermissionNames.{request.EntityName}_GetList)]")
@@ -775,26 +775,23 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             if (!property.IsRelationalProperty)
             {
                 stringBuilder.InsertTab(2);
-                stringBuilder.Append($"public {property.Type + (property.Nullable ? "? " : " ")} " +
+                stringBuilder.Append($"public {property.Type + (property.Nullable ? "? " : " ")}" +
                                      property.Name + " { get; set; }" + Environment.NewLine);
             }
             else
             {
-                if (property.RelationType == RelationType.OneToOne)
+                if (property.RelationType == RelationType.OneToOne || property.RelationType == RelationType.OneToZero)
                 {
                     stringBuilder.InsertTab(2);
                     stringBuilder.Append(
                         $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")}" +
-                        property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
+                        property.Name + "Id { get; set; }" + Environment.NewLine);
                     if (property.RelationalEntityName == "User")
                         stringBuilder.InsertTab(2).Append($"public UserDto{(property.Nullable ? "? " : " ")} " + property.Name + " { get; set; }" + Environment.NewLine);
                     else if (property.RelationalEntityName == "Role")
                         stringBuilder.InsertTab(2).Append($"public RoleDto{(property.Nullable ? "? " : " ")} " + property.Name + " { get; set; }" + Environment.NewLine);
                     else
-                        stringBuilder.InsertTab(2).Append($"public {property.RelationalEntityName + "PartOutput" + (property.Nullable ? "? " : " ")} " +property.Name + " { get; set; }" + Environment.NewLine);
-                }
-                else // OneToMany
-                {
+                        stringBuilder.InsertTab(2).Append($"public {property.RelationalEntityName + "PartOutput" + (property.Nullable ? "? " : " ")}" + property.Name + " { get; set; }" + Environment.NewLine);
                 }
             }
         }
@@ -847,8 +844,8 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                     // public int LineId { get; set; }
                     // public virtual Line Line { get; set; }
                     stringBuilder.Append(
-                        $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")} " +
-                        property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
+                        $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")}" +
+                        property.Name + "Id { get; set; }" + Environment.NewLine);
 
                     stringBuilder.Append('\t');
                     stringBuilder.Append('\t');
@@ -858,12 +855,12 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                     else if (property.RelationalEntityName == "Role")
                         stringBuilder.Append($"public RoleDto{(property.Nullable ? "? " : " ")} " + property.Name + " { get; set; }" + Environment.NewLine);
                     else
-                        stringBuilder.Append($"public {property.RelationalEntityName + "PartOutput" + (property.Nullable ? "? " : " ")} " + property.Name + " { get; set; }" + Environment.NewLine);
+                        stringBuilder.Append($"public {property.RelationalEntityName + "PartOutput" + (property.Nullable ? "? " : " ")}" + property.Name + " { get; set; }" + Environment.NewLine);
                 }
                 else // OneToMany
                 {
                     stringBuilder.Append(
-                        $"public List<{property.RelationalEntityName + "PartOutput"}>" +
+                        $"public List<{property.RelationalEntityName + "PartOutput"}> " +
                         property.Name.Pluralize() + " { get; set; }" + Environment.NewLine);
                 }
             }
@@ -911,21 +908,14 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             }
             else
             {
-                if (property.RelationType == RelationType.OneToOne)
+                if (property.RelationType == RelationType.OneToOne || property.RelationType == RelationType.OneToZero)
                 {
                     stringBuilder.InsertTab(2);
                     // public int LineId { get; set; }
                     stringBuilder.Append(
-                        $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")} " +
-                        property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
-                }
-                else // OneToMany
-                {
-                    //Note: Many relations types cannot insert now. Check this later
-                    // stringBuilder.Append(
-                    //     $"public List<{GetPrimaryKey(property.RelationalEntityPrimaryKeyType)}>{(property.Nullable ? "? " : " ")}" +
-                    //     property.Name.Pluralize() + " { get; set; }" + Environment.NewLine);
-                }
+                        $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")}" +
+                        property.Name + "Id { get; set; }" + Environment.NewLine);
+                }            
             }
         }
 
@@ -971,19 +961,13 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
             }
             else
             {
-                if (property.RelationType == RelationType.OneToOne)
+                if (property.RelationType == RelationType.OneToOne || property.RelationType == RelationType.OneToZero)
                 {
                     // public int LineId { get; set; }
                     stringBuilder.InsertTab(2);
                     stringBuilder.Append(
-                        $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")} " +
-                        property.RelationalEntityName + "Id { get; set; }" + Environment.NewLine);
-                }
-                else // OneToMany
-                {
-                    // stringBuilder.Append(
-                    //     $"public List<{GetPrimaryKey(property.RelationalEntityPrimaryKeyType)}>{(property.Nullable ? "? " : " ")}" +
-                    //     property.Name.Pluralize() + " { get; set; }" + Environment.NewLine);
+                        $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")}" +
+                        property.Name + "Id { get; set; }" + Environment.NewLine);
                 }
             }
         }

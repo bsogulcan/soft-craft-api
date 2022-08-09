@@ -194,7 +194,7 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
         };
 
         foreach (var relationalProperty in entity.Properties.Where(x =>
-                     x.IsRelationalProperty && x.RelationType == Enums.RelationType.OneToOne))
+                     x.IsRelationalProperty && (x.RelationType == Enums.RelationType.OneToOne || x.RelationType == Enums.RelationType.OneToZero)))
         {
             createAppServiceInput.Properties.Add(new DotNetCodeGenerator.Property()
             {

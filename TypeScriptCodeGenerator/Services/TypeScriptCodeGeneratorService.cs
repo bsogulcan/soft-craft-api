@@ -334,11 +334,11 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
 
         foreach (var property in request.Properties)
         {
-            if (property.IsRelationalProperty && property.RelationType == RelationType.OneToOne)
+            if (property.IsRelationalProperty && (property.RelationType == RelationType.OneToOne || property.RelationType == RelationType.OneToZero))
             {
                 // standartId: number;
                 stringBuilder.InsertTab()
-                    .Append(property.RelationalEntityName.ToCamelCase() + "Id: " +
+                    .Append(property.Name.ToCamelCase() + "Id: " +
                             PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType(
                                 (int) property.RelationalEntityPrimaryKeyType));
 
@@ -400,11 +400,11 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             .NewLine();
         foreach (var property in request.Properties)
         {
-            if (property.IsRelationalProperty && property.RelationType == RelationType.OneToOne)
+            if (property.IsRelationalProperty && (property.RelationType == RelationType.OneToOne || property.RelationType == RelationType.OneToZero))
             {
                 // standartId: number;
                 stringBuilder.InsertTab()
-                    .Append(property.RelationalEntityName.ToCamelCase() + "Id: " +
+                    .Append(property.Name.ToCamelCase() + "Id: " +
                             PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType(
                                 (int) property.RelationalEntityPrimaryKeyType));
 
@@ -456,11 +456,11 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             .NewLine();
         foreach (var property in request.Properties)
         {
-            if (property.IsRelationalProperty && property.RelationType == RelationType.OneToOne)
+            if (property.IsRelationalProperty && (property.RelationType == RelationType.OneToOne || property.RelationType == RelationType.OneToZero))
             {
                 // standartId: number;
                 stringBuilder.InsertTab()
-                    .Append(property.RelationalEntityName.ToCamelCase() + "Id: " +
+                    .Append(property.Name.ToCamelCase() + "Id: " +
                             PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType(
                                 (int) property.RelationalEntityPrimaryKeyType));
 
@@ -472,7 +472,7 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
                 stringBuilder.NewLine();
             }
 
-            if (property.IsRelationalProperty && property.RelationType != RelationType.OneToOne)
+            if (property.IsRelationalProperty && property.RelationType != RelationType.OneToOne && property.RelationType != RelationType.OneToZero)
             {
                 continue;
             }
@@ -509,11 +509,11 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             .NewLine();
         foreach (var property in request.Properties)
         {
-            if (property.IsRelationalProperty && property.RelationType == RelationType.OneToOne)
+            if (property.IsRelationalProperty && (property.RelationType == RelationType.OneToOne || property.RelationType == RelationType.OneToZero))
             {
                 // standartId: number;
                 stringBuilder.InsertTab()
-                    .Append(property.RelationalEntityName.ToCamelCase() + "Id: " +
+                    .Append(property.Name.ToCamelCase() + "Id: " +
                             PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType(
                                 (int) property.RelationalEntityPrimaryKeyType));
 
