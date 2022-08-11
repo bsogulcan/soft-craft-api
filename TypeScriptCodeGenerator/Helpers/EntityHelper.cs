@@ -14,17 +14,20 @@ public static class EntityHelper
             {
                 Entity = parentEntity,
             };
-
-            response.Add(entityWrapper);
-            var parentEntityRelatedEntities = GetRelatedEntities(parentEntity);
-
-            foreach (var relatedEntity in parentEntityRelatedEntities)
+            //if (!response.Exists(x => x.Entity.Name == entityWrapper.Entity.Name))
             {
-                if (!response.Exists(x => x.Entity.Name == relatedEntity.Entity.Name))
+                response.Add(entityWrapper);
+                var parentEntityRelatedEntities = GetRelatedEntities(parentEntity);
+
+                foreach (var relatedEntity in parentEntityRelatedEntities)
                 {
-                    response.Add(relatedEntity);
+                    //if (!response.Exists(x => x.Entity.Name == relatedEntity.Entity.Name))
+                    {
+                        response.Add(relatedEntity);
+                    }
                 }
             }
+
         }
 
         return response;

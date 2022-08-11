@@ -80,7 +80,7 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
 
 
         var relationalEntities = request.Properties.Where(x =>
-             x.IsRelationalProperty && x.RelationType == RelationType.OneToOne);
+             x.IsRelationalProperty && (x.RelationType == RelationType.OneToOne || x.RelationType == RelationType.OneToZero));
 
         foreach (var relationalProperty in relationalEntities)
         {
@@ -400,26 +400,37 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             .NewLine();
         foreach (var property in request.Properties)
         {
-            if (property.IsRelationalProperty && (property.RelationType == RelationType.OneToOne || property.RelationType == RelationType.OneToZero))
+            if (property.IsRelationalProperty)
             {
-                // standartId: number;
-                stringBuilder.InsertTab()
-                    .Append(property.Name.ToCamelCase() + "Id: " +
-                            PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType(
-                                (int) property.RelationalEntityPrimaryKeyType));
-
-                if (property.Nullable)
+                if (property.RelationType == RelationType.OneToOne || property.RelationType == RelationType.OneToZero)
                 {
-                    stringBuilder.Append(" | undefined;");
+                    // standartId: number;
+                    stringBuilder.InsertTab()
+                        .Append(property.Name.ToCamelCase() + "Id: " +
+                                PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType(
+                                    (int)property.RelationalEntityPrimaryKeyType));
+
+                    if (property.Nullable)
+                    {
+                        stringBuilder.Append(" | undefined;");
+                    }
+
+                    stringBuilder.NewLine();
                 }
-
-                stringBuilder.NewLine();
+                else
+                {
+                    stringBuilder.InsertTab()
+                        .Append(property.Name.Pluralize().ToCamelCase() + ": ")
+                        .Append(property.Type.ToTypeScriptDataType(property.Nullable, property.IsRelationalProperty,
+                            (int)property.RelationType, property.IsEnumerateProperty))
+                        .NewLine();
+                    continue;
+                }
             }
-
             stringBuilder.InsertTab()
                 .Append(property.Name.ToCamelCase() + ": ")
                 .Append(property.Type.ToTypeScriptDataType(property.Nullable, property.IsRelationalProperty,
-                    (int) property.RelationType, property.IsEnumerateProperty))
+                    (int)property.RelationType, property.IsEnumerateProperty))
                 .NewLine();
         }
 
@@ -434,9 +445,14 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
         foreach (var relationalProperty in request.Properties.Where(x =>
                      x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
         {
-            stringBuilder.Append("import {" + relationalProperty.RelationalEntityName +
-                                 "PartOutput} from '../../" + relationalProperty.RelationalEntityName.ToCamelCase() +
-                                 "/dtos/" + relationalProperty.RelationalEntityName + "PartOutput';").NewLine();
+            if (relationalProperty.RelationalEntityName == "User")
+                stringBuilder.Append("import { UserDto } from '@shared/service-proxies/service-proxies';").NewLine();
+            else if (relationalProperty.RelationalEntityName == "Role")
+                stringBuilder.Append("import { RoleDto } from '@shared/service-proxies/service-proxies';").NewLine();
+            else
+                stringBuilder.Append("import {" + relationalProperty.RelationalEntityName +
+                     "PartOutput} from '../../" + relationalProperty.RelationalEntityName.ToCamelCase() +
+                     "/dtos/" + relationalProperty.RelationalEntityName + "PartOutput';").NewLine();
         }
 
         foreach (var enumProperty in request.Properties.Where(x => x.IsEnumerateProperty))

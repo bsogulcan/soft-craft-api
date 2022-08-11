@@ -27,7 +27,6 @@ public static class CreateComponentHelper
                 .Append(
                     $"import {{{item.Type}, {item.Type}List}} from '../../../../shared/services/enums/{item.Type}';");
         }
-
         var relatedEntities = EntityHelper.GetRelatedEntities(entity);
 
         foreach (var relatedEntity in relatedEntities)
@@ -60,7 +59,7 @@ public static class CreateComponentHelper
         }
 
         //Ozan
-        GetRecursiveRelationalDtos(stringBuilder, relatedEntities);
+        GetRecursiveRelationalDtos(stringBuilder, relatedEntities, entity.Properties.ToList());
 
         stringBuilder.NewLine(2);
 
@@ -152,7 +151,7 @@ public static class CreateComponentHelper
         }
 
         relatedEntities.Reverse();
-        GetRecursiveRelationalDropdownHtmls(stringBuilder, relatedEntities);
+        GetRecursiveRelationalDropdownHtmls(stringBuilder, relatedEntities, entity.Properties.ToList());
 
         foreach (var property in entity.Properties.Where(x => !x.IsRelationalProperty))
         {
@@ -273,8 +272,7 @@ public static class CreateComponentHelper
             }
         }
     }
-
-    public static void GetRecursiveRelationalDtos(StringBuilder stringBuilder, List<EntityWrapper> relatedEntities)
+    public static void GetRecursiveRelationalDtos(StringBuilder stringBuilder, List<EntityWrapper> relatedEntities, List<Property> properties)
     {
         foreach (var relatedEntity in relatedEntities)
         {
@@ -284,11 +282,14 @@ public static class CreateComponentHelper
                     .NewLine()
                     .InsertTab()
                     .Append(
-                        $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<UserDto> = new Array<UserDto>();")
-                    .NewLine()
-                    .InsertTab()
-                    .Append(
-                        $"selected{relatedEntity.Entity.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.Entity.PrimaryKeyType)};");
+                        $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<UserDto> = new Array<UserDto>();");
+                    foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
+                    {
+                        stringBuilder.NewLine().InsertTab()
+                        .Append(
+                            $"selected{item.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.Entity.PrimaryKeyType)};");
+                    }
+
             }
             else if (relatedEntity.Entity.Name == "Role")
             {
@@ -296,11 +297,13 @@ public static class CreateComponentHelper
                     .NewLine()
                     .InsertTab()
                     .Append(
-                        $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<RoleDto> = new Array<RoleDto>();")
-                    .NewLine()
-                    .InsertTab()
-                    .Append(
-                        $"selected{relatedEntity.Entity.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.Entity.PrimaryKeyType)};");
+                        $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<RoleDto> = new Array<RoleDto>();");
+                    foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
+                    {
+                        stringBuilder.NewLine().InsertTab()
+                        .Append(
+                            $"selected{item.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.Entity.PrimaryKeyType)};");
+                    }
             }
             else
             {
@@ -308,11 +311,14 @@ public static class CreateComponentHelper
                     .NewLine()
                     .InsertTab()
                     .Append(
-                        $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<{relatedEntity.Entity.Name}FullOutput> = new Array<{relatedEntity.Entity.Name}FullOutput>();")
-                    .NewLine()
-                    .InsertTab()
-                    .Append(
-                        $"selected{relatedEntity.Entity.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.Entity.PrimaryKeyType)};");
+                        $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<{relatedEntity.Entity.Name}FullOutput> = new Array<{relatedEntity.Entity.Name}FullOutput>();");
+                    foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
+                    {
+                        stringBuilder.NewLine()
+                            .InsertTab()
+                            .Append(
+                                $"selected{item.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.Entity.PrimaryKeyType)};");
+                    }
             }
         }
     }
@@ -482,37 +488,51 @@ public static class CreateComponentHelper
     }
 
     public static void GetRecursiveRelationalDropdownHtmls(StringBuilder stringBuilder,
-        List<EntityWrapper> relatedEntities)
+        List<EntityWrapper> relatedEntities,
+        List<Property> properties)
     {
+        foreach (var currentProperty in properties.Where(x => x.IsRelationalProperty))
+        {
+            var currentEntity = relatedEntities.FirstOrDefault(x => x.Entity.Name == currentProperty.RelationalEntityName);
+            currentEntity.Entity
+        }
+
+
+
+
+
         foreach (var relatedEntity in relatedEntities)
         {
-            stringBuilder.NewLine().InsertTab(4).Append("<div class=\"p-field p-grid\">")
-                .NewLine().InsertTab(5)
-                .Append(
-                    $"<label for=\"element{relatedEntity.Entity.Name}\" class=\"p-col-12 p-mb-2 p-md-2 p-mb-md-0\">{{{{ '{relatedEntity.Entity.Name}' | localize }}}}</label>")
-                .NewLine().InsertTab(5).Append("<div class=\"p-col-12 p-md-10\">");
-
-            if (relatedEntity.Childs.Count == 0)
+            foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
             {
-                stringBuilder.NewLine().InsertTab(6).Append(
-                    $"<p-dropdown appendTo=\"body\" [options]=\"{relatedEntity.Entity.Name.Pluralize().ToCamelCase()}\"  [(ngModel)]=\"createInput.{relatedEntity.Entity.Name.ToCamelCase()}Id\" placeholder=\"{{{{ 'Select{relatedEntity.Entity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Entity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" formControlName=\"element{relatedEntity.Entity.Name}\" optionLabel=\"{relatedEntity.Entity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase()}\" optionValue=\"id\" inputId=\"element{relatedEntity.Entity.Name}\" [showClear]=\"true\">");
-            }
-            else
-            {
-                stringBuilder.NewLine().InsertTab(6).Append(
-                    $"<p-dropdown appendTo=\"body\" [options]=\"{relatedEntity.Entity.Name.Pluralize().ToCamelCase()}\"  [(ngModel)]=\"selected{relatedEntity.Entity.Name}Id\" [ngModelOptions]=\"{{ standalone: true }}\" placeholder =\"{{{{ 'Select{relatedEntity.Entity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Entity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" optionLabel=\"{relatedEntity.Entity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase()}\" inputId=\"element{relatedEntity.Entity.Name}\" [showClear]=\"true\" (onChange)=\"on{relatedEntity.Entity.Name}Changed($event.value?.id)\">");
-            }
+                stringBuilder.NewLine().InsertTab(4).Append("<div class=\"p-field p-grid\">")
+                    .NewLine().InsertTab(5)
+                    .Append($"<label for=\"element{item.Name}\" class=\"p-col-12 p-mb-2 p-md-2 p-mb-md-0\">{{{{ '{item.Name}' | localize }}}}</label>")
+                    .NewLine().InsertTab(5).Append("<div class=\"p-col-12 p-md-10\">");
 
-            stringBuilder.NewLine().InsertTab(7).Append("<ng-template let-item pTemplate=\"item\">");
-            stringBuilder.NewLine().InsertTab(8).Append("<div>");
-            stringBuilder.NewLine().InsertTab(9)
-                .Append(
-                    $"<div>{string.Join(' ', relatedEntity.Entity.Properties.Where(x => x.DisplayOnList).Select(x => string.Format("{{{{item.{0}}}}}", x.Name.ToCamelCase())))}</div>");
-            stringBuilder.NewLine().InsertTab(8).Append("</div>");
-            stringBuilder.NewLine().InsertTab(7).Append("</ng-template>")
-                .NewLine().InsertTab(6).Append("</p-dropdown>")
-                .NewLine().InsertTab(5).Append("</div>")
-                .NewLine().InsertTab(4).Append("</div>");
+
+                if (item.)
+                {
+                    stringBuilder.NewLine().InsertTab(6).Append(
+                        $"<p-dropdown appendTo=\"body\" [options]=\"{relatedEntity.Entity.Name.Pluralize().ToCamelCase()}\"  [(ngModel)]=\"createInput.{item.Name.ToCamelCase()}Id\" placeholder=\"{{{{ 'Select{relatedEntity.Entity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Entity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" formControlName=\"element{item.Name}\" optionLabel=\"{relatedEntity.Entity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase()}\" optionValue=\"id\" inputId=\"element{item.Name}\" [showClear]=\"true\">");
+                }
+                else
+                {
+                    stringBuilder.NewLine().InsertTab(6).Append(
+                        $"<p-dropdown appendTo=\"body\" [options]=\"{relatedEntity.Entity.Name.Pluralize().ToCamelCase()}\"  [(ngModel)]=\"selected{item.Name}Id\" [ngModelOptions]=\"{{ standalone: true }}\" placeholder =\"{{{{ 'Select{relatedEntity.Entity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Entity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" optionLabel=\"{relatedEntity.Entity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase()}\" inputId=\"element{item.Name}\" [showClear]=\"true\" (onChange)=\"on{relatedEntity.Entity.Name}Changed($event.value?.id)\">");
+                }
+
+                stringBuilder.NewLine().InsertTab(7).Append("<ng-template let-item pTemplate=\"item\">");
+                stringBuilder.NewLine().InsertTab(8).Append("<div>");
+                stringBuilder.NewLine().InsertTab(9)
+                    .Append(
+                        $"<div>{string.Join(' ', relatedEntity.Entity.Properties.Where(x => x.DisplayOnList).Select(x => string.Format("{{{{item.{0}}}}}", x.Name.ToCamelCase())))}</div>");
+                stringBuilder.NewLine().InsertTab(8).Append("</div>");
+                stringBuilder.NewLine().InsertTab(7).Append("</ng-template>")
+                    .NewLine().InsertTab(6).Append("</p-dropdown>")
+                    .NewLine().InsertTab(5).Append("</div>")
+                    .NewLine().InsertTab(4).Append("</div>");
+            }
         }
     }
 

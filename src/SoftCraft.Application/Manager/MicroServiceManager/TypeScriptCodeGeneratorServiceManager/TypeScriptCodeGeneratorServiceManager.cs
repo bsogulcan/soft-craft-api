@@ -174,7 +174,7 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
             Name = entity.Name,
             PrimaryKeyType = (PrimaryKeyType) entity.PrimaryKeyType,
             ProjectName = entity.Project.UniqueName,
-            ProjectDisplayName = entity.Project.Name
+            ProjectDisplayName = entity.Project.Name,
         };
 
         foreach (var relationalEntity in entity.Properties.Where(x =>
@@ -184,7 +184,7 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
                 dotNetCodeGeneratorEntity.ParentEntities.Add(EntityToGeneratorEntity(relationalEntity.RelationalEntity, entity));
         }
 
-        foreach (var entityProperty in entity.Properties)
+        foreach (var entityProperty in entity.Properties.OrderBy(x => x.IsRelationalProperty).ThenBy(x => x.Name))
         {
             var property = new TypeScriptCodeGenerator.Property()
             {
