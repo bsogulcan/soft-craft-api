@@ -23,10 +23,12 @@ public class Property : FullAuditedEntity<long>
     public string ToolTip { get; set; }
     public bool Required { get; set; }
     public bool Indexed { get; set; }
-    public int MaxLength { get; set; }
+    public int? MaxLength { get; set; }
     public bool Unique { get; set; }
     public long EntityId { get; set; }
     public virtual Entity Entity { get; set; }
     public bool DisplayOnList { get; set; }
     public bool FilterOnList { get; set; }
+    public long? LinkedPropertyId { get; set; }
+    public virtual Property LinkedProperty { get; set; }
 }
