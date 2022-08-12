@@ -33,6 +33,7 @@ message Property {
   bool displayOnList = 9;
   bool filterOnList = 10;
   optional string relationalPropertyName = 11;
+  bool used = 12;
 }
 
 message DtoResult{

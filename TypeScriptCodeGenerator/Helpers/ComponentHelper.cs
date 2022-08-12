@@ -11,7 +11,7 @@ public static class ComponentHelper
     public static StringBuilder GetComponentTsStringify(Entity entity)
     {
         var stringBuilder = new StringBuilder();
-
+        var properties = entity.Properties.ToList();
         //Imports
         stringBuilder.Append("import {Component, Injector, OnInit} from '@angular/core';")
             .NewLine()
@@ -175,7 +175,7 @@ public static class ComponentHelper
         stringBuilder.NewLine(2).InsertTab().Append("initializeDataGridColumns(): GridColumn[] {")
             .NewLine().InsertTab(2).Append("this.dataGridColumns = [").NewLine();
 
-        var relatedEntities = EntityHelper.GetRelatedEntities(entity);
+        var relatedEntities = EntityHelper.GetRelatedEntities(entity, canBeDuplicate: true);
 
         foreach (var relatedEntity in relatedEntities)
         {
@@ -202,11 +202,23 @@ public static class ComponentHelper
 
         foreach (var relatedEntity in relatedEntities)
         {
+            var mainEntityProperty =
+                EntityHelper.GetProperty(ref properties, relatedEntity.Entity.Name);
             foreach (var property in relatedEntity.Entity.Properties.Where(x => x.DisplayOnList))
             {
+                var dataField = relatedEntity.MainEntity
+                    ? mainEntityProperty.Name.ToCamelCase() + '.' + property.Name.ToCamelCase()
+                    : string.Join(".", relatedEntity.Childs.Select(x => x.ToCamelCase())) +
+                      (relatedEntity.Childs.Count > 0 ? "." : "") + relatedEntity.Entity.Name.ToCamelCase() + "." +
+                      property.Name.ToCamelCase();
+
+                var fieldName = relatedEntity.MainEntity
+                    ? (mainEntityProperty.Name + " " + property.Name)
+                    : (relatedEntity.Entity.Name + " " + property.Name);
+
                 stringBuilder.Append($@"            new GridColumn(
-                '{string.Join(".", relatedEntity.Childs.Select(x => x.ToCamelCase())) + (relatedEntity.Childs.Count > 0 ? "." : "") + relatedEntity.Entity.Name.ToCamelCase() + "." + property.Name.ToCamelCase()}',
-                '{(relatedEntity.Entity.Name + " " + property.Name).ToTitle()}',
+                '{dataField}',
+                '{fieldName}',
                 '{property.Type.ToTypeScriptDataGridColumnType()}',
                 '',
                 'right',

@@ -4,7 +4,8 @@ namespace TypeScriptCodeGenerator.Helpers;
 
 public static class EntityHelper
 {
-    public static List<EntityWrapper> GetRelatedEntities(Entity entity)
+    public static List<EntityWrapper> GetRelatedEntities(Entity entity, bool isMainEntity = true,
+        bool canBeDuplicate = false)
     {
         var response = new List<EntityWrapper>();
 
@@ -13,21 +14,21 @@ public static class EntityHelper
             var entityWrapper = new EntityWrapper()
             {
                 Entity = parentEntity,
+                MainEntity = isMainEntity
             };
-            //if (!response.Exists(x => x.Entity.Name == entityWrapper.Entity.Name))
+            if (canBeDuplicate || !response.Exists(x => x.Entity.Name == entityWrapper.Entity.Name))
             {
                 response.Add(entityWrapper);
-                var parentEntityRelatedEntities = GetRelatedEntities(parentEntity);
+                var parentEntityRelatedEntities = GetRelatedEntities(parentEntity, false, canBeDuplicate);
 
                 foreach (var relatedEntity in parentEntityRelatedEntities)
                 {
-                    //if (!response.Exists(x => x.Entity.Name == relatedEntity.Entity.Name))
+                    if (!response.Exists(x => x.Entity.Name == relatedEntity.Entity.Name))
                     {
                         response.Add(relatedEntity);
                     }
                 }
             }
-
         }
 
         return response;
@@ -68,5 +69,20 @@ public static class EntityHelper
         }
 
         return parent;
+    }
+
+    public static Property GetProperty(ref List<Property> properties, string entityType, bool setUsed = true)
+    {
+        var property =
+            properties.FirstOrDefault(x => x.Type == entityType && (setUsed ? !x.Used : (x.Used || !x.Used)));
+        if (property != null)
+        {
+            if (setUsed)
+            {
+                property.Used = true;
+            }
+        }
+
+        return property;
     }
 }

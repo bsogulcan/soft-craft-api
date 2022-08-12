@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Reflection.Metadata.Ecma335;
+using System.Text;
 using System.Xml;
 using Extensions;
 using Humanizer;
@@ -10,6 +11,11 @@ public static class CreateComponentHelper
 {
     public static StringBuilder GetCreateComponentTsStringify(Entity entity)
     {
+        foreach (var property in entity.Properties)
+        {
+            property.Used = false;
+        }
+
         var stringBuilder = new StringBuilder();
         stringBuilder.Append("import {Component, OnInit} from '@angular/core';")
             .NewLine().Append("import {DynamicDialogRef} from 'primeng-lts/dynamicdialog';")
@@ -27,6 +33,7 @@ public static class CreateComponentHelper
                 .Append(
                     $"import {{{item.Type}, {item.Type}List}} from '../../../../shared/services/enums/{item.Type}';");
         }
+
         var relatedEntities = EntityHelper.GetRelatedEntities(entity);
 
         foreach (var relatedEntity in relatedEntities)
@@ -136,13 +143,18 @@ public static class CreateComponentHelper
 
     public static StringBuilder GetCreateComponentHtmlStringify(Entity entity)
     {
+        foreach (var property in entity.Properties)
+        {
+            property.Used = false;
+        }
+
         var stringBuilder = new StringBuilder();
         stringBuilder.Append("<div class=\"flex align-content-between\">")
             .NewLine().InsertTab().Append("<div class=\"flex align-items-center\">")
             .NewLine().InsertTab(2).Append("<div class=\"p-fluid mt-1\">")
             .NewLine().InsertTab(3).Append("<form [formGroup]=\"formGroup\">");
 
-        var relatedEntities = EntityHelper.GetRelatedEntities(entity);
+        var relatedEntities = EntityHelper.GetRelatedEntities(entity, canBeDuplicate: true);
 
         foreach (var relatedEntity in relatedEntities)
         {
@@ -254,11 +266,13 @@ public static class CreateComponentHelper
         {
             if (relatedEntity.Entity.Name == "User")
             {
-                stringBuilder.NewLine().Append("import {UserServiceProxy, UserDto} from '@shared/service-proxies/service-proxies';");
+                stringBuilder.NewLine()
+                    .Append("import {UserServiceProxy, UserDto} from '@shared/service-proxies/service-proxies';");
             }
             else if (relatedEntity.Entity.Name == "Role")
             {
-                stringBuilder.NewLine().Append("import {RoleServiceProxy, RoleDto} from '@shared/service-proxies/service-proxies';");
+                stringBuilder.NewLine()
+                    .Append("import {RoleServiceProxy, RoleDto} from '@shared/service-proxies/service-proxies';");
             }
             else
             {
@@ -272,7 +286,9 @@ public static class CreateComponentHelper
             }
         }
     }
-    public static void GetRecursiveRelationalDtos(StringBuilder stringBuilder, List<EntityWrapper> relatedEntities, List<Property> properties)
+
+    public static void GetRecursiveRelationalDtos(StringBuilder stringBuilder, List<EntityWrapper> relatedEntities,
+        List<Property> properties)
     {
         foreach (var relatedEntity in relatedEntities)
         {
@@ -283,13 +299,13 @@ public static class CreateComponentHelper
                     .InsertTab()
                     .Append(
                         $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<UserDto> = new Array<UserDto>();");
-                    foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
-                    {
-                        stringBuilder.NewLine().InsertTab()
+         
+                foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
+                {
+                    stringBuilder.NewLine().InsertTab()
                         .Append(
-                            $"selected{item.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.Entity.PrimaryKeyType)};");
-                    }
-
+                            $"selected{item.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int) relatedEntity.Entity.PrimaryKeyType)};");
+                }
             }
             else if (relatedEntity.Entity.Name == "Role")
             {
@@ -298,12 +314,14 @@ public static class CreateComponentHelper
                     .InsertTab()
                     .Append(
                         $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<RoleDto> = new Array<RoleDto>();");
-                    foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
-                    {
-                        stringBuilder.NewLine().InsertTab()
+             
+
+                foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
+                {
+                    stringBuilder.NewLine().InsertTab()
                         .Append(
-                            $"selected{item.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.Entity.PrimaryKeyType)};");
-                    }
+                            $"selected{item.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int) relatedEntity.Entity.PrimaryKeyType)};");
+                }
             }
             else
             {
@@ -312,13 +330,13 @@ public static class CreateComponentHelper
                     .InsertTab()
                     .Append(
                         $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<{relatedEntity.Entity.Name}FullOutput> = new Array<{relatedEntity.Entity.Name}FullOutput>();");
-                    foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
-                    {
-                        stringBuilder.NewLine()
-                            .InsertTab()
-                            .Append(
-                                $"selected{item.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int)relatedEntity.Entity.PrimaryKeyType)};");
-                    }
+                foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
+                {
+                    stringBuilder.NewLine()
+                        .InsertTab()
+                        .Append(
+                            $"selected{item.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int) relatedEntity.Entity.PrimaryKeyType)};");
+                }
             }
         }
     }
@@ -352,7 +370,6 @@ public static class CreateComponentHelper
                     .Append(
                         $"private {relatedEntity.Entity.Name.ToCamelCase()}Service: {relatedEntity.Entity.Name}Service,");
             }
-
         }
     }
 
@@ -371,53 +388,155 @@ public static class CreateComponentHelper
     public static void GetRecursiveRelationalGetMethods(StringBuilder stringBuilder,
         List<EntityWrapper> relatedEntities, Entity entity)
     {
+        var properties = entity.Properties.ToList();
+
+        foreach (var property in properties)
+        {
+            property.Used = false;
+        }
+
         foreach (var relatedEntity in relatedEntities)
         {
             if (relatedEntity.Entity.ParentEntities.Count == 0)
             {
-                stringBuilder
-                    .NewLine()
-                    .InsertTab(1)
-                    .Append("getAll" + relatedEntity.Entity.Name.Pluralize() + "() {")
-                    .NewLine()
-                    .InsertTab(2)
-                    .Append($"this.{relatedEntity.Entity.Name.ToCamelCase()}Service.getList().subscribe(")
-                    .NewLine()
-                    .InsertTab(3)
-                    .Append("(response) => {")
-                    .NewLine()
-                    .InsertTab(4)
-                    .Append("if (response.success) {")
-                    .NewLine()
-                    .InsertTab(5)
-                    .Append($"this.{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} = response.result.items;")
-                    .NewLine().InsertTab(4)
-                    .Append("} else {")
-                    .NewLine()
-                    .InsertTab(5)
-                    .Append("abp.message.error(response.error.message);")
-                    .NewLine()
-                    .InsertTab(4)
-                    .Append("}")
-                    .NewLine()
-                    .InsertTab(3)
-                    .Append("},")
-                    .NewLine()
-                    .InsertTab(3)
-                    .Append("(error) => {")
-                    .NewLine()
-                    .InsertTab(5)
-                    .Append("abp.message.error(error.error.error.message);")
-                    .NewLine()
-                    .InsertTab(3)
-                    .Append("}")
-                    .NewLine()
-                    .InsertTab(2)
-                    .Append(");")
-                    .NewLine()
-                    .InsertTab(1)
-                    .Append("}")
-                    .NewLine();
+                if (relatedEntity.Entity.Name == "User")
+                {
+                    stringBuilder
+                        .NewLine()
+                        .InsertTab(1)
+                        .Append("getAll" + relatedEntity.Entity.Name.Pluralize() + "() {")
+                        .NewLine()
+                        .InsertTab(2)
+                        .Append(
+                            $"this.{relatedEntity.Entity.Name.ToCamelCase()}Service.getAll(undefined, undefined, undefined, undefined).subscribe(")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("(response) => {")
+                        .NewLine()
+                        .InsertTab(4)
+                        .Append("if (response) {")
+                        .NewLine()
+                        .InsertTab(5)
+                        .Append($"this.{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} = response.items;")
+                        .NewLine().InsertTab(4)
+                        .Append("} else {")
+                        .NewLine()
+                        .InsertTab(5)
+                        .NewLine()
+                        .InsertTab(4)
+                        .Append("}")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("},")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("(error) => {")
+                        .NewLine()
+                        .InsertTab(5)
+                        .Append("abp.message.error(error.error.error.message);")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("}")
+                        .NewLine()
+                        .InsertTab(2)
+                        .Append(");")
+                        .NewLine()
+                        .InsertTab(1)
+                        .Append("}")
+                        .NewLine();
+                }
+                else if (relatedEntity.Entity.Name == "Role")
+                {
+                    stringBuilder
+                        .NewLine()
+                        .InsertTab(1)
+                        .Append("getAll" + relatedEntity.Entity.Name.Pluralize() + "() {")
+                        .NewLine()
+                        .InsertTab(2)
+                        .Append(
+                            $"this.{relatedEntity.Entity.Name.ToCamelCase()}Service.getAll(undefined, undefined, undefined).subscribe(")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("(response) => {")
+                        .NewLine()
+                        .InsertTab(4)
+                        .Append("if (response) {")
+                        .NewLine()
+                        .InsertTab(5)
+                        .Append($"this.{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} = response.items;")
+                        .NewLine().InsertTab(4)
+                        .Append("} else {")
+                        .NewLine()
+                        .InsertTab(5)
+                        .NewLine()
+                        .InsertTab(4)
+                        .Append("}")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("},")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("(error) => {")
+                        .NewLine()
+                        .InsertTab(5)
+                        .NewLine()
+                        .Append("abp.message.error(error.error.error.message);")
+                        .InsertTab(3)
+                        .Append("}")
+                        .NewLine()
+                        .InsertTab(2)
+                        .Append(");")
+                        .NewLine()
+                        .InsertTab(1)
+                        .Append("}")
+                        .NewLine();
+                }
+                else
+                {
+                    stringBuilder
+                        .NewLine()
+                        .InsertTab(1)
+                        .Append("getAll" + relatedEntity.Entity.Name.Pluralize() + "() {")
+                        .NewLine()
+                        .InsertTab(2)
+                        .Append($"this.{relatedEntity.Entity.Name.ToCamelCase()}Service.getList().subscribe(")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("(response) => {")
+                        .NewLine()
+                        .InsertTab(4)
+                        .Append("if (response.success) {")
+                        .NewLine()
+                        .InsertTab(5)
+                        .Append($"this.{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} = response.result.items;")
+                        .NewLine().InsertTab(4)
+                        .Append("} else {")
+                        .NewLine()
+                        .InsertTab(5)
+                        .Append("abp.message.error(response.error.message);")
+                        .NewLine()
+                        .InsertTab(4)
+                        .Append("}")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("},")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("(error) => {")
+                        .NewLine()
+                        .InsertTab(5)
+                        .Append("abp.message.error(error.error.error.message);")
+                        .NewLine()
+                        .InsertTab(3)
+                        .Append("}")
+                        .NewLine()
+                        .InsertTab(2)
+                        .Append(");")
+                        .NewLine()
+                        .InsertTab(1)
+                        .Append("}")
+                        .NewLine();
+                }
             }
 
             if (relatedEntity.Childs.Count == 0)
@@ -433,9 +552,11 @@ public static class CreateComponentHelper
 
             foreach (var child in relatedEntity.Childs)
             {
-                if (entity.Properties.Any(x => x.Name == child))
+                var mainProperty = EntityHelper.GetProperty(ref properties, child);
+
+                if (mainProperty != null)
                 {
-                    stringBuilder.Append($"this.createInput.{child.ToCamelCase()}Id = undefined;");
+                    stringBuilder.Append($"this.createInput.{mainProperty.Name.ToCamelCase()}Id = undefined;");
                     stringBuilder.NewLine().InsertTab(2).Append($"this.{child.ToCamelCase().Pluralize()}.splice(0);");
                 }
                 else
@@ -455,10 +576,16 @@ public static class CreateComponentHelper
                     .NewLine().InsertTab(3).Append("return;")
                     .NewLine().InsertTab(2).Append("}");
 
+                var parentEntityProperties =
+                    relatedEntities.First(x => x.Entity.Name == child).Entity.Properties.ToList();
+                var property =
+                    EntityHelper.GetProperty(
+                        ref parentEntityProperties, relatedEntity.Entity.Name);
+
                 stringBuilder.NewLine(2)
                     .InsertTab(2).Append("this." + child.ToCamelCase())
                     .Append(
-                        $"Service.get{child.Pluralize()}By{relatedEntity.Entity.Name}Id({relatedEntity.Entity.Name.ToCamelCase()}Id).subscribe(response => ")
+                        $"Service.get{child.Pluralize()}By{property.Name}Id({relatedEntity.Entity.Name.ToCamelCase()}Id).subscribe(response => ")
                     .Append("{")
                     .NewLine()
                     .InsertTab(3)
@@ -491,35 +618,36 @@ public static class CreateComponentHelper
         List<EntityWrapper> relatedEntities,
         List<Property> properties)
     {
-        foreach (var currentProperty in properties.Where(x => x.IsRelationalProperty))
-        {
-            var currentEntity = relatedEntities.FirstOrDefault(x => x.Entity.Name == currentProperty.RelationalEntityName);
-            currentEntity.Entity
-        }
-
-
-
+        // foreach (var currentProperty in properties.Where(x => x.IsRelationalProperty))
+        // {
+        //     var currentEntity =
+        //         relatedEntities.FirstOrDefault(x => x.Entity.Name == currentProperty.RelationalEntityName);
+        //     //currentEntity.Entity
+        // }
 
 
         foreach (var relatedEntity in relatedEntities)
         {
-            foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
+            // foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
             {
+                var currentEntityProperty = EntityHelper.GetProperty(ref properties, relatedEntity.Entity.Name);
+
                 stringBuilder.NewLine().InsertTab(4).Append("<div class=\"p-field p-grid\">")
                     .NewLine().InsertTab(5)
-                    .Append($"<label for=\"element{item.Name}\" class=\"p-col-12 p-mb-2 p-md-2 p-mb-md-0\">{{{{ '{item.Name}' | localize }}}}</label>")
+                    .Append(
+                        $"<label for=\"element{(currentEntityProperty != null ? currentEntityProperty.Name : relatedEntity.Entity.Name)}\" class=\"p-col-12 p-mb-2 p-md-2 p-mb-md-0\">{{{{ '{(currentEntityProperty != null ? currentEntityProperty.Name : relatedEntity.Entity.Name)}' | localize }}}}</label>")
                     .NewLine().InsertTab(5).Append("<div class=\"p-col-12 p-md-10\">");
 
 
-                if (item.)
+                if (relatedEntity.MainEntity)
                 {
                     stringBuilder.NewLine().InsertTab(6).Append(
-                        $"<p-dropdown appendTo=\"body\" [options]=\"{relatedEntity.Entity.Name.Pluralize().ToCamelCase()}\"  [(ngModel)]=\"createInput.{item.Name.ToCamelCase()}Id\" placeholder=\"{{{{ 'Select{relatedEntity.Entity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Entity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" formControlName=\"element{item.Name}\" optionLabel=\"{relatedEntity.Entity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase()}\" optionValue=\"id\" inputId=\"element{item.Name}\" [showClear]=\"true\">");
+                        $"<p-dropdown appendTo=\"body\" [options]=\"{relatedEntity.Entity.Name.Pluralize().ToCamelCase()}\"  [(ngModel)]=\"createInput.{currentEntityProperty.Name.ToCamelCase()}Id\" placeholder=\"{{{{ 'Select{relatedEntity.Entity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Entity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" formControlName=\"element{(currentEntityProperty != null ? currentEntityProperty.Name : relatedEntity.Entity.Name)}\" optionLabel=\"{relatedEntity.Entity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase()}\" optionValue=\"id\" inputId=\"element{(currentEntityProperty != null ? currentEntityProperty.Name : relatedEntity.Entity.Name)}\" [showClear]=\"true\">");
                 }
                 else
                 {
                     stringBuilder.NewLine().InsertTab(6).Append(
-                        $"<p-dropdown appendTo=\"body\" [options]=\"{relatedEntity.Entity.Name.Pluralize().ToCamelCase()}\"  [(ngModel)]=\"selected{item.Name}Id\" [ngModelOptions]=\"{{ standalone: true }}\" placeholder =\"{{{{ 'Select{relatedEntity.Entity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Entity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" optionLabel=\"{relatedEntity.Entity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase()}\" inputId=\"element{item.Name}\" [showClear]=\"true\" (onChange)=\"on{relatedEntity.Entity.Name}Changed($event.value?.id)\">");
+                        $"<p-dropdown appendTo=\"body\" [options]=\"{relatedEntity.Entity.Name.Pluralize().ToCamelCase()}\" placeholder =\"{{{{ 'Select{relatedEntity.Entity.Name}' | localize}}}}\" [filter]=\"true\" filterBy=\"{string.Join(",", relatedEntity.Entity.Properties.Where(x => x.FilterOnList).Select(x => x.Name.ToCamelCase()))}\" optionLabel=\"{relatedEntity.Entity.Properties.FirstOrDefault(x => x.DisplayOnList)?.Name.ToCamelCase()}\" inputId=\"element{relatedEntity.Entity.Name}\" [showClear]=\"true\" (onChange)=\"on{relatedEntity.Entity.Name}Changed($event.value?.id)\">");
                 }
 
                 stringBuilder.NewLine().InsertTab(7).Append("<ng-template let-item pTemplate=\"item\">");
