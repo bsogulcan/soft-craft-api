@@ -16,6 +16,7 @@ using SoftCraft.AppServices.Project.Dtos;
 using SoftCraft.Entities;
 using SoftCraft.Enums;
 using SoftCraft.Manager.MicroServiceManager.DotNetCodeGeneratorServiceManager;
+using SoftCraft.Manager.MicroServiceManager.Helpers;
 using SoftCraft.Manager.MicroServiceManager.TypeScriptCodeGeneratorServiceManager;
 using SoftCraft.Repositories;
 using Volo.Abp.Application.Dtos;
@@ -139,12 +140,17 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
     public async Task<EntityCodeResultDto> GetCodeResult(long id)
     {
         var entity = await Repository.GetAsync(id);
+        var comboBoxes = EntityHelper.GenerateComboBoxes(entity);
+        var x = Newtonsoft.Json.JsonConvert.SerializeObject(comboBoxes);
+
+        //TODO : Transfer comboBoxes to the Microservices
+
+
         var entityCodeResultDto = new EntityCodeResultDto
         {
             EntityId = entity.Id,
             EntityName = entity.Name
         };
-
         var typeScripDtosResult = await _typeScriptCodeGeneratorServiceManager.CreateDtosAsync(entity);
         entityCodeResultDto.TypeScriptDtoResult.FullOutput = typeScripDtosResult.FullOutputStringify;
         entityCodeResultDto.TypeScriptDtoResult.PartOutput = typeScripDtosResult.PartOutputStringify;

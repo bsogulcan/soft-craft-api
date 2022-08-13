@@ -103,7 +103,7 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
         if (relationalEntities.Count() > 1)
         {
             stringBuilder.NewLine().InsertTab()
-                .Append($"getAll{request.Name.Pluralize()}Filtered(");
+                .Append($"get{request.Name.Pluralize()}Filtered(");
 
             bool isFirst = true;
             foreach (var relationalProperty in relationalEntities)
@@ -126,7 +126,7 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
                 .NewLine()
                 .InsertTab(2)
                 .Append(
-                    $"return this.http.get<ResponceTypeWrap<Array<{request.Name}FullOutput>>>(this.baseUrl + '/api/services/app/' + this.endPoint + '/GetAll{request.Name.Pluralize()}Filtered?");
+                    $"return this.http.get<ResponceTypeWrap<Array<{request.Name}FullOutput>>>(this.baseUrl + '/api/services/app/' + this.endPoint + '/Get{request.Name.Pluralize()}Filtered?");
             isFirst = true;
             foreach (var relationalProperty in relationalEntities)
             {

@@ -322,7 +322,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         {
             appServiceInterfaceStringBuilder.InsertTab(2)
                 .Append(
-                    $"Task<PagedResultDto<{request.EntityName}FullOutput>> GetAll{request.EntityName.Pluralize()}Filtered(");
+                    $"Task<PagedResultDto<{request.EntityName}FullOutput>> Get{request.EntityName.Pluralize()}Filtered(");
 
             bool isFirst = true;
             foreach (var relationalProperty in releatedEntities)
@@ -493,7 +493,7 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
                 .Append($"[AbpAuthorize(PermissionNames.{request.EntityName}_GetList)]")
                 .NewLine().InsertTab(2)
                 .Append(
-                    $"public async Task<PagedResultDto<{request.EntityName}FullOutput>> GetAll{request.EntityName.Pluralize()}Filtered(");
+                    $"public async Task<PagedResultDto<{request.EntityName}FullOutput>> Get{request.EntityName.Pluralize()}Filtered(");
 
 
             bool isFirst = true;
