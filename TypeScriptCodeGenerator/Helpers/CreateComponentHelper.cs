@@ -66,7 +66,8 @@ public static class CreateComponentHelper
         }
 
         //Ozan
-        GetRecursiveRelationalDtos(stringBuilder, relatedEntities, entity.Properties.ToList());
+        GetRecursiveRelationalDtos(stringBuilder, relatedEntities, entity.Properties.ToList(),
+            entity.ComboBoxWrapper.ToList());
 
         stringBuilder.NewLine(2);
 
@@ -288,7 +289,7 @@ public static class CreateComponentHelper
     }
 
     public static void GetRecursiveRelationalDtos(StringBuilder stringBuilder, List<EntityWrapper> relatedEntities,
-        List<Property> properties)
+        List<Property> properties, List<ComboBoxWrapper> comboBoxWrappers)
     {
         foreach (var relatedEntity in relatedEntities)
         {
@@ -299,7 +300,7 @@ public static class CreateComponentHelper
                     .InsertTab()
                     .Append(
                         $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<UserDto> = new Array<UserDto>();");
-         
+
                 foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
                 {
                     stringBuilder.NewLine().InsertTab()
@@ -314,7 +315,7 @@ public static class CreateComponentHelper
                     .InsertTab()
                     .Append(
                         $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<RoleDto> = new Array<RoleDto>();");
-             
+
 
                 foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
                 {
@@ -330,12 +331,13 @@ public static class CreateComponentHelper
                     .InsertTab()
                     .Append(
                         $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<{relatedEntity.Entity.Name}FullOutput> = new Array<{relatedEntity.Entity.Name}FullOutput>();");
-                foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
+                foreach (var item in comboBoxWrappers.Where(x =>
+                             x.EntityName == relatedEntity.Entity.Name && !x.IsInputProperty))
                 {
                     stringBuilder.NewLine()
                         .InsertTab()
                         .Append(
-                            $"selected{item.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int) relatedEntity.Entity.PrimaryKeyType)};");
+                            $"selected{item.PropertyName}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int) relatedEntity.Entity.PrimaryKeyType)};");
                 }
             }
         }
@@ -432,7 +434,7 @@ public static class CreateComponentHelper
                         .InsertTab(3)
                         .Append("(error) => {")
                         .NewLine()
-                        .InsertTab(5)
+                        .InsertTab(4)
                         .Append("abp.message.error(error.error.error.message);")
                         .NewLine()
                         .InsertTab(3)
@@ -480,8 +482,8 @@ public static class CreateComponentHelper
                         .NewLine()
                         .InsertTab(5)
                         .NewLine()
+                        .InsertTab(4)
                         .Append("abp.message.error(error.error.error.message);")
-                        .InsertTab(3)
                         .Append("}")
                         .NewLine()
                         .InsertTab(2)
@@ -545,25 +547,29 @@ public static class CreateComponentHelper
             }
 
             stringBuilder.NewLine().InsertTab()
-                .Append($"on{relatedEntity.Entity.Name}Changed({relatedEntity.Entity.Name.ToCamelCase()}Id?: number) ")
+                .Append(
+                    $"on{relatedEntity.Entity.Name}Changed({relatedEntity.Entity.Name.ToCamelCase()}Id?: number) ")
                 .Append("{")
                 .NewLine()
                 .InsertTab(2);
 
             foreach (var child in relatedEntity.Childs)
             {
-                var mainProperty = EntityHelper.GetProperty(ref properties, child);
-
-                if (mainProperty != null)
+                var mainProperty =
+                    entity.ComboBoxWrapper.First(x =>
+                        x.EntityName == child); //EntityHelper.GetProperty(ref properties, child);
+                if (mainProperty.IsInputProperty)
                 {
-                    stringBuilder.Append($"this.createInput.{mainProperty.Name.ToCamelCase()}Id = undefined;");
-                    stringBuilder.NewLine().InsertTab(2).Append($"this.{child.ToCamelCase().Pluralize()}.splice(0);");
+                    stringBuilder.InsertTab(3)
+                        .Append($"this.createInput.{mainProperty.PropertyName.ToCamelCase()}Id = undefined;");
+                    stringBuilder.NewLine().InsertTab(3).Append($"this.{child.ToCamelCase().Pluralize()}.splice(0);");
                 }
                 else
                 {
-                    stringBuilder.NewLine().InsertTab(2).Append($"this.selected{child}Id = undefined;");
-                    stringBuilder.NewLine().InsertTab(2).Append($"this.{child.ToCamelCase().Pluralize()}.splice(0);");
+                    stringBuilder.NewLine().InsertTab(3).Append($"this.selected{child}Id = undefined;");
+                    stringBuilder.NewLine().InsertTab(3).Append($"this.{child.ToCamelCase().Pluralize()}.splice(0);");
                 }
+
 
                 if (relatedEntities.First(x => x.Entity.Name == child).Entity.ParentEntities
                     .Any(x => x.Name != relatedEntity.Entity.Name))

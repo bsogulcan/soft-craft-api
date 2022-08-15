@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text;
-using System.Xml;
+﻿using System.Text;
 using Extensions;
 using Humanizer;
 using TypeScriptCodeGenerator.Modals;
@@ -70,7 +68,8 @@ public static class EditComponentHelper
         }
 
         //Ozan
-        GetRecursiveRelationalDtos(stringBuilder, relatedEntities, entity.Properties.ToList());
+        GetRecursiveRelationalDtos(stringBuilder, relatedEntities, entity.Properties.ToList(),
+            entity.ComboBoxWrapper.ToList());
 
         stringBuilder.NewLine(2);
 
@@ -295,7 +294,7 @@ public static class EditComponentHelper
     }
 
     public static void GetRecursiveRelationalDtos(StringBuilder stringBuilder, List<EntityWrapper> relatedEntities,
-        List<Property> properties)
+        List<Property> properties, List<ComboBoxWrapper> comboBoxWrappers)
     {
         foreach (var relatedEntity in relatedEntities)
         {
@@ -342,12 +341,14 @@ public static class EditComponentHelper
                     .InsertTab()
                     .Append(
                         $"{relatedEntity.Entity.Name.ToCamelCase().Pluralize()} : Array<{relatedEntity.Entity.Name}FullOutput> = new Array<{relatedEntity.Entity.Name}FullOutput>();");
-                foreach (var item in properties.Where(x => x.RelationalEntityName == relatedEntity.Entity.Name))
+
+                foreach (var item in comboBoxWrappers.Where(x =>
+                             x.EntityName == relatedEntity.Entity.Name && !x.IsInputProperty))
                 {
                     stringBuilder.NewLine()
                         .InsertTab()
                         .Append(
-                            $"selected{item.Name}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int) relatedEntity.Entity.PrimaryKeyType)};");
+                            $"selected{item.PropertyName}Id : {PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType((int) relatedEntity.Entity.PrimaryKeyType)};");
                 }
             }
         }
@@ -444,7 +445,7 @@ public static class EditComponentHelper
                         .InsertTab(3)
                         .Append("(error) => {")
                         .NewLine()
-                        .InsertTab(5)
+                        .InsertTab(4)
                         .Append("abp.message.error(error.error.error.message);")
                         .NewLine()
                         .InsertTab(3)
@@ -536,7 +537,7 @@ public static class EditComponentHelper
                         .InsertTab(3)
                         .Append("(error) => {")
                         .NewLine()
-                        .InsertTab(5)
+                        .InsertTab(4)
                         .Append("abp.message.error(error.error.error.message);")
                         .NewLine()
                         .InsertTab(3)
@@ -557,26 +558,40 @@ public static class EditComponentHelper
             }
 
             stringBuilder.NewLine().InsertTab()
-                .Append($"on{relatedEntity.Entity.Name}Changed({relatedEntity.Entity.Name.ToCamelCase()}Id?: number) ")
+                .Append(
+                    $"on{relatedEntity.Entity.Name}Changed({relatedEntity.Entity.Name.ToCamelCase()}Id?: number, fromInit = false) ")
                 .Append("{")
                 .NewLine()
                 .InsertTab(2);
 
+
+            stringBuilder.Append($"if (!fromInit) ")
+                .Append("{")
+                .NewLine();
+
             foreach (var child in relatedEntity.Childs)
             {
-                var mainProperty = EntityHelper.GetProperty(ref properties, child);
+                var mainProperty =
+                    entity.ComboBoxWrapper.First(x =>
+                        x.EntityName == child); //EntityHelper.GetProperty(ref properties, child);
 
-                if (mainProperty != null)
+                if (mainProperty.IsInputProperty)
                 {
-                    stringBuilder.Append($"this.updateInput.{mainProperty.Name.ToCamelCase()}Id = undefined;");
-                    stringBuilder.NewLine().InsertTab(2).Append($"this.{child.ToCamelCase().Pluralize()}.splice(0);");
+                    stringBuilder.InsertTab(3)
+                        .Append($"this.updateInput.{mainProperty.PropertyName.ToCamelCase()}Id = undefined;");
+                    stringBuilder.NewLine().InsertTab(3).Append($"this.{child.ToCamelCase().Pluralize()}.splice(0);");
                 }
                 else
                 {
-                    stringBuilder.NewLine().InsertTab(2).Append($"this.selected{child}Id = undefined;");
-                    stringBuilder.NewLine().InsertTab(2).Append($"this.{child.ToCamelCase().Pluralize()}.splice(0);");
+                    stringBuilder.NewLine().InsertTab(3).Append($"this.selected{child}Id = undefined;");
+                    stringBuilder.NewLine().InsertTab(3).Append($"this.{child.ToCamelCase().Pluralize()}.splice(0);");
                 }
+            }
 
+            stringBuilder.NewLine().InsertTab(2).Append("}");
+
+            foreach (var child in relatedEntity.Childs)
+            {
                 if (relatedEntities.First(x => x.Entity.Name == child).Entity.ParentEntities
                     .Any(x => x.Name != relatedEntity.Entity.Name))
                 {
@@ -737,7 +752,8 @@ public static class EditComponentHelper
                     $"this.selected{comboBoxWrapper.EntityName}Id = this.currentData.{comboBoxWrapper.AccessString.Replace("createInput.", "") + ".id;"}")
                 .NewLine();
             stringBuilder.InsertTab(2)
-                .Append($"this.on{comboBoxWrapper.EntityName}Changed(this.selected{comboBoxWrapper.EntityName}Id);")
+                .Append(
+                    $"this.on{comboBoxWrapper.EntityName}Changed(this.selected{comboBoxWrapper.EntityName}Id, true);")
                 .NewLine();
         }
 
