@@ -66,13 +66,23 @@ public static class StringExtensions
 
         if (string.IsNullOrEmpty(type) && isRelationalProperty)
         {
-            if ((RelationType) relationType == RelationType.OneToOne)
+            if (((RelationType) relationType == RelationType.OneToOne) || ((RelationType)relationType == RelationType.OneToZero))
             {
-                type = referenceType + "PartOutput";
+                if (referenceType == "User")
+                    type = "UserDto";
+                else if(referenceType == "Role")
+                    type = "RoleDto";
+                else
+                    type = referenceType + "PartOutput";
             }
             else
             {
-                type = $"Array<{referenceType}PartOutput>";
+                if (referenceType == "User")
+                    type = $"Array<UserDto>";
+                else if (referenceType == "Role")
+                    type = $"Array<RoleDto>";
+                else
+                    type = $"Array<{referenceType}PartOutput>";
             }
         }
 

@@ -80,7 +80,8 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
 
 
         var relationalEntities = request.Properties.Where(x =>
-             x.IsRelationalProperty && x.RelationType == RelationType.OneToOne);
+            x.IsRelationalProperty &&
+            (x.RelationType == RelationType.OneToOne || x.RelationType == RelationType.OneToZero));
 
         foreach (var relationalProperty in relationalEntities)
         {
@@ -102,7 +103,7 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
         if (relationalEntities.Count() > 1)
         {
             stringBuilder.NewLine().InsertTab()
-            .Append($"getAll{request.Name.Pluralize()}Filtered(");
+                .Append($"get{request.Name.Pluralize()}Filtered(");
 
             bool isFirst = true;
             foreach (var relationalProperty in relationalEntities)
@@ -119,32 +120,38 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
                         .Append($", {relationalProperty.Name.ToCamelCase()}Id : {relationalProperty.Type}");
                 }
             }
+
             stringBuilder
                 .Append(") {")
                 .NewLine()
                 .InsertTab(2)
-                .Append($"return this.http.get<ResponceTypeWrap<Array<{request.Name}FullOutput>>>(this.baseUrl + '/api/services/app/' + this.endPoint + '/GetAll{request.Name.Pluralize()}Filtered?");
+                .Append(
+                    $"return this.http.get<ResponceTypeWrap<Array<{request.Name}FullOutput>>>(this.baseUrl + '/api/services/app/' + this.endPoint + '/Get{request.Name.Pluralize()}Filtered?");
             isFirst = true;
             foreach (var relationalProperty in relationalEntities)
             {
                 if (isFirst)
                 {
                     stringBuilder
-                        .Append($"{relationalProperty.Name.ToCamelCase()}Id=' + {relationalProperty.Name.ToCamelCase()}Id + '");
+                        .Append(
+                            $"{relationalProperty.Name.ToCamelCase()}Id=' + {relationalProperty.Name.ToCamelCase()}Id + '");
                     isFirst = false;
                 }
                 else
                 {
                     stringBuilder
-                        .Append($"&{relationalProperty.Name.ToCamelCase()}Id=' + {relationalProperty.Name.ToCamelCase()}Id + '");
+                        .Append(
+                            $"&{relationalProperty.Name.ToCamelCase()}Id=' + {relationalProperty.Name.ToCamelCase()}Id + '");
                 }
             }
+
             stringBuilder
                 .Append("');")
                 .NewLine()
                 .InsertTab()
                 .Append("}")
-                .NewLine(); ;
+                .NewLine();
+            ;
         }
 
         stringBuilder.NewLine().Append("}");
@@ -175,9 +182,10 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
         foreach (var value in request.Values)
         {
             stringBuilder.InsertTab();
-            stringBuilder.Append($"{{ id: {value.Value }, displayName: \"{value.Name}\" }},");
+            stringBuilder.Append($"{{ id: {value.Value}, displayName: \"{value.Name}\" }},");
             stringBuilder.NewLine();
         }
+
         stringBuilder.Append("];");
 
         stringifyResult.Stringify = stringBuilder.ToString();
@@ -314,6 +322,7 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
                 result.Add($"'{input.EntityName}.Navigation'");
             }
         }
+
         return result;
     }
 
@@ -334,11 +343,12 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
 
         foreach (var property in request.Properties)
         {
-            if (property.IsRelationalProperty && property.RelationType == RelationType.OneToOne)
+            if (property.IsRelationalProperty && (property.RelationType == RelationType.OneToOne ||
+                                                  property.RelationType == RelationType.OneToZero))
             {
                 // standartId: number;
                 stringBuilder.InsertTab()
-                    .Append(property.RelationalEntityName.ToCamelCase() + "Id: " +
+                    .Append(property.Name.ToCamelCase() + "Id: " +
                             PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType(
                                 (int) property.RelationalEntityPrimaryKeyType));
 
@@ -369,19 +379,38 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
     private StringBuilder GenerateFullOutput(Entity request)
     {
         var stringBuilder = new StringBuilder();
+        var importedProperties = new List<string>();
 
         //import {LinePartOutput} from '../../line/dtos/LinePartOutput';
         foreach (var relationalProperty in request.Properties.Where(x => x.IsRelationalProperty))
         {
-            stringBuilder.Append("import {" + relationalProperty.RelationalEntityName +
-                                 "PartOutput} from '../../" + relationalProperty.RelationalEntityName.ToCamelCase() +
-                                 "/dtos/" + relationalProperty.RelationalEntityName + "PartOutput';").NewLine();
+            if (importedProperties.Any(x => x == relationalProperty.RelationalEntityName))
+            {
+                continue;
+            }
+
+            if (relationalProperty.RelationalEntityName == "User")
+                stringBuilder.Append("import { UserDto } from '@shared/service-proxies/service-proxies';").NewLine();
+            else if (relationalProperty.RelationalEntityName == "Role")
+                stringBuilder.Append("import { RoleDto } from '@shared/service-proxies/service-proxies';").NewLine();
+            else
+                stringBuilder.Append("import {" + relationalProperty.RelationalEntityName +
+                                     "PartOutput} from '../../" +
+                                     relationalProperty.RelationalEntityName.ToCamelCase() +
+                                     "/dtos/" + relationalProperty.RelationalEntityName + "PartOutput';").NewLine();
+            importedProperties.Add(relationalProperty.RelationalEntityName);
         }
 
         foreach (var enumProperty in request.Properties.Where(x => x.IsEnumerateProperty))
         {
+            if (importedProperties.Any(x => x == enumProperty.Type))
+            {
+                continue;
+            }
+
             stringBuilder.Append("import {" + enumProperty.Type + "} from '../../enums/" + enumProperty.Type + "';")
                 .NewLine();
+            importedProperties.Add(enumProperty.Type);
         }
 
         stringBuilder.NewLine()
@@ -395,27 +424,45 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             .NewLine();
         foreach (var property in request.Properties)
         {
-            if (property.IsRelationalProperty && property.RelationType == RelationType.OneToOne)
+            if (property.IsRelationalProperty)
             {
-                // standartId: number;
-                stringBuilder.InsertTab()
-                    .Append(property.RelationalEntityName.ToCamelCase() + "Id: " +
-                            PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType(
-                                (int) property.RelationalEntityPrimaryKeyType));
-
-                if (property.Nullable)
+                if (property.RelationType == RelationType.OneToOne || property.RelationType == RelationType.OneToZero)
                 {
-                    stringBuilder.Append(" | undefined;");
-                }
+                    // standartId: number;
+                    stringBuilder.InsertTab()
+                        .Append(property.Name.ToCamelCase() + "Id: " +
+                                PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType(
+                                    (int) property.RelationalEntityPrimaryKeyType));
+                    if (property.Nullable)
+                    {
+                        stringBuilder.Append(" | undefined;");
+                    }
+                    else
+                    {
+                        stringBuilder.Append(";");
+                    }
 
-                stringBuilder.NewLine();
+                    stringBuilder.NewLine();
+                }
+                else
+                {
+                    stringBuilder.InsertTab()
+                        .Append(property.Name.Pluralize().ToCamelCase() + ": ")
+                        .Append(property.Type.ToTypeScriptDataType(property.Nullable, property.IsRelationalProperty,
+                            (int) property.RelationType, property.IsEnumerateProperty));
+
+                    stringBuilder.NewLine();
+                    continue;
+                }
             }
 
             stringBuilder.InsertTab()
                 .Append(property.Name.ToCamelCase() + ": ")
                 .Append(property.Type.ToTypeScriptDataType(property.Nullable, property.IsRelationalProperty,
-                    (int) property.RelationType, property.IsEnumerateProperty))
-                .NewLine();
+                    (int) property.RelationType, property.IsEnumerateProperty));
+
+
+            stringBuilder.NewLine();
         }
 
         stringBuilder.Append("}");
@@ -425,19 +472,39 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
     private StringBuilder GeneratePartOutput(Entity request)
     {
         var stringBuilder = new StringBuilder();
-
+        var importedProperties = new List<string>();
         foreach (var relationalProperty in request.Properties.Where(x =>
                      x.IsRelationalProperty && x.RelationType == RelationType.OneToOne))
         {
-            stringBuilder.Append("import {" + relationalProperty.RelationalEntityName +
-                                 "PartOutput} from '../../" + relationalProperty.RelationalEntityName.ToCamelCase() +
-                                 "/dtos/" + relationalProperty.RelationalEntityName + "PartOutput';").NewLine();
+            if (importedProperties.Any(x => x == relationalProperty.RelationalEntityName))
+            {
+                continue;
+            }
+
+            if (relationalProperty.RelationalEntityName == "User")
+                stringBuilder.Append("import { UserDto } from '@shared/service-proxies/service-proxies';").NewLine();
+            else if (relationalProperty.RelationalEntityName == "Role")
+                stringBuilder.Append("import { RoleDto } from '@shared/service-proxies/service-proxies';").NewLine();
+            else
+                stringBuilder.Append("import {" + relationalProperty.RelationalEntityName +
+                                     "PartOutput} from '../../" +
+                                     relationalProperty.RelationalEntityName.ToCamelCase() +
+                                     "/dtos/" + relationalProperty.RelationalEntityName + "PartOutput';").NewLine();
+
+            importedProperties.Add(relationalProperty.RelationalEntityName);
         }
 
         foreach (var enumProperty in request.Properties.Where(x => x.IsEnumerateProperty))
         {
+            if (importedProperties.Any(x => x == enumProperty.Type))
+            {
+                continue;
+            }
+
             stringBuilder.Append("import {" + enumProperty.Type + "} from '../../enums/" + enumProperty.Type + "';")
                 .NewLine();
+
+            importedProperties.Add(enumProperty.Type);
         }
 
         stringBuilder
@@ -451,11 +518,12 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             .NewLine();
         foreach (var property in request.Properties)
         {
-            if (property.IsRelationalProperty && property.RelationType == RelationType.OneToOne)
+            if (property.IsRelationalProperty && (property.RelationType == RelationType.OneToOne ||
+                                                  property.RelationType == RelationType.OneToZero))
             {
                 // standartId: number;
                 stringBuilder.InsertTab()
-                    .Append(property.RelationalEntityName.ToCamelCase() + "Id: " +
+                    .Append(property.Name.ToCamelCase() + "Id: " +
                             PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType(
                                 (int) property.RelationalEntityPrimaryKeyType));
 
@@ -463,11 +531,16 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
                 {
                     stringBuilder.Append(" | undefined;");
                 }
+                else
+                {
+                    stringBuilder.Append(";");
+                }
 
                 stringBuilder.NewLine();
             }
 
-            if (property.IsRelationalProperty && property.RelationType != RelationType.OneToOne)
+            if (property.IsRelationalProperty && property.RelationType != RelationType.OneToOne &&
+                property.RelationType != RelationType.OneToZero)
             {
                 continue;
             }
@@ -475,8 +548,8 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             stringBuilder.InsertTab()
                 .Append(property.Name.ToCamelCase() + ": ")
                 .Append(property.Type.ToTypeScriptDataType(property.Nullable, property.IsRelationalProperty,
-                    (int) property.RelationType, property.IsEnumerateProperty))
-                .NewLine();
+                    (int) property.RelationType, property.IsEnumerateProperty));
+            stringBuilder.NewLine();
         }
 
         stringBuilder.Append("}");
@@ -504,11 +577,12 @@ public class TypeScriptCodeGeneratorService : TypeScriptCodeGenerator.TypeScript
             .NewLine();
         foreach (var property in request.Properties)
         {
-            if (property.IsRelationalProperty && property.RelationType == RelationType.OneToOne)
+            if (property.IsRelationalProperty && (property.RelationType == RelationType.OneToOne ||
+                                                  property.RelationType == RelationType.OneToZero))
             {
                 // standartId: number;
                 stringBuilder.InsertTab()
-                    .Append(property.RelationalEntityName.ToCamelCase() + "Id: " +
+                    .Append(property.Name.ToCamelCase() + "Id: " +
                             PropertyTypeExtensions.ConvertPrimaryKeyToTypeScriptDataType(
                                 (int) property.RelationalEntityPrimaryKeyType));
 

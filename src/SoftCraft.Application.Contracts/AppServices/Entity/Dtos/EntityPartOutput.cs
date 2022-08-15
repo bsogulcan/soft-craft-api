@@ -13,4 +13,5 @@ public class EntityPartOutput : EntityDto<long>
     public string DisplayName { get; set; }
     public bool IsFullAudited { get; set; }
     public TenantType TenantType { get; set; }
+    public bool IsDefaultAbpEntity { get; set; }
 }

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 using Extensions;
 using Humanizer;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +12,7 @@ public static class ComponentHelper
     public static StringBuilder GetComponentTsStringify(Entity entity)
     {
         var stringBuilder = new StringBuilder();
-
+        var properties = entity.Properties.ToList();
         //Imports
         stringBuilder.Append("import {Component, Injector, OnInit} from '@angular/core';")
             .NewLine()
@@ -175,7 +176,7 @@ public static class ComponentHelper
         stringBuilder.NewLine(2).InsertTab().Append("initializeDataGridColumns(): GridColumn[] {")
             .NewLine().InsertTab(2).Append("this.dataGridColumns = [").NewLine();
 
-        var relatedEntities = EntityHelper.GetRelatedEntities(entity);
+        var relatedEntities = EntityHelper.GetRelatedEntities(entity, canBeDuplicate: true);
 
         foreach (var relatedEntity in relatedEntities)
         {
@@ -200,13 +201,23 @@ public static class ComponentHelper
                 []
             ),").NewLine();
 
-        foreach (var relatedEntity in relatedEntities)
+        foreach (var comboBoxWrapper in entity.ComboBoxWrapper)
         {
-            foreach (var property in relatedEntity.Entity.Properties.Where(x => x.DisplayOnList))
+            var propertyToDisplay = relatedEntities.First(x => x.Entity.Name == comboBoxWrapper.EntityName).Entity
+                .Properties.Where(x => x.DisplayOnList);
+            foreach (var property in propertyToDisplay)
             {
+                var dataField = comboBoxWrapper.AccessString.ToCamelCase() + '.' + property.Name.ToCamelCase();
+                if (dataField.Contains("createInput."))
+                {
+                    dataField = dataField.Replace("createInput.", "");
+                }
+
+                var fieldName = (comboBoxWrapper.PropertyName + property.Name).ToTitle();
+
                 stringBuilder.Append($@"            new GridColumn(
-                '{string.Join(".", relatedEntity.Childs.Select(x => x.ToCamelCase())) + (relatedEntity.Childs.Count > 0 ? "." : "") + relatedEntity.Entity.Name.ToCamelCase() + "." + property.Name.ToCamelCase()}',
-                '{(relatedEntity.Entity.Name + " " + property.Name).ToTitle()}',
+                '{dataField}',
+                '{fieldName}',
                 '{property.Type.ToTypeScriptDataGridColumnType()}',
                 '',
                 'right',
@@ -221,6 +232,41 @@ public static class ComponentHelper
 ");
             }
         }
+
+
+//         foreach (var relatedEntity in relatedEntities)
+//         {
+//             var mainEntityProperty =
+//                 EntityHelper.GetProperty(ref properties, relatedEntity.Entity.Name);
+//             foreach (var property in relatedEntity.Entity.Properties.Where(x => x.DisplayOnList))
+//             {
+//                 var dataField = relatedEntity.MainEntity
+//                     ? mainEntityProperty.Name.ToCamelCase() + '.' + property.Name.ToCamelCase()
+//                     : string.Join(".", relatedEntity.Childs.Select(x => x.ToCamelCase())) +
+//                       (relatedEntity.Childs.Count > 0 ? "." : "") + relatedEntity.Entity.Name.ToCamelCase() + "." +
+//                       property.Name.ToCamelCase();
+//
+//                 var fieldName = relatedEntity.MainEntity
+//                     ? (mainEntityProperty.Name + " " + property.Name)
+//                     : (relatedEntity.Entity.Name + " " + property.Name);
+//
+//                 stringBuilder.Append($@"            new GridColumn(
+//                 '{dataField}',
+//                 '{fieldName}',
+//                 '{property.Type.ToTypeScriptDataGridColumnType()}',
+//                 '',
+//                 'right',
+//                 false,
+//                 '',
+//                 '',
+//                 false,
+//                 true,
+//                 true,
+//                 []
+//             ),
+// ");
+//             }
+//         }
 
         foreach (var property in entity.Properties.Where(x => !x.IsRelationalProperty))
         {

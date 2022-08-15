@@ -23,6 +23,7 @@ message Entity {
   TenantType tenantType = 6;
   repeated Property properties = 7;
   string projectName = 8;
+  bool isDefaultAbpEntity = 9;
 }
 
 message EntityForRepository {
@@ -46,7 +47,7 @@ message Property {
   optional PrimaryKeyType relationalEntityPrimaryKeyType = 5;
   optional string relationalEntityName = 6;
   optional RelationType relationType = 7;
-  int32 maxLength = 8;
+  optional int32 maxLength = 8;
   optional bool manyToMany = 9;
   optional bool oneToOne = 10;
   string relationalPropertyName = 11;
@@ -79,6 +80,7 @@ enum RelationType{
   OneToOne = 0;
   OneToMany = 1;
   ManyToMany = 2;
+  OneToZero = 3;
 };
 
 message DtoResult{
