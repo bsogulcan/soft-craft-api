@@ -16,7 +16,7 @@ public class UpdatePropertyInput : EntityDto<long>
     public string ToolTip { get; set; }
     public bool Required { get; set; }
     public bool Indexed { get; set; }
-    public int MaxLength { get; set; }
+    public int? MaxLength { get; set; }
     public bool Unique { get; set; }
     public bool IsEnumProperty { get; set; }
     public long? EnumerateId { get; set; }

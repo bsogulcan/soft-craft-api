@@ -47,7 +47,7 @@ message Property {
   optional PrimaryKeyType relationalEntityPrimaryKeyType = 5;
   optional string relationalEntityName = 6;
   optional RelationType relationType = 7;
-  int32 maxLength = 8;
+  optional int32 maxLength = 8;
   optional bool manyToMany = 9;
   optional bool oneToOne = 10;
   string relationalPropertyName = 11;
