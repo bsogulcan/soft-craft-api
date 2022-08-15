@@ -185,7 +185,7 @@ public static class EditComponentHelper
                 "<button pButton pRipple label=\"{{ 'Cancel' | localize }}\" icon=\"pi pi-times\" class=\"p-button-text\" (click)=\"close(false)\" [disabled]=\"isSaving\"></button>")
             .NewLine().InsertTab(2)
             .Append(
-                "<button pButton pRipple label=\"{{ 'Save' | localize }}\" icon=\"pi pi-check\" class=\"p-button-text\" (click)=\"save()\" [disabled]=\"isSaving || this.formGroup.invalid || this.formGroup.pristine || this.formGroup.untouched\"></button>")
+                "<button pButton pRipple label=\"{{ 'Save' | localize }}\" icon=\"pi pi-check\" class=\"p-button-text\" (click)=\"save()\" [disabled]=\"isSaving || this.formGroup.invalid\"></button>")
             .NewLine().InsertTab().Append("</div>")
             .NewLine().Append("</div>");
 
