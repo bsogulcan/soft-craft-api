@@ -408,7 +408,10 @@ namespace SoftCraft.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("LastModifierId");
 
-                    b.Property<int>("MaxLength")
+                    b.Property<long?>("LinkedPropertyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("MaxLength")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")

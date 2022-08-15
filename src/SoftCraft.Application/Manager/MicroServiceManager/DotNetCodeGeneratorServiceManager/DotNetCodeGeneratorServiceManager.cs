@@ -109,8 +109,12 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
             input.Usings.Add("System.Collections.Generic;");
             foreach (var property in entity.Properties.Where(x => x.IsRelationalProperty))
             {
-                input.Usings.Add(
-                    $"{entity.Project.UniqueName}.Domain.{property.RelationalEntity.Name}.Dtos;");
+                if (property.RelationalEntity.IsDefaultAbpEntity && property.RelationalEntity.Name == "User")
+                    input.Usings.Add($"{entity.Project.UniqueName}.Users.Dto;");
+                else if (property.RelationalEntity.IsDefaultAbpEntity && property.RelationalEntity.Name == "Role")
+                    input.Usings.Add($"{entity.Project.UniqueName}.Roles.Dto;");
+                else
+                    input.Usings.Add($"{entity.Project.UniqueName}.Domain.{property.RelationalEntity.Name}.Dtos;");
             }
         }
 
@@ -187,7 +191,6 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
                 //Type = GetNormalizedPropertyType(entityProperty.Type.Value),
                 Nullable = entityProperty.IsNullable,
                 IsRelationalProperty = entityProperty.IsRelationalProperty,
-                MaxLength = entityProperty.MaxLength,
                 ManyToMany = entityProperty.RelationalEntity != null &&
                              entityProperty.RelationalEntity.Properties.Any(x =>
                                  x.IsRelationalProperty && x.RelationalEntityId == entity.Id
@@ -197,6 +200,31 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
                                x.IsRelationalProperty && x.RelationalEntityId == entity.Id
                                                       && x.RelationType == Enums.RelationType.OneToOne),
             };
+
+            if (entityProperty.MaxLength != null)
+            {
+                property.MaxLength = entityProperty.MaxLength.Value;
+            }
+
+            if (entityProperty.IsRelationalProperty && entityProperty.RelationalEntity.IsDefaultAbpEntity)
+            {
+                if (entityProperty.RelationalEntity.Name == "User")
+                {
+                    if (dotNetCodeGeneratorEntity.Usings.FindIndex(x =>
+                            x.Contains($"{entity.Project.UniqueName}.Authorization.Users;")) == -1)
+                    {
+                        dotNetCodeGeneratorEntity.Usings.Add($"{entity.Project.UniqueName}.Authorization.Users;");
+                    }
+                }
+                else if (entityProperty.RelationalEntity.Name == "Role")
+                {
+                    if (dotNetCodeGeneratorEntity.Usings.FindIndex(x =>
+                            x.Contains($"{entity.Project.UniqueName}.Authorization.Roles;")) == -1)
+                    {
+                        dotNetCodeGeneratorEntity.Usings.Add($"{entity.Project.UniqueName}.Authorization.Roles;");
+                    }
+                }
+            }
 
             if (entityProperty.IsRelationalProperty && entityProperty.RelationalEntityId.HasValue)
             {
