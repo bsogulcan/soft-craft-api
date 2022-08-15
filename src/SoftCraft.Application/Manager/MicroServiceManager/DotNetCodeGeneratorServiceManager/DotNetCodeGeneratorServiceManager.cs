@@ -232,20 +232,12 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
                     (PrimaryKeyType) entityProperty.RelationalEntity.PrimaryKeyType;
                 property.RelationalEntityName = entityProperty.RelationalEntity.Name;
 
-                var relationalEntityForeignProperty = entityProperty.RelationalEntity.Properties.FirstOrDefault(x =>
-                    x.RelationalEntityId == entity.Id);
+                var relationalEntityForeignProperty = entityProperty.LinkedProperty;
 
                 if (relationalEntityForeignProperty != null)
                 {
-                    property.RelationalPropertyName =
-                        entityProperty.RelationalEntity.Properties.FirstOrDefault(x =>
-                            x.RelationalEntityId == entity.Id).Name;
+                    property.RelationalPropertyName = relationalEntityForeignProperty.Name;
                 }
-                else
-                {
-                    property.RelationalPropertyName = property.RelationalEntityName;
-                }
-
 
                 if (entityProperty.RelationType != null)
                 {

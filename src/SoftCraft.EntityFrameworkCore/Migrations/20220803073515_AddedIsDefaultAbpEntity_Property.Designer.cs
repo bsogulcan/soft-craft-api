@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SoftCraft.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
@@ -12,9 +13,10 @@ using Volo.Abp.EntityFrameworkCore;
 namespace SoftCraft.Migrations
 {
     [DbContext(typeof(SoftCraftDbContext))]
-    partial class SoftCraftDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220803073515_AddedIsDefaultAbpEntity_Property")]
+    partial class AddedIsDefaultAbpEntity_Property
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -411,10 +413,7 @@ namespace SoftCraft.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("LastModifierId");
 
-                    b.Property<long?>("LinkedPropertyId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int?>("MaxLength")
+                    b.Property<int>("MaxLength")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -445,8 +444,6 @@ namespace SoftCraft.Migrations
                     b.HasIndex("EntityId");
 
                     b.HasIndex("EnumerateId");
-
-                    b.HasIndex("LinkedPropertyId");
 
                     b.HasIndex("RelationalEntityId");
 
@@ -2446,10 +2443,6 @@ namespace SoftCraft.Migrations
                         .WithMany()
                         .HasForeignKey("EnumerateId");
 
-                    b.HasOne("SoftCraft.Entities.Property", "LinkedProperty")
-                        .WithMany()
-                        .HasForeignKey("LinkedPropertyId");
-
                     b.HasOne("SoftCraft.Entities.Entity", "RelationalEntity")
                         .WithMany()
                         .HasForeignKey("RelationalEntityId");
@@ -2457,8 +2450,6 @@ namespace SoftCraft.Migrations
                     b.Navigation("Entity");
 
                     b.Navigation("Enumerate");
-
-                    b.Navigation("LinkedProperty");
 
                     b.Navigation("RelationalEntity");
                 });

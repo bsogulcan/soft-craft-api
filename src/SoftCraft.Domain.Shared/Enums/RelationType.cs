@@ -4,5 +4,6 @@ public enum RelationType
 {
     OneToOne = 0,
     OneToMany = 1,
-    ManyToMany = 2
+    ManyToMany = 2,
+    OneToZero = 3
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -14,12 +15,16 @@ using ProjectManager;
 using SoftCraft.AppServices.Project.Dtos;
 using SoftCraft.Enums;
 using SoftCraft.Manager.MicroServiceManager.DotNetCodeGeneratorServiceManager;
+using SoftCraft.Manager.MicroServiceManager.Helpers;
+using SoftCraft.Manager.MicroServiceManager.Helpers.Modals;
 using SoftCraft.Manager.MicroServiceManager.ProjectManagerServiceManager;
 using SoftCraft.Manager.MicroServiceManager.TypeScriptCodeGeneratorServiceManager;
 using SoftCraft.Repositories;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
+using Volo.Abp.Identity.Settings;
 using Volo.Abp.Users;
+using PrimaryKeyType = SoftCraft.Enums.PrimaryKeyType;
 using RelationType = TypeScriptCodeGenerator.RelationType;
 
 namespace SoftCraft.AppServices;
@@ -33,6 +38,7 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
     private readonly IDotNetCodeGeneratorServiceManager _dotNetCodeGeneratorServiceManager;
     private readonly ITypeScriptCodeGeneratorServiceManager _typeScriptCodeGeneratorServiceManager;
     private readonly INavigationRepository _navigationRepository;
+    private readonly IEntityRepository _entityRepository;
 
     public ProjectAppService(IProjectRepository projectRepository,
         ICurrentUser currentUser,
@@ -40,7 +46,8 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
         IProjectManagerServiceManager projectManagerServiceManager,
         IDotNetCodeGeneratorServiceManager dotNetCodeGeneratorServiceManager,
         ITypeScriptCodeGeneratorServiceManager typeScriptCodeGeneratorServiceManager,
-        INavigationRepository navigationRepository
+        INavigationRepository navigationRepository,
+        IEntityRepository entityRepository
     ) : base(projectRepository)
     {
         _currentUser = currentUser;
@@ -49,6 +56,7 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
         _dotNetCodeGeneratorServiceManager = dotNetCodeGeneratorServiceManager;
         _typeScriptCodeGeneratorServiceManager = typeScriptCodeGeneratorServiceManager;
         _navigationRepository = navigationRepository;
+        _entityRepository = entityRepository;
     }
 
     public override Task<ProjectPartOutput> UpdateAsync(long id, UpdateProjectDto input)
@@ -65,7 +73,7 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
             var result = await _projectManagerServiceManager.CreateAbpBoilerplateProjectAsync(project.Id,
                 project.UniqueName, project.LogType, project.MultiTenant, project.Name);
 
-            foreach (var entity in project.Entities)
+            foreach (var entity in project.Entities.Where(x => x.IsDefaultAbpEntity == false))
             {
                 var entityResult =
                     await _dotNetCodeGeneratorServiceManager.CreateEntityAsync(entity);
@@ -132,7 +140,8 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                 };
 
                 foreach (var relationalProperty in entity.Properties.Where(x =>
-                             x.IsRelationalProperty && x.RelationType == Enums.RelationType.OneToOne))
+                             x.IsRelationalProperty && (x.RelationType == Enums.RelationType.OneToOne ||
+                                                        x.RelationType == Enums.RelationType.OneToZero)))
                 {
                     createAppServiceInput.Properties.Add(new DotNetCodeGenerator.Property()
                     {
@@ -188,7 +197,10 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                     await _projectManagerServiceManager.AddTypeScriptServiceToExistingProjectAsync(
                         addTypeScrtipServiceInput);
 
-                var createComponentResult = await _typeScriptCodeGeneratorServiceManager.CreateComponentsAsync(entity);
+                var comboBoxes = EntityHelper.GenerateComboBoxes(entity);
+                var createComponentResult =
+                    await _typeScriptCodeGeneratorServiceManager.CreateComponentsAsync(entity,
+                        comboBoxes);
                 var componentResult = new ProjectManager.ComponentResult()
                 {
                     ProjectId = project.Id,
@@ -272,7 +284,76 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
 
     public override async Task<ProjectPartOutput> CreateAsync(CreateProjectDto input)
     {
-        return await base.CreateAsync(input);
+        var projectDto = await base.CreateAsync(input);
+
+        List<Entities.Property> properties = new List<Entities.Property>();
+
+        properties.Add(new Entities.Property
+        {
+            Name = "UserName",
+            DisplayName = "UserName",
+            DisplayOnList = true,
+            FilterOnList = true,
+            Type = PropertyType.String,
+            MaxLength = 256
+        });
+        properties.Add(new Entities.Property
+        {
+            Name = "Name",
+            DisplayName = "Name",
+            DisplayOnList = true,
+            FilterOnList = true,
+            Type = PropertyType.String,
+            MaxLength = 64
+        });
+        properties.Add(new Entities.Property
+        {
+            Name = "Surname",
+            DisplayName = "Surname",
+            DisplayOnList = true,
+            FilterOnList = true,
+            Type = PropertyType.String,
+            MaxLength = 64
+        });
+
+        var defaultUserEntity = new Entities.Entity()
+        {
+            IsDefaultAbpEntity = true,
+            Name = "User",
+            DisplayName = "User",
+            ProjectId = projectDto.Id,
+            PrimaryKeyType = PrimaryKeyType.Long,
+            Properties = properties
+        };
+
+        await _entityRepository.InsertAsync(defaultUserEntity);
+
+        properties = new List<Entities.Property>();
+
+        properties.Add(new Entities.Property
+        {
+            Name = "Name",
+            DisplayName = "Name",
+            DisplayOnList = true,
+            FilterOnList = true,
+            Type = PropertyType.String,
+            MaxLength = 64
+        });
+
+        var defaultRoleEntity = new Entities.Entity()
+        {
+            IsDefaultAbpEntity = true,
+            Name = "Role",
+            DisplayName = "Role",
+            ProjectId = projectDto.Id,
+            PrimaryKeyType = PrimaryKeyType.Int,
+            Properties = properties
+        };
+
+        await _entityRepository.InsertAsync(defaultRoleEntity);
+
+        return projectDto;
+
         // using var dotNetCodeGeneratorChannel =
         //     GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
         // var client =

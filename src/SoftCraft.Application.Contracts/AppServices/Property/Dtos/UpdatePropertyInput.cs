@@ -22,4 +22,5 @@ public class UpdatePropertyInput : EntityDto<long>
     public long? EnumerateId { get; set; }
     public bool DisplayOnList { get; set; }
     public bool FilterOnList { get; set; }
+    public long? LinkedPropertyId { get; set; }
 }
