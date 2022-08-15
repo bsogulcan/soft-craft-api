@@ -87,9 +87,9 @@ public static class EditComponentHelper
         //Ozan
         GetRecursiveRelationalGetAllCalls(stringBuilder, relatedEntities);
         stringBuilder.InsertTab(2).Append("this.currentData = config.data?.item?.result;").NewLine();
-        stringBuilder.InsertTab(2).Append("this.updateInput = JSON.parse(JSON.stringify(this.currentData));").NewLine();
 
-        GetRecursiveRelationalInitialValues(stringBuilder, relatedEntities, entity.Properties.ToList());
+        GetRecursiveRelationalInitialValues(stringBuilder, relatedEntities, entity.Properties.ToList(), entity);
+        stringBuilder.InsertTab(2).Append("this.updateInput = JSON.parse(JSON.stringify(this.currentData));").NewLine();
 
         stringBuilder.InsertTab().Append("}")
             .NewLine();
@@ -723,50 +723,61 @@ public static class EditComponentHelper
     }
 
     public static void GetRecursiveRelationalInitialValues(StringBuilder stringBuilder,
-        List<EntityWrapper> relatedEntities, List<Property> properties)
+        List<EntityWrapper> relatedEntities, List<Property> properties, Entity entity)
     {
         foreach (var property in properties)
         {
             property.Used = false;
         }
 
-        foreach (var relatedEntity in relatedEntities)
+        foreach (var comboBoxWrapper in entity.ComboBoxWrapper.Where(x => !x.IsInputProperty))
         {
-            var mainEntityProperty = EntityHelper.GetProperty(ref properties, relatedEntity.Entity.Name);
-
-            if (relatedEntity.MainEntity)
-            {
-                stringBuilder.InsertTab(2)
-                    .Append(
-                        $"this.updateInput.{mainEntityProperty.Name.ToCamelCase()}Id = this.currentData.{mainEntityProperty.Name.ToCamelCase()}Id;")
-                    .NewLine();
-            }
-            else
-            {
-                var dataField = string.Empty;
-                //TODO: needs to be refactoring
-                foreach (var relatedEntityChild in relatedEntity.Childs)
-                {
-                    var relatedEntityInfo = relatedEntities.First(x => x.Entity.Name == relatedEntityChild).Entity;
-                    mainEntityProperty = EntityHelper.GetProperty(ref properties, relatedEntityInfo.Name, false);
-                    dataField += mainEntityProperty.Name.ToCamelCase() + '.';
-
-
-                    var list = relatedEntityInfo.Properties.ToList();
-                    mainEntityProperty =
-                        EntityHelper.GetProperty(ref list, relatedEntity.Entity.Name, false);
-                    dataField += mainEntityProperty.Name.ToCamelCase();
-                }
-
-                stringBuilder.InsertTab(2)
-                    .Append(
-                        $"this.selected{relatedEntity.Entity.Name}Id = this.currentData.{dataField + ".id;"}")
-                    .NewLine();
-                stringBuilder.InsertTab(2)
-                    .Append($"this.on{relatedEntity.Entity.Name}Changed(this.selected{relatedEntity.Entity.Name}Id);")
-                    .NewLine();
-            }
+            stringBuilder.InsertTab(2)
+                .Append(
+                    $"this.selected{comboBoxWrapper.EntityName}Id = this.currentData.{comboBoxWrapper.AccessString.Replace("createInput.", "") + ".id;"}")
+                .NewLine();
+            stringBuilder.InsertTab(2)
+                .Append($"this.on{comboBoxWrapper.EntityName}Changed(this.selected{comboBoxWrapper.EntityName}Id);")
+                .NewLine();
         }
+
+        // foreach (var relatedEntity in relatedEntities)
+        // {
+        //     var mainEntityProperty = EntityHelper.GetProperty(ref properties, relatedEntity.Entity.Name);
+        //
+        //     // if (relatedEntity.MainEntity)
+        //     // {
+        //     //     stringBuilder.InsertTab(2)
+        //     //         .Append(
+        //     //             $"this.updateInput.{mainEntityProperty.Name.ToCamelCase()}Id = this.currentData.{mainEntityProperty.Name.ToCamelCase()}Id;")
+        //     //         .NewLine();
+        //     // }
+        //     // else
+        //     // {
+        //     var dataField = string.Empty;
+        //     //TODO: needs to be refactoring
+        //     foreach (var relatedEntityChild in relatedEntity.Childs)
+        //     {
+        //         var relatedEntityInfo = relatedEntities.First(x => x.Entity.Name == relatedEntityChild).Entity;
+        //         mainEntityProperty = EntityHelper.GetProperty(ref properties, relatedEntityInfo.Name, false);
+        //         dataField += mainEntityProperty.Name.ToCamelCase() + '.';
+        //
+        //
+        //         var list = relatedEntityInfo.Properties.ToList();
+        //         mainEntityProperty =
+        //             EntityHelper.GetProperty(ref list, relatedEntity.Entity.Name, false);
+        //         dataField += mainEntityProperty.Name.ToCamelCase();
+        //     }
+        //
+        //     stringBuilder.InsertTab(2)
+        //         .Append(
+        //             $"this.selected{relatedEntity.Entity.Name}Id = this.currentData.{dataField + ".id;"}")
+        //         .NewLine();
+        //     stringBuilder.InsertTab(2)
+        //         .Append($"this.on{relatedEntity.Entity.Name}Changed(this.selected{relatedEntity.Entity.Name}Id);")
+        //         .NewLine();
+        //     // }
+        // }
     }
 
     #endregion

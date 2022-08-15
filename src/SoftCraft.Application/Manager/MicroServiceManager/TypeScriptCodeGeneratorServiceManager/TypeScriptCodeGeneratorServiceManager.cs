@@ -9,6 +9,8 @@ using ProjectManager;
 using SoftCraft.AppServices.Navigations.Dtos;
 using SoftCraft.Entities;
 using TypeScriptCodeGenerator;
+using ComboBoxWrapper = SoftCraft.Manager.MicroServiceManager.Helpers.Modals.ComboBoxWrapper;
+using ComponentResult = TypeScriptCodeGenerator.ComponentResult;
 using Entity = Volo.Abp.Domain.Entities.Entity;
 using Property = TypeScriptCodeGenerator.Property;
 
@@ -53,7 +55,8 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
         };
 
         foreach (var property in entity.Properties.Where(x =>
-                     x.IsRelationalProperty && (x.RelationType == Enums.RelationType.OneToOne || x.RelationType == Enums.RelationType.OneToZero)))
+                     x.IsRelationalProperty && (x.RelationType == Enums.RelationType.OneToOne ||
+                                                x.RelationType == Enums.RelationType.OneToZero)))
         {
             input.Properties.Add(new Property()
             {
@@ -95,7 +98,8 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
         return enumResult;
     }
 
-    public async Task<TypeScriptCodeGenerator.ComponentResult> CreateComponentsAsync(Entities.Entity entity)
+    public async Task<ComponentResult> CreateComponentsAsync(Entities.Entity entity,
+        List<ComboBoxWrapper> comboBoxWrappers)
     {
         using var typeScriptCodeGeneratorChannel =
             GrpcChannel.ForAddress(_configuration["MicroServices:TypeScriptCodeGeneratorUrl"]);
@@ -103,6 +107,24 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
             typeScriptCodeGeneratorChannel);
 
         var input = EntityToGeneratorEntity(entity);
+        foreach (var comboBoxWrapper in comboBoxWrappers)
+        {
+            var comboBox = new TypeScriptCodeGenerator.ComboBoxWrapper()
+            {
+                AccessString = comboBoxWrapper.AccessString,
+                DataSource = comboBoxWrapper.DataSource,
+                EntityName = comboBoxWrapper.EntityName,
+                PropertyName = comboBoxWrapper.PropertyName,
+                ComboBoxName = comboBoxWrapper.ComboBoxName,
+                IsInputProperty = comboBoxWrapper.IsInputProperty,
+                NGModel = comboBoxWrapper.NGModel,
+                OnChangeEvent = comboBoxWrapper.OnChangeEvent,
+                DataSourceGetFunction = comboBoxWrapper.DataSourceGetFunction,
+            };
+            comboBox.OnChangeEventTasks.AddRange(comboBoxWrapper.OnChangeEventTasks);
+
+            input.ComboBoxWrapper.Add(comboBox);
+        }
 
         var entityResult = await client.CreateComponentsAsync(input);
         return entityResult;
@@ -167,7 +189,8 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
         return input;
     }
 
-    private TypeScriptCodeGenerator.Entity EntityToGeneratorEntity(Entities.Entity entity, Entities.Entity CurrentChild = null)
+    private TypeScriptCodeGenerator.Entity EntityToGeneratorEntity(Entities.Entity entity,
+        Entities.Entity CurrentChild = null)
     {
         var dotNetCodeGeneratorEntity = new TypeScriptCodeGenerator.Entity()
         {
@@ -178,10 +201,12 @@ public class TypeScriptCodeGeneratorServiceManager : ITypeScriptCodeGeneratorSer
         };
 
         foreach (var relationalEntity in entity.Properties.Where(x =>
-                     x.IsRelationalProperty && (x.RelationType == Enums.RelationType.OneToOne || x.RelationType == Enums.RelationType.OneToZero)))
+                     x.IsRelationalProperty && (x.RelationType == Enums.RelationType.OneToOne ||
+                                                x.RelationType == Enums.RelationType.OneToZero)))
         {
             if (relationalEntity.RelationalEntity != CurrentChild)
-                dotNetCodeGeneratorEntity.ParentEntities.Add(EntityToGeneratorEntity(relationalEntity.RelationalEntity, entity));
+                dotNetCodeGeneratorEntity.ParentEntities.Add(EntityToGeneratorEntity(relationalEntity.RelationalEntity,
+                    entity));
         }
 
         foreach (var entityProperty in entity.Properties.OrderBy(x => x.IsRelationalProperty).ThenBy(x => x.Name))

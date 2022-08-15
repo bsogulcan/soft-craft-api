@@ -19,6 +19,7 @@ message Entity {
   repeated Property properties = 4;
   repeated Entity ParentEntities = 5;
   string projectDisplayName = 6;
+  repeated ComboBoxWrapper comboBoxWrapper = 7;
 }
 
 message Property {
@@ -104,4 +105,18 @@ message NavigationItemRequest{
   string icon = 3;
   optional string entityName = 4;
   repeated NavigationItemRequest navigations = 5;
+}
+
+message ComboBoxWrapper{
+  string entityName = 1;
+  string propertyName = 2;
+  bool isInputProperty = 3;
+  string accessString = 4;
+  string comboBoxName = 5;
+  string nGModel = 6;
+  string dataSource = 7;
+  string dataSourceGetFunction = 8;
+  string onChangeEvent = 9;
+  repeated string onChangeEventTasks = 10;
+
 }

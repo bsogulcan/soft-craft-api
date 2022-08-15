@@ -15,6 +15,8 @@ using ProjectManager;
 using SoftCraft.AppServices.Project.Dtos;
 using SoftCraft.Enums;
 using SoftCraft.Manager.MicroServiceManager.DotNetCodeGeneratorServiceManager;
+using SoftCraft.Manager.MicroServiceManager.Helpers;
+using SoftCraft.Manager.MicroServiceManager.Helpers.Modals;
 using SoftCraft.Manager.MicroServiceManager.ProjectManagerServiceManager;
 using SoftCraft.Manager.MicroServiceManager.TypeScriptCodeGeneratorServiceManager;
 using SoftCraft.Repositories;
@@ -138,7 +140,8 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                 };
 
                 foreach (var relationalProperty in entity.Properties.Where(x =>
-                             x.IsRelationalProperty && (x.RelationType == Enums.RelationType.OneToOne || x.RelationType == Enums.RelationType.OneToZero)))
+                             x.IsRelationalProperty && (x.RelationType == Enums.RelationType.OneToOne ||
+                                                        x.RelationType == Enums.RelationType.OneToZero)))
                 {
                     createAppServiceInput.Properties.Add(new DotNetCodeGenerator.Property()
                     {
@@ -194,7 +197,10 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
                     await _projectManagerServiceManager.AddTypeScriptServiceToExistingProjectAsync(
                         addTypeScrtipServiceInput);
 
-                var createComponentResult = await _typeScriptCodeGeneratorServiceManager.CreateComponentsAsync(entity);
+                var comboBoxes = EntityHelper.GenerateComboBoxes(entity);
+                var createComponentResult =
+                    await _typeScriptCodeGeneratorServiceManager.CreateComponentsAsync(entity,
+                        comboBoxes);
                 var componentResult = new ProjectManager.ComponentResult()
                 {
                     ProjectId = project.Id,

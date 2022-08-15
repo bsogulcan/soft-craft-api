@@ -200,7 +200,8 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
         };
 
         foreach (var relationalProperty in entity.Properties.Where(x =>
-                     x.IsRelationalProperty && (x.RelationType == Enums.RelationType.OneToOne || x.RelationType == Enums.RelationType.OneToZero)))
+                     x.IsRelationalProperty && (x.RelationType == Enums.RelationType.OneToOne ||
+                                                x.RelationType == Enums.RelationType.OneToZero)))
         {
             createAppServiceInput.Properties.Add(new DotNetCodeGenerator.Property()
             {
@@ -222,7 +223,8 @@ public class EntityAppService : CrudAppService<Entities.Entity, EntityPartOutput
 
         //TODO: Get TS Enums
 
-        var createComponentResult = await _typeScriptCodeGeneratorServiceManager.CreateComponentsAsync(entity);
+        var createComponentResult =
+            await _typeScriptCodeGeneratorServiceManager.CreateComponentsAsync(entity, comboBoxes);
         entityCodeResultDto.TypeScriptComponentResult.ComponentTsStringify =
             createComponentResult.ListComponent.ComponentTsStringify;
         entityCodeResultDto.TypeScriptComponentResult.ComponentHtmlStringify =
