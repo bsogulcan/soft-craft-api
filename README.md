@@ -10,6 +10,9 @@ SoftCraft creates a backend using (.Net Core 6) and frontend (Angular) applicati
  TypeScriptCodeGenerator creates Dtos, Services, Routes, Enums, List-Create-Edit Components and Navigation Items.
  ProjectManager creates AbpBoilerplate application according to the generated codes.
 
+# Dependent Projects
+Client project of SoftCraft: [soft-craft-client](https://github.com/bsogulcan/soft-craft-client) <br />
+Base project to generate projects: [soft-craft-base-apb-boilerplate-project](https://github.com/bsogulcan/soft-craft-base-apb-boilerplate-project) 
 # Architecture
 ![Architecture](https://imgkub.com/images/2022/07/28/soft-craft-api.png)
 
