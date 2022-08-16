@@ -18,8 +18,10 @@ service ProjectManager{
   rpc AddTypeScriptComponentsToExistingProject(ComponentResult) returns (ProjectReply);
   rpc AddNavigationToExistingProject(AddStringToExistingProject) returns (ProjectReply);
   rpc FileDownLoad (FileInfo) returns (stream BytesContent);
-}
+  rpc AddDefaultAbpConfigurationToExistingProject(AddEntityRequest) returns (ProjectReply);
+  rpc AddEntityPropertiesToExistingProject(AddEntityRequest) returns (ProjectReply);
 
+}
 // The request message containing the user's name.
 message ProjectRequest{
   string id = 1;

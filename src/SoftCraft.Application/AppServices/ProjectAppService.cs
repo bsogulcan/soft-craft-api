@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DotNetCodeGenerator;
 using Extensions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using ProjectManager;
@@ -72,6 +73,26 @@ public class ProjectAppService : CrudAppService<Entities.Project, ProjectPartOut
 
             var result = await _projectManagerServiceManager.CreateAbpBoilerplateProjectAsync(project.Id,
                 project.UniqueName, project.LogType, project.MultiTenant, project.Name);
+
+            foreach (var entity in project.Entities.Where(x => x.IsDefaultAbpEntity == true))
+            {
+                var createEntityConfigurationResult = await _dotNetCodeGeneratorServiceManager.CreateDefaultAbpConfiguration(entity);
+                var createPropertiesResult = await _dotNetCodeGeneratorServiceManager.CreateProperties(entity);
+                await _projectManagerServiceManager.AddDefaultAbpConfigurationToExistingProject(new AddEntityRequest()
+                {
+                    Id = project.Id.ToString(),
+                    EntityName = entity.Name,
+                    ProjectName = project.UniqueName,
+                    Stringified = createEntityConfigurationResult.Stringified
+                });
+                await _projectManagerServiceManager.AddEntityPropertiesToExistingProject(new AddEntityRequest()
+                {
+                    Id = project.Id.ToString(),
+                    EntityName = entity.Name,
+                    ProjectName = project.UniqueName,
+                    Stringified = createPropertiesResult.Stringified
+                });
+            }
 
             foreach (var entity in project.Entities.Where(x => x.IsDefaultAbpEntity == false))
             {

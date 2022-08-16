@@ -645,6 +645,120 @@ public class DotNetCodeGeneratorService : DotNetCodeGenerator.DotNetCodeGenerato
         return entityResult;
     }
 
+    #region Default Entity Generators
+    public override async Task<EntityResult> CreateDefaultAbpConfiguration(Entity request, ServerCallContext context)
+    {
+        var entityResult = new EntityResult
+        {
+            Entity = request
+        };
+
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append($"using {request.ProjectName}.Authorization.Users;").NewLine();
+        stringBuilder.Append($"using {request.ProjectName}.Authorization.Roles;").NewLine();
+        stringBuilder.Append($"using {request.ProjectName}.Domain.Entities;").NewLine();
+        stringBuilder.Append($"using Microsoft.EntityFrameworkCore;").NewLine();
+        stringBuilder.Append($"using Microsoft.EntityFrameworkCore.Metadata.Builders;").NewLine();
+
+        stringBuilder.NewLine()
+            .Append($"namespace {request.ProjectName}.Domain.Configurations")
+            .NewLine()
+            .Append("{");
+
+        stringBuilder.NewLine()
+            .InsertTab()
+            .Append($"public class {request.Name}Configuration : IEntityTypeConfiguration<{request.Name}>");
+
+        stringBuilder.NewLine()
+            .InsertTab()
+            .Append("{");
+
+        stringBuilder.NewLine()
+            .InsertTab(2)
+            .Append($"public void Configure(EntityTypeBuilder<{request.Name}> builder)");
+
+        stringBuilder.NewLine()
+            .InsertTab(2)
+            .Append("{");
+
+        foreach (var property in request.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType != RelationType.OneToOne && x.RelationType != RelationType.OneToZero && !x.ManyToMany))
+        {
+            stringBuilder.NewLine(2)
+                .InsertTab(3)
+                .Append($"builder.HasMany(x => x.{property.Name.Pluralize()})")
+                .NewLine().InsertTab(4)
+                .Append($".WithOne(y => y.{property.RelationalPropertyName})")
+                .NewLine().InsertTab(4)
+                .Append($".HasForeignKey(y => y.{property.RelationalPropertyName}Id)")
+                .NewLine().InsertTab(4)
+                .Append($".OnDelete(DeleteBehavior.ClientSetNull);");
+        }
+
+        foreach (var property in request.Properties.Where(x =>
+                     x.IsRelationalProperty && x.RelationType == RelationType.OneToOne && x.OneToOne))
+        {
+            stringBuilder.NewLine(2)
+                .InsertTab(3)
+                .Append($"builder.HasOne(x => x.{property.Name})")
+                .NewLine().InsertTab(4)
+                .Append($".WithOne(y => y.{property.RelationalPropertyName})")
+                .NewLine().InsertTab(4)
+                .Append($".HasForeignKey<{property.RelationalEntityName}>(y => y.{property.Name}Id);")
+                .NewLine();
+        }
+
+
+        stringBuilder.NewLine()
+            .InsertTab(2)
+            .Append("}");
+
+        stringBuilder.NewLine()
+            .InsertTab()
+            .Append("}");
+
+        stringBuilder.NewLine()
+            .Append("}");
+
+        entityResult.Stringified = stringBuilder.ToString();
+        return entityResult;
+    }
+    public override async Task<EntityResult> CreateProperties(Entity request, ServerCallContext context)
+    {
+        var entityResult = new EntityResult
+        {
+            Entity = request
+        };
+        var stringBuilder = new StringBuilder();
+
+        foreach (var property in request.Properties.Where(x => x.IsRelationalProperty))
+        {
+            if ((property.RelationType == RelationType.OneToOne) || (property.RelationType == RelationType.OneToZero))
+            {
+                // public int LineId { get; set; }
+                // public virtual Line Line { get; set; }
+                stringBuilder.Append(
+                    $"public {GetPrimaryKey(property.RelationalEntityPrimaryKeyType) + (property.Nullable ? "? " : " ")}" +
+                    property.Name + "Id { get; set; }" + Environment.NewLine);
+
+                stringBuilder.InsertTab(2);
+
+                stringBuilder.Append(
+                    $"public virtual {property.RelationalEntityName + (property.Nullable ? "? " : " ")}" +
+                    property.Name + " { get; set; }" + Environment.NewLine);
+            }
+            else // OneToMany
+            {
+                stringBuilder.Append(
+                    $"public virtual ICollection<{property.RelationalEntityName}> " +
+                    property.Name.Pluralize() + $" {{ get; set; }} = new HashSet<{property.RelationalEntityName}>();" + Environment.NewLine);
+            }
+        }
+
+        entityResult.Stringified = stringBuilder.ToString();
+        return entityResult;
+    }
+    #endregion
     #region HelperMethods
 
     private string GenerateDtosToDomainStringify(Entity request)
