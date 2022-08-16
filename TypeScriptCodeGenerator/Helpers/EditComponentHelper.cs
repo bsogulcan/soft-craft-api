@@ -88,7 +88,6 @@ public static class EditComponentHelper
         stringBuilder.InsertTab(2).Append("this.currentData = config.data?.item?.result;").NewLine();
 
         GetRecursiveRelationalInitialValues(stringBuilder, relatedEntities, entity.Properties.ToList(), entity);
-        stringBuilder.InsertTab(2).Append("this.updateInput = JSON.parse(JSON.stringify(this.currentData));").NewLine();
 
         stringBuilder.InsertTab().Append("}")
             .NewLine();
@@ -757,6 +756,15 @@ public static class EditComponentHelper
                 .NewLine();
         }
 
+        stringBuilder.InsertTab(2).Append("this.updateInput = JSON.parse(JSON.stringify(this.currentData));").NewLine();
+
+        foreach (var dateProperty in properties.Where(x => x.Type == "DateTime"))
+        {
+            stringBuilder.InsertTab(2)
+                .Append(
+                    $"this.updateInput.{dateProperty.Name.ToCamelCase()} = new Date(this.updateInput.{dateProperty.Name.ToCamelCase()});")
+                .NewLine();
+        }
         // foreach (var relatedEntity in relatedEntities)
         // {
         //     var mainEntityProperty = EntityHelper.GetProperty(ref properties, relatedEntity.Entity.Name);
