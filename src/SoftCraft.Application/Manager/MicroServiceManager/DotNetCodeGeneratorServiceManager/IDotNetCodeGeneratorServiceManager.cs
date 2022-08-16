@@ -16,4 +16,6 @@ public interface IDotNetCodeGeneratorServiceManager : ITransientDependency
     Task<AppServiceResult> CreateAppServiceAsync(AppServiceRequest appServiceRequest);
     Task<EntityResult> CreateEnumAsync(Enumerate enumerate);
     DotNetCodeGenerator.Entity EntityToGeneratorEntity(Entity entity);
+    Task<EntityResult> CreateDefaultAbpConfiguration(Entity entity);
+    Task<EntityResult> CreateProperties(Entity entity);
 }

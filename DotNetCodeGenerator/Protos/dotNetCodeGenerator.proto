@@ -12,6 +12,8 @@ service DotNetCodeGenerator {
   rpc CreateDtos (Entity) returns (DtoResult);
   rpc CreateAppService (AppServiceRequest) returns (AppServiceResult);
   rpc CreateConfiguration (Entity) returns (EntityResult);
+  rpc CreateDefaultAbpConfiguration (Entity) returns (EntityResult);
+  rpc CreateProperties (Entity) returns (EntityResult);
 }
 
 message Entity {

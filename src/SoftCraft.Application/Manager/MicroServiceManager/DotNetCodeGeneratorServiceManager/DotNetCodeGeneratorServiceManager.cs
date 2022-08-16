@@ -264,4 +264,30 @@ public class DotNetCodeGeneratorServiceManager : IDotNetCodeGeneratorServiceMana
 
         return dotNetCodeGeneratorEntity;
     }
+
+    public async Task<EntityResult> CreateDefaultAbpConfiguration(Entity entity)
+    {
+        using var dotNetCodeGeneratorChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:DotNetCodeGeneratorUrl"]);
+        var client =
+            new DotNetCodeGenerator.DotNetCodeGenerator.DotNetCodeGeneratorClient(dotNetCodeGeneratorChannel);
+
+        var input = EntityToGeneratorEntity(entity);
+
+        var result = await client.CreateDefaultAbpConfigurationAsync(input);
+        return result;
+    }
+
+    public async Task<EntityResult> CreateProperties(Entity entity)
+    {
+        using var dotNetCodeGeneratorChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:DotNetCodeGeneratorUrl"]);
+        var client =
+            new DotNetCodeGenerator.DotNetCodeGenerator.DotNetCodeGeneratorClient(dotNetCodeGeneratorChannel);
+
+        var input = EntityToGeneratorEntity(entity);
+
+        var result = await client.CreatePropertiesAsync(input);
+        return result;
+    }
 }

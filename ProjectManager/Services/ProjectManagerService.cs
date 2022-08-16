@@ -1,3 +1,4 @@
+using System;
 using System.IO.Compression;
 using System.Management.Automation;
 using System.Text;
@@ -559,6 +560,72 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         };
     }
 
+    public override async Task<ProjectReply> AddDefaultAbpConfigurationToExistingProject(AddEntityRequest request, ServerCallContext context)
+    {
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.Id);
+        var configurationsFolderPath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.Core\\Domain\\Configurations");
+
+        if (!Directory.Exists(configurationsFolderPath))
+        {
+            Directory.CreateDirectory(configurationsFolderPath);
+        }
+
+        await File.WriteAllTextAsync(
+            Path.Combine(configurationsFolderPath, $"{request.EntityName}Configuration.cs"),
+            request.Stringified);
+
+        var dbContextFilePath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.EntityFrameworkCore\\EntityFrameworkCore\\{request.ProjectName}DbContext.cs");
+
+        var dbContext =
+            await HelperClass.HelperClass.AddConfigurationNamespaceToDbContext(dbContextFilePath, request.ProjectName);
+
+        dbContext = await HelperClass.HelperClass.AddConfigurationToDbContext(dbContext, request.ProjectName,
+            request.EntityName);
+        await File.WriteAllTextAsync(dbContextFilePath, dbContext.ToString());
+
+
+        return new ProjectReply()
+        {
+            Id = request.Id
+        };
+    }
+
+    public override async Task<ProjectReply> AddEntityPropertiesToExistingProject(AddEntityRequest request, ServerCallContext context)
+    {
+        var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.Id);
+        
+        var entityFolderPath = Path.Combine(projectFolderPath,
+            $"aspnet-core\\src\\{request.ProjectName}.Core\\Authorization\\{request.EntityName.Pluralize()}");
+
+        if (!Directory.Exists(entityFolderPath))
+        {
+            Directory.CreateDirectory(entityFolderPath);
+        }
+
+        var existedFile = File.ReadAllText(Path.Combine(entityFolderPath, request.EntityName + ".cs"));
+        var stringBulder = new StringBuilder(existedFile);
+
+        var index = existedFile.IndexOf("public Role()");
+        if (index == -1)
+            index = existedFile.IndexOf("public static string CreateRandomPassword()");
+        if (index > 0)
+        {
+            stringBulder.Insert(index - 1, request.Stringified);
+        }
+
+        var usingIndex = existedFile.IndexOf("namespace");
+        if (usingIndex > 0)
+            stringBulder.Insert(usingIndex, "using SonTest.Domain.Entities;").NewLine();
+
+        await File.WriteAllTextAsync(Path.Combine(entityFolderPath, request.EntityName + ".cs"), stringBulder.ToString());
+
+        return new ProjectReply()
+        {
+            Id = request.Id
+        };
+    }
     #region Helper Methods
 
     private async Task WritePermissionNames(string projectFolderPath, AddAppServiceRequest request)

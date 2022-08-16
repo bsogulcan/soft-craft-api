@@ -27,4 +27,8 @@ public interface IProjectManagerServiceManager : ITransientDependency
     Task<ProjectReply> AddTypeScriptEnumToExistingProjectAsync(AddEnumRequest addEnumRequest);
     Task<ProjectReply> AddTypeScriptComponentsToExistingProjectAsync(ComponentResult componentResult);
     Task<ProjectReply> AddNavigationToExistingProjectAsync(AddStringToExistingProject input);
+
+    Task<ProjectReply> AddDefaultAbpConfigurationToExistingProject(AddEntityRequest addEntityRequest);
+    Task<ProjectReply> AddEntityPropertiesToExistingProject(AddEntityRequest addEntityRequest);
+
 }

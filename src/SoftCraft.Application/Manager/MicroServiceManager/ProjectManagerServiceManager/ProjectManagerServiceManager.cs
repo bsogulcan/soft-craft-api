@@ -211,4 +211,24 @@ public class ProjectManagerServiceManager : IProjectManagerServiceManager
         var result = await projectManagerClient.AddNavigationToExistingProjectAsync(input);
         return result;
     }
+
+    public async Task<ProjectReply> AddDefaultAbpConfigurationToExistingProject(AddEntityRequest addEntityRequest)
+    {
+        using var projectManagerChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
+        var projectManagerClient =
+            new ProjectManager.ProjectManager.ProjectManagerClient(projectManagerChannel);
+        var result = await projectManagerClient.AddDefaultAbpConfigurationToExistingProjectAsync(addEntityRequest);
+        return result;
+    }
+
+    public async Task<ProjectReply> AddEntityPropertiesToExistingProject(AddEntityRequest addEntityRequest)
+    {
+        using var projectManagerChannel =
+            GrpcChannel.ForAddress(_configuration["MicroServices:ProjectManagerUrl"]);
+        var projectManagerClient =
+            new ProjectManager.ProjectManager.ProjectManagerClient(projectManagerChannel);
+        var result = await projectManagerClient.AddEntityPropertiesToExistingProjectAsync(addEntityRequest);
+        return result;
+    }
 }
