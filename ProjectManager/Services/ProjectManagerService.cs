@@ -560,7 +560,8 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         };
     }
 
-    public override async Task<ProjectReply> AddDefaultAbpConfigurationToExistingProject(AddEntityRequest request, ServerCallContext context)
+    public override async Task<ProjectReply> AddDefaultAbpConfigurationToExistingProject(AddEntityRequest request,
+        ServerCallContext context)
     {
         var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.Id);
         var configurationsFolderPath = Path.Combine(projectFolderPath,
@@ -592,10 +593,11 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
         };
     }
 
-    public override async Task<ProjectReply> AddEntityPropertiesToExistingProject(AddEntityRequest request, ServerCallContext context)
+    public override async Task<ProjectReply> AddEntityPropertiesToExistingProject(AddEntityRequest request,
+        ServerCallContext context)
     {
         var projectFolderPath = Path.Combine(_configuration["ProjectsFolderPath"], request.Id);
-        
+
         var entityFolderPath = Path.Combine(projectFolderPath,
             $"aspnet-core\\src\\{request.ProjectName}.Core\\Authorization\\{request.EntityName.Pluralize()}");
 
@@ -617,15 +619,18 @@ public class ProjectManagerService : ProjectManager.ProjectManagerBase
 
         var usingIndex = existedFile.IndexOf("namespace");
         if (usingIndex > 0)
-            stringBulder.Insert(usingIndex, "using SonTest.Domain.Entities;").NewLine();
+            stringBulder.Insert(usingIndex, $"using {request.ProjectName}.Domain.Entities;" + Environment.NewLine)
+                .NewLine();
 
-        await File.WriteAllTextAsync(Path.Combine(entityFolderPath, request.EntityName + ".cs"), stringBulder.ToString());
+        await File.WriteAllTextAsync(Path.Combine(entityFolderPath, request.EntityName + ".cs"),
+            stringBulder.ToString());
 
         return new ProjectReply()
         {
             Id = request.Id
         };
     }
+
     #region Helper Methods
 
     private async Task WritePermissionNames(string projectFolderPath, AddAppServiceRequest request)
